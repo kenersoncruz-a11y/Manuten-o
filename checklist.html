@@ -3,687 +3,225 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Check-list Diário - Sistema de Manutenção</title>
+    <title>Central de Ocorrências - Sistema de Manutenção</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
-
-        :root {
-            --primary: #5b21b6;
-            --primary-light: #7c3aed;
-            --primary-pale: #ede9fe;
-            --accent: #f59e0b;
-            --success: #059669;
-            --danger: #dc2626;
-            --bg: #f8f7ff;
-            --surface: #ffffff;
-            --border: #e4e0f5;
-            --text: #1e1b4b;
-            --muted: #6b7280;
-            --radius: 14px;
-        }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'DM Sans', sans-serif;
-            background: var(--bg);
-            min-height: 100vh;
-            color: var(--text);
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; min-height: 100vh; }
 
         /* HEADER */
-        .header {
-            background: linear-gradient(135deg, #5b21b6 0%, #7c3aed 60%, #a78bfa 100%);
-            color: white;
-            padding: 16px 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 24px rgba(91,33,182,0.3);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
+        .header { background: linear-gradient(135deg,#667eea 0%,#ADD8E6 100%); color:white; padding:16px 20px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 4px 20px rgba(0,0,0,0.15); position:sticky; top:0; z-index:100; }
+        .header-left { display:flex; align-items:center; gap:16px; }
+        .hamburger-btn { display:flex; flex-direction:column; justify-content:center; gap:5px; width:30px; height:30px; background:none; border:none; cursor:pointer; padding:0; position:relative; z-index:1001; transition:all 0.3s; }
+        .hamburger-btn:hover { transform:scale(1.1); }
+        .hamburger-line { width:100%; height:3px; background:white; border-radius:3px; transition:all 0.3s cubic-bezier(0.68,-0.55,0.265,1.55); transform-origin:center; }
+        .hamburger-btn.active .hamburger-line:nth-child(1) { transform:translateY(8px) rotate(45deg); }
+        .hamburger-btn.active .hamburger-line:nth-child(2) { opacity:0; transform:scaleX(0); }
+        .hamburger-btn.active .hamburger-line:nth-child(3) { transform:translateY(-8px) rotate(-45deg); }
+        .header h1 { font-size:20px; font-weight:700; display:flex; align-items:center; gap:8px; }
+        .user-info { display:flex; align-items:center; gap:12px; }
+        .user-name { font-size:14px; font-weight:500; display:none; }
+        .user-badge { background:rgba(255,255,255,0.25); padding:6px 12px; border-radius:20px; font-size:12px; font-weight:600; }
+        .btn-logout { padding:8px 16px; background:rgba(255,255,255,0.2); color:white; border:2px solid white; border-radius:8px; cursor:pointer; font-weight:600; font-size:13px; transition:all 0.3s; }
+        .btn-logout:hover { background:white; color:#667eea; transform:translateY(-2px); }
 
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .back-btn {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(255,255,255,0.2);
-            border: 2px solid rgba(255,255,255,0.4);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-family: 'DM Sans', sans-serif;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.3s;
-            text-decoration: none;
-        }
-
-        .back-btn:hover {
-            background: rgba(255,255,255,0.35);
-            transform: translateX(-2px);
-        }
-
-        .header-title {
-            font-family: 'Syne', sans-serif;
-            font-size: 20px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .header-icon {
-            width: 36px;
-            height: 36px;
-            background: rgba(255,255,255,0.25);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .user-badge {
-            background: rgba(255,255,255,0.2);
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-        }
+        /* SIDEBAR */
+        .sidebar-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); opacity:0; visibility:hidden; transition:all 0.3s; z-index:999; }
+        .sidebar-overlay.active { opacity:1; visibility:visible; }
+        .sidebar { position:fixed; top:0; left:-320px; width:300px; height:100vh; background:white; box-shadow:4px 0 24px rgba(0,0,0,0.15); transition:left 0.3s cubic-bezier(0.68,-0.55,0.265,1.55); z-index:1000; overflow-y:auto; padding-top:80px; }
+        .sidebar.active { left:0; }
+        .sidebar-header { padding:24px 20px; border-bottom:2px solid #f0f0f0; }
+        .sidebar-header h2 { font-size:18px; color:#333; font-weight:700; margin-bottom:8px; }
+        .sidebar-header p { font-size:13px; color:#666; }
+        .menu-section { padding:16px 0; }
+        .menu-section-title { padding:8px 20px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#999; }
+        .menu-item { padding:14px 20px; cursor:pointer; transition:all 0.3s; display:flex; align-items:center; gap:14px; color:#555; font-weight:500; font-size:15px; position:relative; overflow:hidden; text-decoration:none; }
+        .menu-item::before { content:''; position:absolute; left:0; top:0; height:100%; width:4px; background:linear-gradient(135deg,#667eea,#764ba2); transform:scaleY(0); transition:transform 0.3s; }
+        .menu-item:hover { background:linear-gradient(90deg,#f8f9ff,#fff); color:#667eea; padding-left:28px; }
+        .menu-item:hover .menu-icon { transform:scale(1.2) rotate(5deg); }
+        .menu-item.active { background:linear-gradient(90deg,#e8ecff,#f4f6ff); color:#667eea; font-weight:600; padding-left:28px; }
+        .menu-item.active::before { transform:scaleY(1); }
+        .menu-icon { font-size:22px; transition:all 0.3s; filter:grayscale(100%); }
+        .menu-item:hover .menu-icon, .menu-item.active .menu-icon { filter:grayscale(0%); }
 
         /* MAIN */
-        .main {
-            max-width: 720px;
-            margin: 0 auto;
-            padding: 32px 16px 60px;
-        }
-
-        /* HERO CARD */
-        .hero-card {
-            background: linear-gradient(135deg, #5b21b6, #7c3aed);
-            border-radius: 20px;
-            padding: 28px 32px;
-            color: white;
-            margin-bottom: 28px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .hero-card::before {
-            content: '🏗️';
-            position: absolute;
-            right: 24px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 72px;
-            opacity: 0.15;
-        }
-
-        .hero-card h1 {
-            font-family: 'Syne', sans-serif;
-            font-size: 26px;
-            font-weight: 800;
-            margin-bottom: 6px;
-        }
-
-        .hero-card p {
-            opacity: 0.85;
-            font-size: 14px;
-            font-weight: 400;
-        }
-
-        /* PROGRESS BAR */
-        .progress-wrap {
-            background: white;
-            border-radius: 16px;
-            padding: 20px 24px;
-            margin-bottom: 24px;
-            box-shadow: 0 2px 12px rgba(91,33,182,0.08);
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .progress-text {
-            min-width: 60px;
-            font-family: 'Syne', sans-serif;
-            font-size: 22px;
-            font-weight: 800;
-            color: var(--primary);
-        }
-
-        .progress-bar-bg {
-            flex: 1;
-            height: 10px;
-            background: var(--primary-pale);
-            border-radius: 20px;
-            overflow: hidden;
-        }
-
-        .progress-bar-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #5b21b6, #a78bfa);
-            border-radius: 20px;
-            transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
-            width: 0%;
-        }
-
-        .progress-label {
-            font-size: 13px;
-            color: var(--muted);
-            font-weight: 500;
-            min-width: 80px;
-            text-align: right;
-        }
-
-        /* ALERT */
-        .alert {
-            padding: 14px 18px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            font-weight: 500;
-            display: none;
-        }
-
-        .alert.visible { display: flex; align-items: center; gap: 10px; }
-        .alert-success { background: #d1fae5; color: #065f46; border-left: 4px solid #059669; }
-        .alert-error { background: #fee2e2; color: #991b1b; border-left: 4px solid #dc2626; }
-
-        /* SECTION DIVIDER */
-        .section-divider {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            margin: 32px 0 20px;
-        }
-
-        .section-divider-line {
-            flex: 1;
-            height: 2px;
-            background: var(--border);
-            border-radius: 2px;
-        }
-
-        .section-label {
-            background: linear-gradient(135deg, #5b21b6, #7c3aed);
-            color: white;
-            padding: 7px 18px;
-            border-radius: 30px;
-            font-family: 'Syne', sans-serif;
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            white-space: nowrap;
-        }
-
-        /* FORM CARD */
-        .form-card {
-            background: var(--surface);
-            border-radius: var(--radius);
-            padding: 22px 24px;
-            margin-bottom: 14px;
-            border: 2px solid var(--border);
-            transition: all 0.3s;
-            position: relative;
-        }
-
-        .form-card:hover {
-            border-color: #a78bfa;
-            box-shadow: 0 4px 20px rgba(91,33,182,0.08);
-        }
-
-        .form-card.answered {
-            border-color: #a7f3d0;
-            background: #f0fdf4;
-        }
-
-        .form-card label.main-label {
-            display: block;
-            font-weight: 600;
-            font-size: 15px;
-            color: var(--text);
-            margin-bottom: 14px;
-            line-height: 1.5;
-        }
-
-        /* TEXT INPUT */
-        .form-card input[type="text"],
-        .form-card input[type="date"],
-        .form-card input[type="time"],
-        .form-card input[type="number"] {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid var(--border);
-            border-radius: 10px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 15px;
-            color: var(--text);
-            background: var(--bg);
-            transition: all 0.3s;
-            outline: none;
-        }
-
-        .form-card input:focus {
-            border-color: var(--primary-light);
-            box-shadow: 0 0 0 4px rgba(124,58,237,0.1);
-            background: white;
-        }
-
-        /* RADIO GROUP */
-        .radio-group {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .radio-option {
-            flex: 1;
-            min-width: 100px;
-        }
-
-        .radio-option input[type="radio"] {
-            display: none;
-        }
-
-        .radio-option label {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 12px 18px;
-            border: 2px solid var(--border);
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 15px;
-            transition: all 0.25s;
-            color: var(--muted);
-            background: var(--bg);
-            user-select: none;
-        }
-
-        .radio-option input[type="radio"]:checked + label {
-            border-color: var(--primary);
-            background: var(--primary-pale);
-            color: var(--primary);
-        }
-
-        .radio-option.sim input[type="radio"]:checked + label {
-            border-color: #dc2626;
-            background: #fef2f2;
-            color: #dc2626;
-        }
-
-        .radio-option.nao input[type="radio"]:checked + label {
-            border-color: #059669;
-            background: #f0fdf4;
-            color: #059669;
-        }
-
-        .radio-option label:hover {
-            border-color: var(--primary-light);
-            background: var(--primary-pale);
-            color: var(--primary-light);
-        }
-
-        /* TURNO SPECIFIC */
-        .turno-group {
-            display: flex;
-            gap: 10px;
-        }
-
-        .turno-option {
-            flex: 1;
-        }
-
-        .turno-option input[type="radio"] { display: none; }
-
-        .turno-option label {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 14px 10px;
-            border: 2px solid var(--border);
-            border-radius: 12px;
-            cursor: pointer;
-            font-family: 'Syne', sans-serif;
-            font-weight: 800;
-            font-size: 22px;
-            color: var(--muted);
-            background: var(--bg);
-            transition: all 0.25s;
-            user-select: none;
-        }
-
-        .turno-option label span {
-            font-family: 'DM Sans', sans-serif;
-            font-size: 11px;
-            font-weight: 500;
-            margin-top: 4px;
-            opacity: 0.7;
-        }
-
-        .turno-option input[type="radio"]:checked + label {
-            border-color: var(--primary);
-            background: var(--primary-pale);
-            color: var(--primary);
-        }
-
-        /* SUBMIT AREA */
-        .submit-area {
-            margin-top: 36px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .btn-submit {
-            width: 100%;
-            padding: 18px;
-            background: linear-gradient(135deg, #5b21b6, #7c3aed);
-            color: white;
-            border: none;
-            border-radius: 14px;
-            font-family: 'Syne', sans-serif;
-            font-size: 17px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 6px 24px rgba(91,33,182,0.35);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .btn-submit:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 32px rgba(91,33,182,0.45);
-        }
-
-        .btn-submit:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .btn-clear {
-            width: 100%;
-            padding: 14px;
-            background: transparent;
-            color: var(--muted);
-            border: 2px solid var(--border);
-            border-radius: 14px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .btn-clear:hover {
-            border-color: #dc2626;
-            color: #dc2626;
-            background: #fef2f2;
-        }
-
-        /* HISTORY */
-        .history-section {
-            margin-top: 48px;
-        }
-
-        .history-section h2 {
-            font-family: 'Syne', sans-serif;
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--text);
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .history-card {
-            background: white;
-            border: 2px solid var(--border);
-            border-radius: 14px;
-            padding: 18px 22px;
-            margin-bottom: 12px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .history-card:hover {
-            border-color: #a78bfa;
-            box-shadow: 0 4px 16px rgba(91,33,182,0.1);
-            transform: translateX(4px);
-        }
-
-        .history-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .history-operator {
-            font-weight: 700;
-            font-size: 15px;
-            color: var(--text);
-        }
-
-        .history-date {
-            font-size: 13px;
-            color: var(--muted);
-        }
-
-        .history-meta {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .meta-tag {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            background: var(--primary-pale);
-            color: var(--primary);
-        }
-
-        .meta-tag.danger {
-            background: #fee2e2;
-            color: #dc2626;
-        }
-
-        .meta-tag.success {
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        /* MODAL */
-        .modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(30, 27, 75, 0.6);
-            backdrop-filter: blur(6px);
-            z-index: 500;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .modal.active {
-            display: flex;
-            animation: fadeIn 0.3s;
-        }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        .modal-box {
-            background: white;
-            border-radius: 20px;
-            padding: 32px;
-            max-width: 700px;
-            width: 100%;
-            max-height: 85vh;
-            overflow-y: auto;
-            box-shadow: 0 24px 64px rgba(91,33,182,0.25);
-            animation: slideUp 0.3s;
-        }
-
-        @keyframes slideUp {
-            from { transform: translateY(30px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-            padding-bottom: 16px;
-            border-bottom: 2px solid var(--border);
-        }
-
-        .modal-header h2 {
-            font-family: 'Syne', sans-serif;
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--text);
-        }
-
-        .modal-close {
-            background: #f3f4f6;
-            border: none;
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 20px;
-            color: var(--muted);
-            transition: all 0.2s;
-        }
-
-        .modal-close:hover {
-            background: #fee2e2;
-            color: #dc2626;
-            transform: rotate(90deg);
-        }
-
-        .detail-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid #f3f4f6;
-            font-size: 14px;
-        }
-
-        .detail-row:last-child { border-bottom: none; }
-
-        .detail-label {
-            color: var(--muted);
-            font-weight: 500;
-            flex: 1;
-        }
-
-        .detail-value {
-            font-weight: 600;
-            color: var(--text);
-        }
-
-        .badge-sim {
-            background: #fef2f2;
-            color: #dc2626;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-weight: 700;
-            font-size: 12px;
-        }
-
-        .badge-nao {
-            background: #f0fdf4;
-            color: #059669;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-weight: 700;
-            font-size: 12px;
-        }
+        .main-container { padding:28px 24px; max-width:1400px; margin:0 auto; animation:fadeIn 0.4s; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);} }
+
+        /* HERO */
+        .hero-strip { background:linear-gradient(135deg,#667eea,#764ba2); border-radius:16px; padding:24px 32px; color:white; margin-bottom:24px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; }
+        .hero-strip h2 { font-size:22px; font-weight:700; display:flex; align-items:center; gap:10px; }
+        .hero-strip p { font-size:14px; opacity:0.85; margin-top:4px; }
+        .hero-actions { display:flex; gap:10px; flex-wrap:wrap; }
+        .btn-hero { padding:10px 20px; background:rgba(255,255,255,0.2); color:white; border:2px solid rgba(255,255,255,0.5); border-radius:10px; font-weight:600; font-size:14px; cursor:pointer; transition:all 0.3s; text-decoration:none; display:flex; align-items:center; gap:6px; }
+        .btn-hero:hover { background:rgba(255,255,255,0.35); transform:translateY(-2px); }
+
+        /* STATS */
+        .stats-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:24px; }
+        .stat-card { background:white; border-radius:14px; padding:20px; text-align:center; box-shadow:0 2px 10px rgba(0,0,0,0.06); border:2px solid #f0f0f0; transition:all 0.3s; }
+        .stat-card:hover { border-color:#a78bfa; transform:translateY(-3px); box-shadow:0 8px 20px rgba(102,126,234,0.12); }
+        .stat-number { font-size:32px; font-weight:800; color:#667eea; line-height:1; margin-bottom:6px; }
+        .stat-label { font-size:12px; color:#666; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }
+        .stat-card.pendente .stat-number  { color:#856404; }
+        .stat-card.andamento .stat-number { color:#084298; }
+        .stat-card.concluido .stat-number { color:#0f5132; }
+        .stat-card.urgente   .stat-number { color:#dc3545; }
+
+        /* CARD */
+        .card { background:white; border-radius:16px; padding:28px; box-shadow:0 2px 12px rgba(0,0,0,0.08); margin-bottom:24px; }
+
+        /* FILTERS */
+        .filters-section { background:linear-gradient(135deg,#f8f9fa,#e9ecef); padding:24px; border-radius:12px; margin-bottom:24px; }
+        .filters-section h3 { font-size:16px; font-weight:700; margin-bottom:16px; color:#333; }
+        .form-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; }
+        .form-group { margin-bottom:0; }
+        .form-group label { display:block; margin-bottom:6px; font-weight:600; color:#333; font-size:13px; }
+        .form-group input, .form-group select, .form-group textarea { width:100%; padding:10px 14px; border:2px solid #e0e0e0; border-radius:10px; font-size:14px; transition:all 0.3s; font-family:inherit; background:#fafafa; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline:none; border-color:#667eea; box-shadow:0 0 0 4px rgba(102,126,234,0.1); background:white; }
+        .form-group textarea { resize:vertical; min-height:80px; }
+        .filter-actions { display:flex; gap:10px; margin-top:18px; flex-wrap:wrap; }
+
+        /* SEARCH */
+        .search-box { margin-bottom:20px; }
+        .search-input { width:100%; padding:14px 16px; border:2px solid #e0e0e0; border-radius:12px; font-size:14px; transition:all 0.3s; background:#fafafa; font-family:inherit; }
+        .search-input:focus { outline:none; border-color:#667eea; box-shadow:0 0 0 4px rgba(102,126,234,0.1); background:white; }
+
+        /* TABLE */
+        .table-container { width:100%; overflow-x:auto; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+        table { width:100%; border-collapse:collapse; min-width:700px; background:white; }
+        thead { background:linear-gradient(135deg,#f8f9fa,#e9ecef); }
+        th { padding:14px 12px; text-align:left; font-weight:700; color:#495057; font-size:12px; border-bottom:2px solid #dee2e6; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap; }
+        td { padding:14px 12px; border-bottom:1px solid #f0f0f0; color:#333; font-size:14px; vertical-align:middle; }
+        tr { transition:background 0.2s; }
+        tr:hover { background:#f8f9ff; }
+        tr:last-child td { border-bottom:none; }
+
+        /* BADGES */
+        .badge { padding:5px 12px; border-radius:20px; font-size:11px; font-weight:700; display:inline-block; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap; }
+        .badge-pendente  { background:linear-gradient(135deg,#fff3cd,#ffeaa7); color:#856404; }
+        .badge-andamento { background:linear-gradient(135deg,#cfe2ff,#9ac5f4); color:#084298; }
+        .badge-concluido { background:linear-gradient(135deg,#d1e7dd,#a8d5ba); color:#0f5132; }
+        .badge-cancelado { background:linear-gradient(135deg,#f8d7da,#f5c6cb); color:#721c24; }
+        .badge-baixa     { background:linear-gradient(135deg,#e7f3ff,#cce5ff); color:#0066cc; }
+        .badge-media     { background:linear-gradient(135deg,#fff3cd,#ffeaa7); color:#856404; }
+        .badge-alta      { background:linear-gradient(135deg,#ffe6e6,#ffcccc); color:#cc0000; }
+        .badge-urgente   { background:linear-gradient(135deg,#dc3545,#c82333); color:white; }
+        .tipo-chip { display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:#444; }
+        .codigo-badge { display:inline-block; background:linear-gradient(135deg,#667eea,#764ba2); color:white; padding:6px 12px; border-radius:8px; font-weight:700; font-family:'Courier New',monospace; font-size:12px; letter-spacing:1px; box-shadow:0 2px 8px rgba(102,126,234,0.3); white-space:nowrap; }
+
+        /* BUTTONS */
+        .btn { padding:10px 22px; background:linear-gradient(135deg,#667eea,#764ba2); color:white; border:none; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; transition:all 0.3s; box-shadow:0 4px 12px rgba(102,126,234,0.3); font-family:inherit; }
+        .btn:hover { transform:translateY(-2px); box-shadow:0 6px 18px rgba(102,126,234,0.4); }
+        .btn:active { transform:translateY(0); }
+        .btn-secondary { background:linear-gradient(135deg,#6c757d,#495057); box-shadow:none; }
+        .btn-secondary:hover { box-shadow:0 4px 12px rgba(0,0,0,0.2); }
+        .btn-warning { background:linear-gradient(135deg,#ffc107,#e0a800); color:#333; box-shadow:none; }
+        .btn-warning:hover { box-shadow:0 4px 12px rgba(255,193,7,0.3); }
+        .btn-success { background:linear-gradient(135deg,#28a745,#218838); color:white; box-shadow:none; }
+        .btn-success:hover { box-shadow:0 4px 12px rgba(40,167,69,0.3); }
+        .btn-small { padding:7px 14px; font-size:12px; }
+        .action-buttons { display:flex; gap:6px; flex-wrap:wrap; }
 
         /* LOADING */
-        .spinner {
-            width: 36px;
-            height: 36px;
-            border: 3px solid var(--primary-pale);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 40px auto;
-        }
+        .loading { text-align:center; padding:48px; color:#666; font-size:15px; }
+        .spinner { border:3px solid #f3f3f3; border-top:3px solid #667eea; border-radius:50%; width:38px; height:38px; animation:spin 0.9s linear infinite; margin:0 auto 14px; }
+        @keyframes spin { to{transform:rotate(360deg);} }
+        .empty-state { text-align:center; padding:60px 20px; color:#999; }
+        .empty-icon { font-size:52px; margin-bottom:12px; }
+        .total-strip { display:flex; align-items:center; gap:10px; padding:12px 18px; background:linear-gradient(135deg,#e8ecff,#f4f6ff); border-radius:10px; font-weight:700; color:#667eea; font-size:14px; margin-bottom:16px; }
 
-        @keyframes spin { to { transform: rotate(360deg); } }
+        /* MODAL */
+        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); backdrop-filter:blur(6px); z-index:2000; align-items:center; justify-content:center; padding:20px; }
+        .modal.active { display:flex; animation:fadeIn 0.3s; }
+        .modal-content { background:white; border-radius:16px; padding:32px; max-width:900px; width:100%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.3); animation:slideUp 0.3s; }
+        @keyframes slideUp { from{transform:translateY(40px);opacity:0;}to{transform:translateY(0);opacity:1;} }
+        .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; padding-bottom:16px; border-bottom:2px solid #f0f0f0; }
+        .modal-header h2 { font-size:20px; font-weight:700; color:#333; }
+        .modal-close { background:#f0f0f0; border:none; font-size:22px; cursor:pointer; color:#666; width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; transition:all 0.2s; }
+        .modal-close:hover { background:#fee2e2; color:#dc3545; transform:rotate(90deg); }
+        .modal-footer { margin-top:24px; padding-top:18px; border-top:2px solid #f0f0f0; display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap; }
 
-        .loading-text {
-            text-align: center;
-            color: var(--muted);
-            padding: 40px;
-            font-size: 15px;
-        }
+        /* DETAIL */
+        .detail-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin:16px 0; }
+        .detail-item { background:#f8f9fa; border-radius:10px; padding:14px; }
+        .detail-item strong { font-size:11px; color:#999; text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:4px; }
+        .detail-item span { font-size:15px; font-weight:600; color:#333; }
+        .desc-box { background:#f8f9fa; border-radius:10px; padding:16px; font-size:14px; color:#555; line-height:1.6; margin-top:4px; }
+        .image-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:12px; margin-top:12px; }
+        .image-grid img { width:100%; height:130px; object-fit:cover; border-radius:10px; cursor:pointer; transition:transform 0.2s; }
+        .image-grid img:hover { transform:scale(1.04); }
 
-        /* EMPTY */
-        .empty-state {
-            text-align: center;
-            padding: 48px 20px;
-            color: var(--muted);
-        }
+        /* EDIT SECTION */
+        .edit-section { margin-top:24px; padding-top:20px; border-top:2px dashed #dee2e6; }
+        .edit-section-title { font-size:16px; font-weight:700; color:#333; margin-bottom:18px; display:flex; align-items:center; gap:8px; background:linear-gradient(135deg,#fff3cd,#ffeaa7); padding:12px 16px; border-radius:10px; border-left:4px solid #ffc107; }
+        .edit-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin-bottom:16px; }
+        .edit-group { margin-bottom:14px; }
+        .edit-group label { display:block; margin-bottom:6px; font-weight:600; color:#333; font-size:13px; }
+        .edit-group input, .edit-group select, .edit-group textarea { width:100%; padding:11px 14px; border:2px solid #e0e0e0; border-radius:10px; font-size:14px; transition:all 0.3s; font-family:inherit; background:#fafafa; }
+        .edit-group input:focus, .edit-group select:focus, .edit-group textarea:focus { outline:none; border-color:#667eea; box-shadow:0 0 0 4px rgba(102,126,234,0.1); background:white; }
+        .edit-group textarea { resize:vertical; min-height:80px; }
+        .img-upload-label { display:flex; align-items:center; gap:10px; padding:14px 18px; background:#f8f9fa; border:2px dashed #d0d0d0; border-radius:10px; cursor:pointer; color:#666; font-size:14px; font-weight:600; transition:all 0.3s; }
+        .img-upload-label:hover { border-color:#667eea; color:#667eea; background:#f0f4ff; }
+        .img-preview-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:10px; margin-top:12px; }
+        .img-preview-item { position:relative; border-radius:8px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
+        .img-preview-item img { width:100%; height:100px; object-fit:cover; display:block; }
+        .img-remove { position:absolute; top:4px; right:4px; background:rgba(220,53,69,0.9); color:white; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center; }
 
-        .empty-icon {
-            font-size: 48px;
-            margin-bottom: 12px;
-        }
+        /* COMMENTS */
+        .comments-section { margin-top:28px; padding-top:24px; border-top:2px solid #e0e0e0; }
+        .comments-header { display:flex; align-items:center; gap:10px; margin-bottom:20px; }
+        .comments-header h3 { font-size:18px; font-weight:700; color:#333; margin:0; }
+        .comments-count { background:linear-gradient(135deg,#667eea,#764ba2); color:white; padding:4px 12px; border-radius:20px; font-size:13px; font-weight:700; }
+        .comment-form { background:#f8f9fa; padding:20px; border-radius:14px; margin-bottom:20px; }
+        .comment-form textarea { width:100%; min-height:80px; padding:12px; border:2px solid #e0e0e0; border-radius:10px; font-size:14px; font-family:inherit; resize:vertical; margin-bottom:14px; transition:all 0.3s; background:white; }
+        .comment-form textarea:focus { outline:none; border-color:#667eea; box-shadow:0 0 0 4px rgba(102,126,234,0.1); }
+        .comment-form-footer { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+        .comment-attach-btn { display:flex; align-items:center; gap:8px; padding:10px 16px; background:white; border:2px solid #e0e0e0; border-radius:10px; cursor:pointer; font-size:14px; color:#666; font-weight:600; transition:all 0.3s; }
+        .comment-attach-btn:hover { border-color:#667eea; color:#667eea; background:#f0f4ff; }
+        .comment-images-preview { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+        .comment-image-item { position:relative; width:78px; height:78px; border-radius:10px; overflow:hidden; }
+        .comment-image-item img { width:100%; height:100%; object-fit:cover; }
+        .comment-image-remove { position:absolute; top:4px; right:4px; background:rgba(220,53,69,0.9); color:white; border:none; border-radius:50%; width:22px; height:22px; cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center; }
+        .comments-list { display:flex; flex-direction:column; gap:14px; }
+        .comment-item { background:white; border:2px solid #e8e8e8; border-radius:14px; padding:16px; transition:all 0.3s; }
+        .comment-item:hover { border-color:#667eea; box-shadow:0 4px 14px rgba(102,126,234,0.1); transform:translateX(4px); }
+        .comment-header { display:flex; align-items:center; margin-bottom:12px; }
+        .comment-author { display:flex; align-items:center; gap:12px; }
+        .comment-avatar { width:40px; height:40px; background:linear-gradient(135deg,#667eea,#764ba2); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; }
+        .comment-author-name { font-weight:700; color:#333; font-size:14px; }
+        .comment-date { font-size:12px; color:#999; }
+        .comment-text { color:#444; font-size:14px; line-height:1.6; white-space:pre-wrap; margin-bottom:12px; }
+        .comment-imgs { display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:10px; margin-top:10px; }
+        .comment-imgs img { width:100%; height:100px; object-fit:cover; border-radius:10px; cursor:pointer; transition:transform 0.2s; }
+        .comment-imgs img:hover { transform:scale(1.05); }
+        .no-comments { text-align:center; padding:40px; color:#999; font-size:14px; }
+
+        /* LOCKED */
+        .locked-msg { background:linear-gradient(135deg,#fff3cd,#ffeaa7); border:2px solid #ffc107; padding:16px; border-radius:12px; margin-top:20px; display:flex; align-items:center; gap:10px; color:#856404; font-weight:500; }
+        .unlock-btn { background:linear-gradient(135deg,#ffc107,#ff9800); color:white; border:none; padding:8px 16px; border-radius:8px; cursor:pointer; font-weight:600; font-size:13px; transition:all 0.3s; margin-left:auto; }
+        .unlock-btn:hover { transform:translateY(-2px); box-shadow:0 4px 12px rgba(255,152,0,0.35); }
+
+        /* ALERT BOX */
+        .alert-inline { padding:12px 16px; border-radius:10px; margin-bottom:14px; font-size:14px; font-weight:500; display:none; }
+        .alert-inline.show { display:block; }
+        .alert-inline.success { background:#d1e7dd; color:#0f5132; border-left:4px solid #28a745; }
+        .alert-inline.error   { background:#f8d7da; color:#721c24; border-left:4px solid #dc3545; }
 
         /* RESPONSIVE */
-        @media (max-width: 600px) {
-            .hero-card h1 { font-size: 20px; }
-            .hero-card::before { display: none; }
-            .radio-group { flex-direction: column; }
-            .radio-option { min-width: 100%; }
-            .main { padding: 24px 12px 60px; }
+        @media (min-width:769px) { .user-name{display:block;} }
+        @media (max-width:768px) {
+            .header h1{font-size:16px;} .main-container{padding:16px;} .card{padding:18px;}
+            .stats-row{grid-template-columns:repeat(2,1fr);} .hero-strip{padding:18px 20px;}
+            .modal-content{padding:22px;max-height:88vh;} .action-buttons{flex-direction:column;}
+            .btn-small{width:100%;margin:2px 0;text-align:center;}
+            .comment-form-footer{flex-direction:column;align-items:stretch;}
+            .comment-attach-btn{width:100%;justify-content:center;}
+            .edit-grid{grid-template-columns:1fr;}
         }
-
-        /* AUTOFILL detected style */
-        .check-icon {
-            position: absolute;
-            top: 18px;
-            right: 18px;
-            color: #059669;
-            font-size: 18px;
-            opacity: 0;
-            transition: opacity 0.3s;
+        @media (max-width:480px) {
+            th,td{padding:10px 8px;font-size:12px;} .badge{font-size:10px;padding:4px 8px;}
+            .stats-row{gap:10px;} .stat-number{font-size:26px;}
         }
-
-        .form-card.answered .check-icon { opacity: 1; }
     </style>
 </head>
 <body>
@@ -691,431 +229,145 @@
 <!-- HEADER -->
 <div class="header">
     <div class="header-left">
-        <a href="menu.html" class="back-btn">← Voltar</a>
-        <div class="header-title">
-            <div class="header-icon">📋</div>
-            Check-list Diário
-        </div>
+        <button class="hamburger-btn" id="hamburgerBtn">
+            <span class="hamburger-line"></span><span class="hamburger-line"></span><span class="hamburger-line"></span>
+        </button>
+        <h1>📋 Central de Ocorrências</h1>
     </div>
     <div class="user-info">
-        <span class="user-badge" id="userBadge">Operador</span>
+        <span class="user-name" id="userName"></span>
+        <span class="user-badge" id="userBadge">Usuário</span>
+        <button class="btn-logout" id="btnLogout">Sair</button>
+    </div>
+</div>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header"><h2>Menu de Navegação</h2><p>Selecione uma opção abaixo</p></div>
+    <div class="menu-section">
+        <div class="menu-section-title">Principal</div>
+        <div class="menu-item active" onclick="closeSidebar()"><span class="menu-icon">📋</span><span>Ocorrências</span></div>
+    </div>
+    <div class="menu-section">
+        <div class="menu-section-title">Sistema</div>
+        <a href="menu.html" class="menu-item"><span class="menu-icon">⚙️</span><span>Gestão Completa</span></a>
+        <a href="checklist-painel.html" class="menu-item"><span class="menu-icon">✅</span><span>Painel Check-lists</span></a>
+        <a href="checklist.html" class="menu-item"><span class="menu-icon">📝</span><span>Novo Check-list</span></a>
+        <a href="usuarios.html" class="menu-item"><span class="menu-icon">👥</span><span>Usuários</span></a>
     </div>
 </div>
 
 <!-- MAIN -->
-<div class="main">
-
-    <!-- HERO -->
-    <div class="hero-card">
-        <h1>Check-list Diário</h1>
-        <p>Inspeção de segurança da empilhadeira — preencha antes de iniciar a operação</p>
+<div class="main-container">
+    <div class="hero-strip">
+        <div>
+            <h2>📋 Central de Ocorrências</h2>
+            <p>Visualize e gerencie todas as manutenções prediais e de equipamentos</p>
+        </div>
+        <div class="hero-actions">
+            <button class="btn-hero" onclick="abrirNovaOcorrencia('predial')">🏢 Nova Predial</button>
+            <button class="btn-hero" onclick="abrirNovaOcorrencia('equipamento')">⚙️ Novo Equipamento</button>
+        </div>
     </div>
 
-    <!-- PROGRESS -->
-    <div class="progress-wrap">
-        <div class="progress-text" id="progressPercent">0%</div>
-        <div class="progress-bar-bg">
-            <div class="progress-bar-fill" id="progressBar"></div>
-        </div>
-        <div class="progress-label" id="progressLabel">0 / 0 campos</div>
+    <div class="stats-row">
+        <div class="stat-card"><div class="stat-number" id="statTotal">–</div><div class="stat-label">Total</div></div>
+        <div class="stat-card pendente"><div class="stat-number" id="statPendente">–</div><div class="stat-label">Pendentes</div></div>
+        <div class="stat-card andamento"><div class="stat-number" id="statAndamento">–</div><div class="stat-label">Em Andamento</div></div>
+        <div class="stat-card concluido"><div class="stat-number" id="statConcluido">–</div><div class="stat-label">Concluídos</div></div>
+        <div class="stat-card urgente"><div class="stat-number" id="statUrgente">–</div><div class="stat-label">Urgentes</div></div>
     </div>
 
-    <!-- ALERT -->
-    <div class="alert" id="alertBox"></div>
+    <div class="card">
+        <div class="filters-section">
+            <h3>🔍 Filtros</h3>
+            <div class="form-grid">
+                <div class="form-group"><label>Tipo</label>
+                    <select id="filtroTipo"><option value="">Todos</option><option value="predial">Predial</option><option value="equipamento">Equipamento</option></select>
+                </div>
+                <div class="form-group"><label>Status</label>
+                    <select id="filtroStatus"><option value="">Todos</option><option value="pendente">Pendente</option><option value="andamento">Em Andamento</option><option value="concluido">Concluído</option><option value="cancelado">Cancelado</option></select>
+                </div>
+                <div class="form-group"><label>Prioridade</label>
+                    <select id="filtroPrioridade"><option value="">Todas</option><option value="baixa">Baixa</option><option value="media">Média</option><option value="alta">Alta</option><option value="urgente">Urgente</option></select>
+                </div>
+                <div class="form-group"><label>Criado por</label><select id="filtroCriadoPor"><option value="">Todos</option></select></div>
+                <div class="form-group"><label>Data inicial</label><input type="date" id="filtroDataInicio"></div>
+                <div class="form-group"><label>Data final</label><input type="date" id="filtroDataFim"></div>
+            </div>
+            <div class="filter-actions">
+                <button class="btn" onclick="aplicarFiltros()">🔍 Aplicar</button>
+                <button class="btn btn-secondary" onclick="limparFiltros()">↺ Limpar</button>
+            </div>
+        </div>
+        <div class="search-box">
+            <input type="text" class="search-input" id="searchOcorrencias" placeholder="🔍 Buscar por código, local, equipamento, tipo...">
+        </div>
+        <div id="listaOcorrencias"><div class="loading"><div class="spinner"></div><p>Carregando...</p></div></div>
+    </div>
+</div>
 
-    <!-- FORM -->
-    <form id="checklistForm">
-
-        <!-- IDENTIFICAÇÃO -->
-        <div class="section-divider">
-            <div class="section-divider-line"></div>
-            <div class="section-label">📋 Identificação</div>
-            <div class="section-divider-line"></div>
+<!-- MODAL: VER + EDITAR + COMENTÁRIOS -->
+<div class="modal" id="modalForum">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalForumTitle">Detalhes da Ocorrência</h2>
+            <button class="modal-close" onclick="fecharModal()">×</button>
         </div>
 
-        <div class="form-card" id="card_operador">
-            <span class="check-icon">✓</span>
-            <label class="main-label">Nome do operador *</label>
-            <input type="text" id="operador" name="operador" placeholder="Digite o nome completo" required>
-        </div>
+        <div class="alert-inline" id="alertModal"></div>
 
-        <div class="form-card" id="card_matricula">
-            <span class="check-icon">✓</span>
-            <label class="main-label">Matrícula *</label>
-            <input type="text" id="matricula" name="matricula" placeholder="Número da matrícula" required>
-        </div>
+        <!-- Visualização -->
+        <div id="modalDetalhes"></div>
 
-        <div class="form-card" id="card_turno">
-            <span class="check-icon">✓</span>
-            <label class="main-label">Turno *</label>
-            <div class="turno-group">
-                <div class="turno-option">
-                    <input type="radio" name="turno" id="turnoA" value="A">
-                    <label for="turnoA">A <span>06h–14h</span></label>
-                </div>
-                <div class="turno-option">
-                    <input type="radio" name="turno" id="turnoB" value="B">
-                    <label for="turnoB">B <span>14h–22h</span></label>
-                </div>
-                <div class="turno-option">
-                    <input type="radio" name="turno" id="turnoC" value="C">
-                    <label for="turnoC">C <span>22h–06h</span></label>
-                </div>
+        <!-- Edição (toggle) -->
+        <div id="editSection" style="display:none">
+            <div class="edit-section">
+                <div class="edit-section-title">✏️ Modo de Edição</div>
+                <div id="editFormContainer"></div>
             </div>
         </div>
 
-        <div class="form-card" id="card_horimetro">
-            <span class="check-icon">✓</span>
-            <label class="main-label">Horímetro *</label>
-            <input type="number" id="horimetro" name="horimetro" placeholder="Ex: 12543" min="0" required>
-        </div>
-
-        <div class="form-card" id="card_data">
-            <span class="check-icon">✓</span>
-            <label class="main-label">Data *</label>
-            <input type="date" id="data" name="data" required>
-        </div>
-
-        <div class="form-card" id="card_hora">
-            <span class="check-icon">✓</span>
-            <label class="main-label">Hora *</label>
-            <input type="time" id="hora" name="hora" required>
-        </div>
-
-        <!-- INSPEÇÃO VISUAL GERAL -->
-        <div class="section-divider">
-            <div class="section-divider-line"></div>
-            <div class="section-label">👁️ Inspeção Visual Geral</div>
-            <div class="section-divider-line"></div>
-        </div>
-
-        <div class="form-card" id="card_q1">
-            <span class="check-icon">✓</span>
-            <label class="main-label">Há vazamentos visíveis de água ou óleo?</label>
-            <div class="radio-group">
-                <div class="radio-option sim">
-                    <input type="radio" name="q1" id="q1_sim" value="Sim">
-                    <label for="q1_sim">⚠️ Sim</label>
-                </div>
-                <div class="radio-option nao">
-                    <input type="radio" name="q1" id="q1_nao" value="Não">
-                    <label for="q1_nao">✅ Não</label>
+        <!-- Comentários -->
+        <div class="comments-section">
+            <div class="comments-header">
+                <h3>💬 Comentários</h3>
+                <span class="comments-count" id="commentsCount">0</span>
+            </div>
+            <div class="comment-form">
+                <textarea id="commentText" placeholder="Adicione um comentário, atualização ou observação..." maxlength="1000"></textarea>
+                <div id="commentImgsPreview" class="comment-images-preview"></div>
+                <div class="comment-form-footer">
+                    <label class="comment-attach-btn">📷 Anexar Fotos
+                        <input type="file" accept="image/*" multiple style="display:none" onchange="handleCommentImg(event)">
+                    </label>
+                    <button class="btn" onclick="enviarComentario()">Enviar Comentário</button>
                 </div>
             </div>
+            <div class="comments-list" id="commentsList"><div class="loading"><div class="spinner"></div></div></div>
         </div>
 
-        <div class="form-card" id="card_q2">
-            <span class="check-icon">✓</span>
-            <label class="main-label">A cabine da empilhadeira está limpa e sem acúmulo de sujeira ou óleo?</label>
-            <div class="radio-group">
-                <div class="radio-option nao">
-                    <input type="radio" name="q2" id="q2_sim" value="Sim">
-                    <label for="q2_sim">✅ Sim</label>
-                </div>
-                <div class="radio-option sim">
-                    <input type="radio" name="q2" id="q2_nao" value="Não">
-                    <label for="q2_nao">⚠️ Não</label>
-                </div>
-            </div>
-        </div>
-
-        <div class="form-card" id="card_q3">
-            <span class="check-icon">✓</span>
-            <label class="main-label">A corrente da torre possui folgas ou ruídos anormais?</label>
-            <div class="radio-group">
-                <div class="radio-option sim">
-                    <input type="radio" name="q3" id="q3_sim" value="Sim">
-                    <label for="q3_sim">⚠️ Sim</label>
-                </div>
-                <div class="radio-option nao">
-                    <input type="radio" name="q3" id="q3_nao" value="Não">
-                    <label for="q3_nao">✅ Não</label>
-                </div>
-            </div>
-        </div>
-
-        <div class="form-card" id="card_q4">
-            <span class="check-icon">✓</span>
-            <label class="main-label">Há ruídos anormais durante o funcionamento da máquina?</label>
-            <div class="radio-group">
-                <div class="radio-option sim">
-                    <input type="radio" name="q4" id="q4_sim" value="Sim">
-                    <label for="q4_sim">⚠️ Sim</label>
-                </div>
-                <div class="radio-option nao">
-                    <input type="radio" name="q4" id="q4_nao" value="Não">
-                    <label for="q4_nao">✅ Não</label>
-                </div>
-            </div>
-        </div>
-
-        <div class="form-card" id="card_q5">
-            <span class="check-icon">✓</span>
-            <label class="main-label">A estrutura da torre, mastro e garfos apresenta rachaduras, empenos ou soldas quebradas?</label>
-            <div class="radio-group">
-                <div class="radio-option sim">
-                    <input type="radio" name="q5" id="q5_sim" value="Sim">
-                    <label for="q5_sim">⚠️ Sim</label>
-                </div>
-                <div class="radio-option nao">
-                    <input type="radio" name="q5" id="q5_nao" value="Não">
-                    <label for="q5_nao">✅ Não</label>
-                </div>
-            </div>
-        </div>
-
-        <!-- SISTEMA ELÉTRICO -->
-        <div class="section-divider">
-            <div class="section-divider-line"></div>
-            <div class="section-label">⚡ Sistema Elétrico</div>
-            <div class="section-divider-line"></div>
-        </div>
-
-        <div class="form-card" id="card_q6">
-            <span class="check-icon">✓</span>
-            <label class="main-label">A bateria possui carga o suficiente?</label>
-            <div class="radio-group">
-                <div class="radio-option nao">
-                    <input type="radio" name="q6" id="q6_sim" value="Sim">
-                    <label for="q6_sim">✅ Sim</label>
-                </div>
-                <div class="radio-option sim">
-                    <input type="radio" name="q6" id="q6_nao" value="Não">
-                    <label for="q6_nao">⚠️ Não</label>
-                </div>
-            </div>
-        </div>
-
-        <div class="form-card" id="card_q7">
-            <span class="check-icon">✓</span>
-            <label class="main-label">A bateria está com o nível de água normal?</label>
-            <div class="radio-group">
-                <div class="radio-option nao">
-                    <input type="radio" name="q7" id="q7_sim" value="Sim">
-                    <label for="q7_sim">✅ Sim</label>
-                </div>
-                <div class="radio-option sim">
-                    <input type="radio" name="q7" id="q7_nao" value="Não">
-                    <label for="q7_nao">⚠️ Não</label>
-                </div>
-            </div>
-        </div>
-
-        <div class="form-card" id="card_q8">
-            <span class="check-icon">✓</span>
-            <label class="main-label">Os cabos e terminais da bateria estão limpos e firmes?</label>
-            <div class="radio-group">
-                <div class="radio-option nao">
-                    <input type="radio" name="q8" id="q8_sim" value="Sim">
-                    <label for="q8_sim">✅ Sim</label>
-                </div>
-                <div class="radio-option sim">
-                    <input type="radio" name="q8" id="q8_nao" value="Não">
-                    <label for="q8_nao">⚠️ Não</label>
-                </div>
-            </div>
-        </div>
-
-        <div class="form-card" id="card_q9">
-            <span class="check-icon">✓</span>
-            <label class="main-label">O sinal sonoro (buzina) funciona corretamente?</label>
-            <div class="radio-group">
-                <div class="radio-option nao">
-                    <input type="radio" name="q9" id="q9_sim" value="Sim">
-                    <label for="q9_sim">✅ Sim</label>
-                </div>
-                <div class="radio-option sim">
-                    <input type="radio" name="q9" id="q9_nao" value="Não">
-                    <label for="q9_nao">⚠️ Não</label>
-                </div>
-            </div>
-        </div>
-
-        <div class="form-card" id="card_q10">
-            <span class="check-icon">✓</span>
-            <label class="main-label">As luzes estão funcionando?</label>
-            <div class="radio-group">
-                <div class="radio-option nao">
-                    <input type="radio" name="q10" id="q10_sim" value="Sim">
-                    <label for="q10_sim">✅ Sim</label>
-                </div>
-                <div class="radio-option sim">
-                    <input type="radio" name="q10" id="q10_nao" value="Não">
-                    <label for="q10_nao">⚠️ Não</label>
-                </div>
-            </div>
-        </div>
-
-        <div class="form-card" id="card_q11">
-            <span class="check-icon">✓</span>
-            <label class="main-label">O alarme de ré funciona?</label>
-            <div class="radio-group">
-                <div class="radio-option nao">
-                    <input type="radio" name="q11" id="q11_sim" value="Sim">
-                    <label for="q11_sim">✅ Sim</label>
-                </div>
-                <div class="radio-option sim">
-                    <input type="radio" name="q11" id="q11_nao" value="Não">
-                    <label for="q11_nao">⚠️ Não</label>
-                </div>
-            </div>
-        </div>
-
-        <!-- SISTEMA HIDRÁULICO -->
-        <div class="section-divider">
-            <div class="section-divider-line"></div>
-            <div class="section-label">💧 Sistema Hidráulico</div>
-            <div class="section-divider-line"></div>
-        </div>
-
-        <div class="form-card" id="card_q12">
-            <span class="check-icon">✓</span>
-            <label class="main-label">O sistema de elevação e inclinação está funcionando normalmente? (Sem trancos ou falhas)</label>
-            <div class="radio-group">
-                <div class="radio-option nao">
-                    <input type="radio" name="q12" id="q12_sim" value="Sim">
-                    <label for="q12_sim">✅ Sim</label>
-                </div>
-                <div class="radio-option sim">
-                    <input type="radio" name="q12" id="q12_nao" value="Não">
-                    <label for="q12_nao">⚠️ Não</label>
-                </div>
-            </div>
-        </div>
-
-        <div class="form-card" id="card_q13">
-            <span class="check-icon">✓</span>
-            <label class="main-label">Há vazamentos no chão, mangueiras ou cilindros?</label>
-            <div class="radio-group">
-                <div class="radio-option sim">
-                    <input type="radio" name="q13" id="q13_sim" value="Sim">
-                    <label for="q13_sim">⚠️ Sim</label>
-                </div>
-                <div class="radio-option nao">
-                    <input type="radio" name="q13" id="q13_nao" value="Não">
-                    <label for="q13_nao">✅ Não</label>
-                </div>
-            </div>
-        </div>
-
-        <!-- RODAS -->
-        <div class="section-divider">
-            <div class="section-divider-line"></div>
-            <div class="section-label">🔧 Rodas</div>
-            <div class="section-divider-line"></div>
-        </div>
-
-        <div class="form-card" id="card_q14">
-            <span class="check-icon">✓</span>
-            <label class="main-label">As rodas estão firmes e seguras? (sem folgas ou porcas soltas)</label>
-            <div class="radio-group">
-                <div class="radio-option nao">
-                    <input type="radio" name="q14" id="q14_sim" value="Sim">
-                    <label for="q14_sim">✅ Sim</label>
-                </div>
-                <div class="radio-option sim">
-                    <input type="radio" name="q14" id="q14_nao" value="Não">
-                    <label for="q14_nao">⚠️ Não</label>
-                </div>
-            </div>
-        </div>
-
-        <div class="form-card" id="card_q15">
-            <span class="check-icon">✓</span>
-            <label class="main-label">As rodas estão boas? (sem cortes, desgastadas ou danificadas)</label>
-            <div class="radio-group">
-                <div class="radio-option nao">
-                    <input type="radio" name="q15" id="q15_sim" value="Sim">
-                    <label for="q15_sim">✅ Sim</label>
-                </div>
-                <div class="radio-option sim">
-                    <input type="radio" name="q15" id="q15_nao" value="Não">
-                    <label for="q15_nao">⚠️ Não</label>
-                </div>
-            </div>
-        </div>
-
-        <!-- FREIO E DIREÇÃO -->
-        <div class="section-divider">
-            <div class="section-divider-line"></div>
-            <div class="section-label">🛑 Freio e Direção</div>
-            <div class="section-divider-line"></div>
-        </div>
-
-        <div class="form-card" id="card_q16">
-            <span class="check-icon">✓</span>
-            <label class="main-label">O freio de serviço está eficiente?</label>
-            <div class="radio-group">
-                <div class="radio-option nao">
-                    <input type="radio" name="q16" id="q16_sim" value="Sim">
-                    <label for="q16_sim">✅ Sim</label>
-                </div>
-                <div class="radio-option sim">
-                    <input type="radio" name="q16" id="q16_nao" value="Não">
-                    <label for="q16_nao">⚠️ Não</label>
-                </div>
-            </div>
-        </div>
-
-        <div class="form-card" id="card_q17">
-            <span class="check-icon">✓</span>
-            <label class="main-label">O freio de estacionamento funciona normalmente?</label>
-            <div class="radio-group">
-                <div class="radio-option nao">
-                    <input type="radio" name="q17" id="q17_sim" value="Sim">
-                    <label for="q17_sim">✅ Sim</label>
-                </div>
-                <div class="radio-option sim">
-                    <input type="radio" name="q17" id="q17_nao" value="Não">
-                    <label for="q17_nao">⚠️ Não</label>
-                </div>
-            </div>
-        </div>
-
-        <div class="form-card" id="card_q18">
-            <span class="check-icon">✓</span>
-            <label class="main-label">A direção está leve e sem folgas?</label>
-            <div class="radio-group">
-                <div class="radio-option nao">
-                    <input type="radio" name="q18" id="q18_sim" value="Sim">
-                    <label for="q18_sim">✅ Sim</label>
-                </div>
-                <div class="radio-option sim">
-                    <input type="radio" name="q18" id="q18_nao" value="Não">
-                    <label for="q18_nao">⚠️ Não</label>
-                </div>
-            </div>
-        </div>
-
-        <!-- SUBMIT -->
-        <div class="submit-area">
-            <button type="submit" class="btn-submit" id="btnSubmit">
-                <span>📋</span> Enviar Check-list
-            </button>
-            <button type="button" class="btn-clear" onclick="limparFormulario()">
-                ↺ Limpar formulário
-            </button>
-        </div>
-
-    </form>
-
-    <!-- HISTÓRICO -->
-    <div class="history-section">
-        <h2>🕓 Histórico de Check-lists</h2>
-        <div id="historicoLista">
-            <div class="spinner"></div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="fecharModal()">Fechar</button>
+            <button class="btn btn-warning" id="btnToggleEdit" style="display:none" onclick="toggleEdit()">✏️ Editar</button>
+            <button class="btn btn-success"  id="btnSalvarEdit" style="display:none" onclick="salvarEdicao()">💾 Salvar Alterações</button>
         </div>
     </div>
 </div>
 
-<!-- MODAL DETALHES -->
-<div class="modal" id="modalDetalhes">
-    <div class="modal-box">
+<!-- MODAL: NOVA OCORRÊNCIA -->
+<div class="modal" id="modalNova">
+    <div class="modal-content">
         <div class="modal-header">
-            <h2>📋 Detalhes do Check-list</h2>
-            <button class="modal-close" onclick="fecharModal()">×</button>
+            <h2 id="modalNovaTitle">Nova Ocorrência</h2>
+            <button class="modal-close" onclick="fecharModalNova()">×</button>
         </div>
-        <div id="modalConteudo"></div>
+        <div class="alert-inline" id="alertNova"></div>
+        <div id="novaFormContainer"></div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="fecharModalNova()">Cancelar</button>
+            <button class="btn" onclick="salvarNovaOcorrencia()">✅ Registrar</button>
+        </div>
     </div>
 </div>
 
@@ -1123,330 +375,534 @@
 const SUPABASE_URL = 'https://wcfrwsgnxochxvwhxnvy.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjZnJ3c2dueG9jaHh2d2h4bnZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc2MzExMDgsImV4cCI6MjA4MzIwNzEwOH0.Yb4cT5chXp3S8NZaWbLpv436HzxGCO7CZTruPpOPDdU';
 
-let db;
-let currentUser = null;
+/* ── WhatsApp Helper ─────────────────────────────────────────── */
+const WA = (() => {
+    const _cache = {};
+    async function _buscarTel(nomeOuId) {
+        if (_cache[nomeOuId]) return _cache[nomeOuId];
+        try {
+            const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            const { data } = await sb.from('usuarios').select('nome,telefone')
+                .ilike('nome', nomeOuId).maybeSingle();
+            if (data?.telefone) _cache[nomeOuId] = data.telefone;
+            return data?.telefone || null;
+        } catch { return null; }
+    }
+    function _enviar(tel, msg) {
+        const n = tel.replace(/[^\d+]/g,'').replace(/^\+/,'');
+        window.open(`https://wa.me/${n}?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+    async function notificar(nomeOuId, mensagem) {
+        if (!nomeOuId || !mensagem) return;
+        if (/^\+?\d{8,}$/.test(nomeOuId.replace(/[\s\-()+]/g,''))) { _enviar(nomeOuId, mensagem); return; }
+        const tel = await _buscarTel(nomeOuId);
+        if (tel) _enviar(tel, mensagem);
+    }
+    async function notificarMencoes(texto, contexto) {
+        const m = (texto.match(/@([\wÀ-ú\s]+?)(?=\s@|\s*$|[,.])/g)||[]).map(x=>x.replace('@','').trim());
+        for (const nome of m) await notificar(nome, `💬 Você foi mencionado!\n\n"${texto.substring(0,120)}"\n\n${contexto||''}`);
+    }
+    return { notificar, notificarMencoes };
+})();
 
-// ── PERGUNTAS (para rótulos no histórico) ──
-const PERGUNTAS = {
-    q1:  'Há vazamentos visíveis de água ou óleo?',
-    q2:  'A cabine está limpa e sem acúmulo de sujeira ou óleo?',
-    q3:  'A corrente da torre possui folgas ou ruídos anormais?',
-    q4:  'Há ruídos anormais durante o funcionamento da máquina?',
-    q5:  'A estrutura da torre, mastro e garfos apresenta rachaduras, empenos ou soldas quebradas?',
-    q6:  'A bateria possui carga o suficiente?',
-    q7:  'A bateria está com o nível de água normal?',
-    q8:  'Os cabos e terminais da bateria estão limpos e firmes?',
-    q9:  'O sinal sonoro (buzina) funciona corretamente?',
-    q10: 'As luzes estão funcionando?',
-    q11: 'O alarme de ré funciona?',
-    q12: 'O sistema de elevação e inclinação está funcionando normalmente?',
-    q13: 'Há vazamentos no chão, mangueiras ou cilindros?',
-    q14: 'As rodas estão firmes e seguras?',
-    q15: 'As rodas estão boas? (sem cortes, desgastadas ou danificadas)',
-    q16: 'O freio de serviço está eficiente?',
-    q17: 'O freio de estacionamento funciona normalmente?',
-    q18: 'A direção está leve e sem folgas?'
-};
+let db, currentUser;
+let allOcorrencias = [], filteredOcorrencias = [];
+let currentItemId = null, currentItemTipo = null, currentItemData = null;
+let commentImgs = [], editImgs = [], novaImgs = [];
+let editModeActive = false;
 
-// Respostas que indicam problema (alerta)
-const ALERTA_SIM  = ['q1','q3','q4','q5','q13'];
-const ALERTA_NAO  = ['q2','q6','q7','q8','q9','q10','q11','q12','q14','q15','q16','q17','q18'];
-
-function isProblema(key, value) {
-    if (ALERTA_SIM.includes(key)  && value === 'Sim') return true;
-    if (ALERTA_NAO.includes(key)  && value === 'Não') return true;
-    return false;
-}
-
-// ── INIT ──
 document.addEventListener('DOMContentLoaded', () => {
-    if (typeof window.supabase !== 'undefined') {
-        db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    }
-
     const saved = localStorage.getItem('currentUser');
-    if (saved) {
-        currentUser = JSON.parse(saved);
-        document.getElementById('userBadge').textContent = currentUser.nome || 'Operador';
-        // Pre-fill operator name
-        document.getElementById('operador').value = currentUser.nome || '';
-        atualizarCard('operador', document.getElementById('operador'));
+    if (!saved) { window.location.href = 'login.html'; return; }
+    currentUser = JSON.parse(saved);
+    document.getElementById('userName').textContent  = currentUser.nome || '';
+    document.getElementById('userBadge').textContent = currentUser.perfil || 'Usuário';
+    db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    setupSidebar();
+    setupSearch();
+    document.getElementById('btnLogout').addEventListener('click', logout);
+    loadOcorrencias();
+});
+
+/* SIDEBAR */
+function setupSidebar() {
+    const btn=document.getElementById('hamburgerBtn'), sb=document.getElementById('sidebar'), ov=document.getElementById('sidebarOverlay');
+    btn.addEventListener('click',()=>{btn.classList.toggle('active');sb.classList.toggle('active');ov.classList.toggle('active');});
+    ov.addEventListener('click',closeSidebar);
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSidebar();fecharModal();fecharModalNova();}});
+}
+function closeSidebar(){
+    ['hamburgerBtn','sidebar','sidebarOverlay'].forEach(id=>document.getElementById(id).classList.remove('active'));
+}
+
+/* LOAD */
+async function loadOcorrencias() {
+    document.getElementById('listaOcorrencias').innerHTML='<div class="loading"><div class="spinner"></div><p>Carregando...</p></div>';
+    try {
+        const [rP,rE] = await Promise.all([
+            db.from('manutencao_predial').select('*').order('created_at',{ascending:false}),
+            db.from('manutencao_equipamentos').select('*').order('created_at',{ascending:false})
+        ]);
+        if(rP.error)throw rP.error; if(rE.error)throw rE.error;
+        const prediais=(rP.data||[]).map(i=>({...i,tipo_manutencao:'predial',titulo:i.local,subtitulo:i.tipo}));
+        const equips=(rE.data||[]).map(i=>({...i,tipo_manutencao:'equipamento',titulo:i.equipamento,subtitulo:i.tipo}));
+        allOcorrencias=[...prediais,...equips].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+        filteredOcorrencias=[...allOcorrencias];
+        calcStats(); popularFiltroUsuarios(); renderTabela(filteredOcorrencias);
+    } catch(e){document.getElementById('listaOcorrencias').innerHTML='<div class="loading">Erro ao carregar.</div>';}
+}
+
+function calcStats(){
+    document.getElementById('statTotal').textContent=allOcorrencias.length;
+    document.getElementById('statPendente').textContent=allOcorrencias.filter(i=>i.status==='pendente').length;
+    document.getElementById('statAndamento').textContent=allOcorrencias.filter(i=>i.status==='andamento').length;
+    document.getElementById('statConcluido').textContent=allOcorrencias.filter(i=>i.status==='concluido').length;
+    document.getElementById('statUrgente').textContent=allOcorrencias.filter(i=>i.prioridade==='urgente').length;
+}
+
+/* RENDER TABLE */
+function renderTabela(lista){
+    const el=document.getElementById('listaOcorrencias');
+    if(!lista.length){el.innerHTML='<div class="empty-state"><div class="empty-icon">🔍</div><p>Nenhuma ocorrência encontrada.</p></div>';return;}
+    let html=`<div class="total-strip">📊 ${lista.length} ocorrência(s) encontrada(s)</div>
+    <div class="table-container"><table id="tabelaOcorrencias">
+    <thead><tr><th>Tipo</th><th>Código</th><th>Título</th><th>Categoria</th><th>Prioridade</th><th>Status</th><th>Criado por</th><th>Data</th><th>Ações</th></tr></thead><tbody>`;
+    lista.forEach(item=>{
+        const isPredial=item.tipo_manutencao==='predial';
+        const icon=isPredial?'🏢':'⚙️', label=isPredial?'Predial':'Equipamento';
+        const data=new Date(item.created_at).toLocaleDateString('pt-BR');
+        const priorBadge=item.prioridade?`<span class="badge badge-${item.prioridade}">${item.prioridade}</span>`:'<span class="badge badge-media">média</span>';
+        const canEdit=isPredial?hasPermission('perm_predial_editar'):hasPermission('perm_equipamentos_editar');
+        const notLocked=!item.bloqueado||currentUser.perfil==='admin';
+        const editBtn=canEdit&&notLocked?`<button class="btn btn-small btn-warning" onclick="abrirDetalhes(${item.id},'${item.tipo_manutencao}',true)">✏️ Editar</button>`:'';
+        html+=`<tr>
+            <td><div class="tipo-chip">${icon} <span style="font-size:11px;color:#666">${label}</span></div></td>
+            <td><span class="codigo-badge">${item.codigo}</span></td>
+            <td><strong>${item.titulo}</strong></td>
+            <td>${item.subtitulo}</td>
+            <td>${priorBadge}</td>
+            <td><span class="badge badge-${item.status}">${item.status}</span></td>
+            <td>${item.criado_por||'–'}</td>
+            <td style="white-space:nowrap">${data}</td>
+            <td><div class="action-buttons">
+                <button class="btn btn-small btn-secondary" onclick="abrirDetalhes(${item.id},'${item.tipo_manutencao}',false)">👁️ Ver</button>
+                ${editBtn}
+            </div></td>
+        </tr>`;
+    });
+    html+='</tbody></table></div>';
+    el.innerHTML=html;
+}
+
+/* SEARCH */
+function setupSearch(){
+    document.getElementById('searchOcorrencias').addEventListener('input',function(){
+        const term=this.value.toLowerCase().trim();
+        const tbody=document.querySelector('#tabelaOcorrencias tbody');
+        if(!tbody)return;
+        let v=0;
+        tbody.querySelectorAll('tr').forEach(row=>{
+            const m=row.textContent.toLowerCase().includes(term);
+            row.style.display=m?'':'none'; if(m)v++;
+        });
+        const strip=document.querySelector('.total-strip');
+        if(strip)strip.textContent=`📊 ${v} ocorrência(s) encontrada(s)`;
+    });
+}
+
+/* FILTERS */
+function popularFiltroUsuarios(){
+    const usu=[...new Set(allOcorrencias.map(i=>i.criado_por).filter(Boolean))].sort();
+    const sel=document.getElementById('filtroCriadoPor');
+    sel.innerHTML='<option value="">Todos</option>';
+    usu.forEach(u=>{const o=document.createElement('option');o.value=u;o.textContent=u;sel.appendChild(o);});
+}
+function aplicarFiltros(){
+    const tipo=document.getElementById('filtroTipo').value;
+    const status=document.getElementById('filtroStatus').value;
+    const prio=document.getElementById('filtroPrioridade').value;
+    const por=document.getElementById('filtroCriadoPor').value;
+    const ini=document.getElementById('filtroDataInicio').value;
+    const fim=document.getElementById('filtroDataFim').value;
+    filteredOcorrencias=allOcorrencias.filter(item=>{
+        if(tipo&&item.tipo_manutencao!==tipo)return false;
+        if(status&&item.status!==status)return false;
+        if(prio&&item.prioridade!==prio)return false;
+        if(por&&item.criado_por!==por)return false;
+        if(ini&&new Date(item.created_at)<new Date(ini))return false;
+        if(fim){const f=new Date(fim);f.setHours(23,59,59,999);if(new Date(item.created_at)>f)return false;}
+        return true;
+    });
+    renderTabela(filteredOcorrencias);
+    document.getElementById('searchOcorrencias').value='';
+}
+function limparFiltros(){
+    ['filtroTipo','filtroStatus','filtroPrioridade','filtroCriadoPor','filtroDataInicio','filtroDataFim'].forEach(id=>document.getElementById(id).value='');
+    filteredOcorrencias=[...allOcorrencias];
+    renderTabela(filteredOcorrencias);
+    document.getElementById('searchOcorrencias').value='';
+}
+
+/* ABRIR DETALHES */
+async function abrirDetalhes(id, tipo, openEditing=false){
+    currentItemId=id; currentItemTipo=tipo; commentImgs=[]; editImgs=[]; editModeActive=false;
+    const tabela=tipo==='predial'?'manutencao_predial':'manutencao_equipamentos';
+    try {
+        const {data,error}=await db.from(tabela).select('*').eq('id',id).single();
+        if(error)throw error;
+        currentItemData=data;
+        document.getElementById('modalForumTitle').textContent=tipo==='predial'?'🏢 Manutenção Predial':'⚙️ Manutenção de Equipamento';
+        renderDetalhes(data,tipo);
+        clearAlert('alertModal');
+        // Esconder edição
+        document.getElementById('editSection').style.display='none';
+        document.getElementById('btnSalvarEdit').style.display='none';
+        document.getElementById('btnToggleEdit').textContent='✏️ Editar';
+
+        const canEdit=tipo==='predial'?hasPermission('perm_predial_editar'):hasPermission('perm_equipamentos_editar');
+        const isLocked=data.bloqueado&&currentUser.perfil!=='admin';
+        document.getElementById('btnToggleEdit').style.display=(canEdit&&!isLocked)?'inline-flex':'none';
+
+        document.getElementById('modalForum').classList.add('active');
+        await carregarComentarios();
+
+        // Se clicou em Editar direto — abre o form automaticamente
+        if(openEditing&&canEdit&&!isLocked){
+            toggleEdit();
+        }
+    } catch(err){alert('Erro ao abrir: '+err.message);}
+}
+
+function renderDetalhes(data,tipo){
+    const isBloqueado=data.bloqueado||data.status==='concluido';
+    const isAdmin=currentUser.perfil==='admin';
+    let html=`<div class="detail-grid">
+        <div class="detail-item"><strong>Código</strong><span class="codigo-badge">${data.codigo}</span></div>
+        <div class="detail-item"><strong>Status</strong><span class="badge badge-${data.status}">${data.status}</span></div>`;
+    if(tipo==='predial'){
+        html+=`<div class="detail-item"><strong>Local</strong><span>${data.local}</span></div>
+        <div class="detail-item"><strong>Tipo</strong><span>${data.tipo}</span></div>
+        <div class="detail-item"><strong>Prioridade</strong><span class="badge badge-${data.prioridade||'media'}">${data.prioridade||'–'}</span></div>
+        <div class="detail-item"><strong>Data Prevista</strong><span>${data.data_prevista?new Date(data.data_prevista).toLocaleDateString('pt-BR'):'–'}</span></div>
+        <div class="detail-item"><strong>Criado por</strong><span>${data.criado_por||'–'}</span></div>`;
     } else {
-        window.location.href = 'login.html';
-        return;
+        html+=`<div class="detail-item"><strong>Equipamento</strong><span>${data.equipamento}</span></div>
+        <div class="detail-item"><strong>Patrimônio</strong><span>${data.patrimonio||'–'}</span></div>
+        <div class="detail-item"><strong>Tipo</strong><span>${data.tipo}</span></div>
+        <div class="detail-item"><strong>Responsável</strong><span>${data.responsavel||'–'}</span></div>
+        <div class="detail-item"><strong>Criado por</strong><span>${data.criado_por||'–'}</span></div>`;
     }
-
-    // Pre-fill date/time
-    const now = new Date();
-    document.getElementById('data').value = now.toISOString().split('T')[0];
-    document.getElementById('hora').value = now.toTimeString().slice(0,5);
-    atualizarCard('data', document.getElementById('data'));
-    atualizarCard('hora', document.getElementById('hora'));
-
-    setupListeners();
-    atualizarProgresso();
-    carregarHistorico();
-});
-
-// ── LISTENERS ──
-function setupListeners() {
-    const form = document.getElementById('checklistForm');
-
-    // Text/date/time/number inputs
-    form.querySelectorAll('input[type="text"], input[type="date"], input[type="time"], input[type="number"]').forEach(input => {
-        input.addEventListener('input', () => {
-            atualizarCard(input.name || input.id, input);
-            atualizarProgresso();
-        });
-    });
-
-    // Radio inputs
-    form.querySelectorAll('input[type="radio"]').forEach(radio => {
-        radio.addEventListener('change', () => {
-            atualizarCard(radio.name, radio);
-            atualizarProgresso();
-        });
-    });
-
-    // Turno radios
-    form.querySelectorAll('input[name="turno"]').forEach(r => {
-        r.addEventListener('change', () => {
-            atualizarCard('turno', r);
-            atualizarProgresso();
-        });
-    });
-
-    form.addEventListener('submit', enviarChecklist);
+    html+=`</div>`;
+    const desc=tipo==='predial'?data.descricao:data.observacoes;
+    html+=`<p style="font-weight:600;margin:16px 0 6px">Descrição / Observações</p><div class="desc-box">${desc||'–'}</div>`;
+    if(data.observacoes_conclusao) html+=`<p style="font-weight:600;margin:16px 0 6px">Observações de Conclusão</p><div class="desc-box">${data.observacoes_conclusao}</div>`;
+    if(data.imagens&&data.imagens.length) html+=`<p style="font-weight:600;margin:16px 0 8px">Imagens</p><div class="image-grid">${data.imagens.map(img=>`<img src="${img}" onclick="zoomImg('${img}')">`).join('')}</div>`;
+    if(isBloqueado&&!isAdmin) html+=`<div class="locked-msg">🔒 <strong>Manutenção concluída.</strong> Apenas comentários são permitidos.</div>`;
+    else if(isBloqueado&&isAdmin) html+=`<div class="locked-msg">🔒 <strong>Bloqueada.</strong><button class="unlock-btn" onclick="desbloquear(${data.id},'${tipo}')">Desbloquear</button></div>`;
+    document.getElementById('modalDetalhes').innerHTML=html;
 }
 
-function atualizarCard(fieldName, el) {
-    const cardId = 'card_' + fieldName;
-    const card = document.getElementById(cardId);
-    if (!card) return;
-    const filled = el.value && el.value.trim() !== '';
-    card.classList.toggle('answered', filled);
+/* TOGGLE EDIT */
+function toggleEdit(){
+    editModeActive=!editModeActive;
+    const editSec=document.getElementById('editSection');
+    const btnT=document.getElementById('btnToggleEdit');
+    const btnS=document.getElementById('btnSalvarEdit');
+    if(editModeActive){
+        editImgs=currentItemData.imagens?[...currentItemData.imagens]:[];
+        renderEditForm(currentItemData,currentItemTipo);
+        editSec.style.display='block';
+        btnT.textContent='👁️ Cancelar Edição';
+        btnS.style.display='inline-flex';
+        editSec.scrollIntoView({behavior:'smooth',block:'start'});
+    } else {
+        editSec.style.display='none';
+        btnT.textContent='✏️ Editar';
+        btnS.style.display='none';
+    }
 }
 
-// ── PROGRESS ──
-function atualizarProgresso() {
-    const form = document.getElementById('checklistForm');
-    const totalCampos = 24; // 6 id + 18 perguntas
-    let preenchidos = 0;
-
-    // Text/number/date/time
-    ['operador','matricula','horimetro','data','hora'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el && el.value.trim()) preenchidos++;
-    });
-
-    // Turno
-    if (form.querySelector('input[name="turno"]:checked')) preenchidos++;
-
-    // Questions q1–q18
-    for (let i = 1; i <= 18; i++) {
-        if (form.querySelector(`input[name="q${i}"]:checked`)) preenchidos++;
+function renderEditForm(data,tipo){
+    let html='';
+    if(tipo==='predial'){
+        html=`<div class="edit-grid">
+            <div class="edit-group"><label>Local *</label><input type="text" id="ef_local" value="${esc(data.local||'')}"></div>
+            <div class="edit-group"><label>Tipo *</label><select id="ef_tipo">${['eletrica','hidraulica','pintura','estrutural','limpeza','outros'].map(t=>`<option value="${t}"${data.tipo===t?' selected':''}>${t}</option>`).join('')}</select></div>
+            <div class="edit-group"><label>Prioridade *</label><select id="ef_prioridade">${['baixa','media','alta','urgente'].map(p=>`<option value="${p}"${data.prioridade===p?' selected':''}>${p}</option>`).join('')}</select></div>
+            <div class="edit-group"><label>Status *</label><select id="ef_status">${['pendente','andamento','concluido','cancelado'].map(s=>`<option value="${s}"${data.status===s?' selected':''}>${s}</option>`).join('')}</select></div>
+            <div class="edit-group"><label>Data Prevista</label><input type="date" id="ef_data_prevista" value="${data.data_prevista||''}"></div>
+            <div class="edit-group"><label>Data Conclusão</label><input type="date" id="ef_data_conclusao" value="${data.data_conclusao||''}"></div>
+        </div>
+        <div class="edit-group"><label>Descrição *</label><textarea id="ef_descricao">${esc(data.descricao||'')}</textarea></div>
+        <div class="edit-group"><label>Obs. de Conclusão</label><textarea id="ef_obs_conclusao">${esc(data.observacoes_conclusao||'')}</textarea></div>`;
+    } else {
+        html=`<div class="edit-grid">
+            <div class="edit-group"><label>Equipamento *</label><input type="text" id="ef_equipamento" value="${esc(data.equipamento||'')}"></div>
+            <div class="edit-group"><label>Patrimônio</label><input type="text" id="ef_patrimonio" value="${esc(data.patrimonio||'')}"></div>
+            <div class="edit-group"><label>Tipo *</label><select id="ef_tipo">${['preventiva','corretiva','preditiva'].map(t=>`<option value="${t}"${data.tipo===t?' selected':''}>${t}</option>`).join('')}</select></div>
+            <div class="edit-group"><label>Status *</label><select id="ef_status">${['pendente','andamento','concluido','cancelado'].map(s=>`<option value="${s}"${data.status===s?' selected':''}>${s}</option>`).join('')}</select></div>
+            <div class="edit-group"><label>Data Manutenção</label><input type="date" id="ef_data_manutencao" value="${data.data_manutencao||''}"></div>
+            <div class="edit-group"><label>Responsável</label><input type="text" id="ef_responsavel" value="${esc(data.responsavel||'')}"></div>
+            <div class="edit-group"><label>Data Conclusão</label><input type="date" id="ef_data_conclusao" value="${data.data_conclusao||''}"></div>
+        </div>
+        <div class="edit-group"><label>Observações *</label><textarea id="ef_observacoes">${esc(data.observacoes||'')}</textarea></div>
+        <div class="edit-group"><label>Obs. de Conclusão</label><textarea id="ef_obs_conclusao">${esc(data.observacoes_conclusao||'')}</textarea></div>`;
     }
-
-    const pct = Math.round((preenchidos / totalCampos) * 100);
-    document.getElementById('progressPercent').textContent = pct + '%';
-    document.getElementById('progressBar').style.width = pct + '%';
-    document.getElementById('progressLabel').textContent = `${preenchidos} / ${totalCampos} campos`;
+    html+=`<div class="edit-group"><label>Imagens</label>
+        <label class="img-upload-label">📷 Adicionar imagens<input type="file" accept="image/*" multiple style="display:none" onchange="handleEditImg(event)"></label>
+        <div class="img-preview-grid" id="editImgsPreview"></div>
+    </div>`;
+    document.getElementById('editFormContainer').innerHTML=html;
+    renderEditImgs();
 }
+function handleEditImg(ev){
+    Array.from(ev.target.files).forEach(f=>{if(!f.type.startsWith('image/'))return;const r=new FileReader();r.onload=e=>{editImgs.push(e.target.result);renderEditImgs();};r.readAsDataURL(f);});
+    ev.target.value='';
+}
+function renderEditImgs(){
+    const el=document.getElementById('editImgsPreview');
+    if(!el)return;
+    el.innerHTML=editImgs.map((img,i)=>`<div class="img-preview-item"><img src="${img}"><button class="img-remove" onclick="removeEditImg(${i})">×</button></div>`).join('');
+}
+function removeEditImg(i){editImgs.splice(i,1);renderEditImgs();}
 
-// ── SUBMIT ──
-async function enviarChecklist(e) {
-    e.preventDefault();
-
-    const form = document.getElementById('checklistForm');
-    const btn  = document.getElementById('btnSubmit');
-
-    // Validate mandatory radio questions
-    let missing = [];
-    for (let i = 1; i <= 18; i++) {
-        if (!form.querySelector(`input[name="q${i}"]:checked`)) {
-            missing.push(i);
-        }
-    }
-    if (!form.querySelector('input[name="turno"]:checked')) {
-        mostrarAlerta('Por favor, selecione o turno.', 'error');
-        return;
-    }
-    if (missing.length > 0) {
-        mostrarAlerta(`Por favor, responda todas as perguntas. Faltam ${missing.length} resposta(s).`, 'error');
-        return;
-    }
-
-    btn.disabled = true;
-    btn.innerHTML = '<span style="animation:spin 0.8s linear infinite;display:inline-block">⏳</span> Enviando...';
-
-    // Collect data
-    const respostas = {};
-    for (let i = 1; i <= 18; i++) {
-        respostas[`q${i}`] = form.querySelector(`input[name="q${i}"]:checked`)?.value || '';
-    }
-
-    const payload = {
-        operador:   document.getElementById('operador').value.trim(),
-        matricula:  document.getElementById('matricula').value.trim(),
-        turno:      form.querySelector('input[name="turno"]:checked')?.value || '',
-        horimetro:  document.getElementById('horimetro').value,
-        data:       document.getElementById('data').value,
-        hora:       document.getElementById('hora').value,
-        usuario_id: currentUser?.id || null,
-        respostas:  respostas
-    };
-
-    // Count problems
-    payload.total_problemas = Object.entries(respostas).filter(([k, v]) => isProblema(k, v)).length;
-
+/* SALVAR EDIÇÃO */
+async function salvarEdicao(){
+    const tipo=currentItemTipo;
+    const tabela=tipo==='predial'?'manutencao_predial':'manutencao_equipamentos';
     try {
-        if (db) {
-            const { error } = await db.from('checklist_diario').insert([payload]);
-            if (error) throw error;
+        let payload={imagens:editImgs};
+        const status=document.getElementById('ef_status').value;
+        if(tipo==='predial'){
+            payload={...payload,
+                local:document.getElementById('ef_local').value.trim(),
+                tipo:document.getElementById('ef_tipo').value,
+                prioridade:document.getElementById('ef_prioridade').value,
+                status,
+                data_prevista:document.getElementById('ef_data_prevista').value||null,
+                data_conclusao:document.getElementById('ef_data_conclusao').value||null,
+                descricao:document.getElementById('ef_descricao').value.trim(),
+                observacoes_conclusao:document.getElementById('ef_obs_conclusao').value.trim()
+            };
         } else {
-            // Fallback: store locally for demo
-            const existing = JSON.parse(localStorage.getItem('checklists') || '[]');
-            existing.unshift({ ...payload, id: Date.now(), created_at: new Date().toISOString() });
-            localStorage.setItem('checklists', JSON.stringify(existing.slice(0, 50)));
+            payload={...payload,
+                equipamento:document.getElementById('ef_equipamento').value.trim(),
+                patrimonio:document.getElementById('ef_patrimonio').value.trim(),
+                tipo:document.getElementById('ef_tipo').value,
+                status,
+                data_manutencao:document.getElementById('ef_data_manutencao').value||null,
+                data_conclusao:document.getElementById('ef_data_conclusao').value||null,
+                responsavel:document.getElementById('ef_responsavel').value.trim(),
+                observacoes:document.getElementById('ef_observacoes').value.trim(),
+                observacoes_conclusao:document.getElementById('ef_obs_conclusao').value.trim()
+            };
         }
-
-        mostrarAlerta('✅ Check-list enviado com sucesso!', 'success');
-        form.reset();
-
-        // Re-fill after reset
-        document.getElementById('operador').value = currentUser?.nome || '';
-        const now = new Date();
-        document.getElementById('data').value = now.toISOString().split('T')[0];
-        document.getElementById('hora').value = now.toTimeString().slice(0,5);
-
-        // Clear answered classes
-        document.querySelectorAll('.form-card.answered').forEach(c => c.classList.remove('answered'));
-        atualizarProgresso();
-        carregarHistorico();
-
-    } catch (err) {
-        console.error(err);
-        mostrarAlerta('Erro ao enviar check-list: ' + (err.message || err), 'error');
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<span>📋</span> Enviar Check-list';
-    }
+        if(status==='concluido'){
+            payload.bloqueado=true;
+            payload.concluido_por=currentUser.nome;
+            if(!payload.data_conclusao)payload.data_conclusao=new Date().toISOString().split('T')[0];
+        }
+        const{error}=await db.from(tabela).update(payload).eq('id',currentItemId);
+        if(error)throw error;
+        showAlert('alertModal','✅ Salvo com sucesso!','success');
+        const{data}=await db.from(tabela).select('*').eq('id',currentItemId).single();
+        currentItemData=data;
+        renderDetalhes(data,tipo);
+        // Fechar edição
+        editModeActive=false;
+        document.getElementById('editSection').style.display='none';
+        document.getElementById('btnToggleEdit').textContent='✏️ Editar';
+        document.getElementById('btnSalvarEdit').style.display='none';
+        loadOcorrencias();
+        // Notificações WhatsApp
+        const codigo = data.codigo || '';
+        if (tipo !== 'predial') {
+            const novoResp = payload.responsavel;
+            const antigoResp = currentItemData?.responsavel;
+            if (novoResp && novoResp !== antigoResp) {
+                await WA.notificar(novoResp, `🔧 Você foi designado como responsável!\n\nOcorrência: ${codigo}\nEquipamento: ${data.equipamento||''}\nStatus: ${payload.status}\n\nAcesse o sistema para mais detalhes.`);
+            }
+        }
+        if (payload.status === 'concluido' && data.criado_por && data.criado_por !== currentUser.nome) {
+            await WA.notificar(data.criado_por, `✅ Ocorrência ${codigo} foi concluída por ${currentUser.nome}.`);
+        }
+    } catch(err){showAlert('alertModal','❌ Erro: '+err.message,'error');}
 }
 
-// ── HISTÓRICO ──
-async function carregarHistorico() {
-    const lista = document.getElementById('historicoLista');
-    lista.innerHTML = '<div class="spinner"></div>';
+/* NOVA OCORRÊNCIA */
+function abrirNovaOcorrencia(tipo){
+    novaImgs=[];
+    const isPredial=tipo==='predial';
+    document.getElementById('modalNovaTitle').textContent=isPredial?'🏢 Nova Manutenção Predial':'⚙️ Nova Manutenção de Equipamento';
+    const hoje=new Date().toISOString().split('T')[0];
+    let html=`<input type="hidden" id="nv_tipo" value="${tipo}">`;
+    if(isPredial){
+        html+=`<div class="edit-grid">
+            <div class="edit-group"><label>Local *</label><input type="text" id="nv_local" placeholder="Ex: Sala 101"></div>
+            <div class="edit-group"><label>Tipo *</label><select id="nv_tipo_m"><option value="">Selecione...</option>${['eletrica','hidraulica','pintura','estrutural','limpeza','outros'].map(t=>`<option value="${t}">${t}</option>`).join('')}</select></div>
+            <div class="edit-group"><label>Prioridade *</label><select id="nv_prioridade"><option value="">Selecione...</option>${['baixa','media','alta','urgente'].map(p=>`<option value="${p}">${p}</option>`).join('')}</select></div>
+            <div class="edit-group"><label>Data Prevista *</label><input type="date" id="nv_data" value="${hoje}"></div>
+        </div>
+        <div class="edit-group"><label>Descrição *</label><textarea id="nv_descricao" placeholder="Descreva o problema..."></textarea></div>`;
+    } else {
+        html+=`<div class="edit-grid">
+            <div class="edit-group"><label>Equipamento *</label><input type="text" id="nv_equipamento" placeholder="Nome do equipamento"></div>
+            <div class="edit-group"><label>Patrimônio</label><input type="text" id="nv_patrimonio" placeholder="Número de patrimônio"></div>
+            <div class="edit-group"><label>Tipo *</label><select id="nv_tipo_m"><option value="">Selecione...</option>${['preventiva','corretiva','preditiva'].map(t=>`<option value="${t}">${t}</option>`).join('')}</select></div>
+            <div class="edit-group"><label>Status *</label><select id="nv_status">${['pendente','andamento'].map(s=>`<option value="${s}">${s}</option>`).join('')}</select></div>
+            <div class="edit-group"><label>Data *</label><input type="date" id="nv_data" value="${hoje}"></div>
+            <div class="edit-group"><label>Responsável</label><input type="text" id="nv_responsavel" placeholder="Nome do técnico"></div>
+        </div>
+        <div class="edit-group"><label>Observações *</label><textarea id="nv_observacoes" placeholder="Descreva o serviço..."></textarea></div>`;
+    }
+    html+=`<div class="edit-group"><label>Imagens</label>
+        <label class="img-upload-label">📷 Adicionar imagens<input type="file" accept="image/*" multiple style="display:none" onchange="handleNovaImg(event)"></label>
+        <div class="img-preview-grid" id="novaImgsPreview"></div>
+    </div>`;
+    document.getElementById('novaFormContainer').innerHTML=html;
+    clearAlert('alertNova');
+    document.getElementById('modalNova').classList.add('active');
+}
+function handleNovaImg(ev){
+    Array.from(ev.target.files).forEach(f=>{if(!f.type.startsWith('image/'))return;const r=new FileReader();r.onload=e=>{novaImgs.push(e.target.result);renderNovaImgs();};r.readAsDataURL(f);});
+    ev.target.value='';
+}
+function renderNovaImgs(){
+    const el=document.getElementById('novaImgsPreview');
+    if(!el)return;
+    el.innerHTML=novaImgs.map((img,i)=>`<div class="img-preview-item"><img src="${img}"><button class="img-remove" onclick="removeNovaImg(${i})">×</button></div>`).join('');
+}
+function removeNovaImg(i){novaImgs.splice(i,1);renderNovaImgs();}
 
+async function salvarNovaOcorrencia(){
+    const tipo=document.getElementById('nv_tipo')?.value;
+    if(!tipo)return;
+    const isPredial=tipo==='predial';
+    const tabela=isPredial?'manutencao_predial':'manutencao_equipamentos';
+    const canCreate=isPredial?hasPermission('perm_predial_criar'):hasPermission('perm_equipamentos_criar');
+    if(!canCreate){showAlert('alertNova','❌ Sem permissão!','error');return;}
     try {
-        let data = [];
-
-        if (db) {
-            const res = await db
-                .from('checklist_diario')
-                .select('*')
-                .order('created_at', { ascending: false })
-                .limit(30);
-            if (res.error) throw res.error;
-            data = res.data || [];
+        const codigo=gerarCodigo(isPredial?'MP':'ME');
+        let payload={imagens:novaImgs,criado_por:currentUser.nome,codigo};
+        if(isPredial){
+            const local=document.getElementById('nv_local').value.trim();
+            const tipo_m=document.getElementById('nv_tipo_m').value;
+            const prio=document.getElementById('nv_prioridade').value;
+            const data=document.getElementById('nv_data').value;
+            const desc=document.getElementById('nv_descricao').value.trim();
+            if(!local||!tipo_m||!prio||!data||!desc){showAlert('alertNova','❌ Preencha todos os campos!','error');return;}
+            payload={...payload,local,tipo:tipo_m,prioridade:prio,data_prevista:data,descricao:desc,status:'pendente'};
         } else {
-            data = JSON.parse(localStorage.getItem('checklists') || '[]');
+            const equip=document.getElementById('nv_equipamento').value.trim();
+            const patri=document.getElementById('nv_patrimonio').value.trim();
+            const tipo_m=document.getElementById('nv_tipo_m').value;
+            const status=document.getElementById('nv_status').value;
+            const data=document.getElementById('nv_data').value;
+            const resp=document.getElementById('nv_responsavel').value.trim();
+            const obs=document.getElementById('nv_observacoes').value.trim();
+            if(!equip||!tipo_m||!data||!obs){showAlert('alertNova','❌ Preencha todos os campos obrigatórios!','error');return;}
+            payload={...payload,equipamento:equip,patrimonio:patri,tipo:tipo_m,status,data_manutencao:data,responsavel:resp,observacoes:obs};
         }
-
-        if (!data.length) {
-            lista.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><p>Nenhum check-list registrado ainda.</p></div>';
-            return;
+        const{error}=await db.from(tabela).insert([payload]);
+        if(error)throw error;
+        showAlert('alertNova','✅ Registrado com sucesso!','success');
+        // Notificar responsável se equipamento
+        if (!isPredial && payload.responsavel) {
+            await WA.notificar(payload.responsavel, `🔧 Nova ocorrência atribuída a você!\n\nCódigo: ${payload.codigo}\nEquipamento: ${payload.equipamento||''}\nTipo: ${payload.tipo||''}\n\nAcesse o sistema para mais detalhes.`);
         }
+        setTimeout(()=>{fecharModalNova();loadOcorrencias();},1400);
+    } catch(err){showAlert('alertNova','❌ Erro: '+err.message,'error');}
+}
+function fecharModalNova(){document.getElementById('modalNova').classList.remove('active');}
 
-        lista.innerHTML = data.map(item => {
-            const dt = new Date(item.created_at || item.data).toLocaleString('pt-BR');
-            const prob = item.total_problemas || 0;
-            return `
-                <div class="history-card" onclick="verDetalhes(${JSON.stringify(JSON.stringify(item))})">
-                    <div class="history-top">
-                        <div class="history-operator">👤 ${item.operador}</div>
-                        <div class="history-date">${dt}</div>
-                    </div>
-                    <div class="history-meta">
-                        <span class="meta-tag">Turno ${item.turno}</span>
-                        <span class="meta-tag">Horímetro: ${item.horimetro}</span>
-                        ${prob > 0
-                            ? `<span class="meta-tag danger">⚠️ ${prob} problema(s)</span>`
-                            : `<span class="meta-tag success">✅ Sem problemas</span>`}
-                    </div>
-                </div>
-            `;
+/* DESBLOQUEAR */
+async function desbloquear(id,tipo){
+    if(!confirm('Desbloquear para edição?'))return;
+    const tabela=tipo==='predial'?'manutencao_predial':'manutencao_equipamentos';
+    try {
+        const{error}=await db.from(tabela).update({bloqueado:false,status:'andamento'}).eq('id',id);
+        if(error)throw error;
+        showAlert('alertModal','✅ Desbloqueado!','success');
+        const{data}=await db.from(tabela).select('*').eq('id',id).single();
+        currentItemData=data; renderDetalhes(data,tipo);
+        document.getElementById('btnToggleEdit').style.display='inline-flex';
+        loadOcorrencias();
+    } catch(err){showAlert('alertModal','❌ Erro: '+err.message,'error');}
+}
+
+/* COMENTÁRIOS */
+async function carregarComentarios(){
+    document.getElementById('commentsList').innerHTML='<div class="loading"><div class="spinner"></div></div>';
+    const tabela=currentItemTipo==='predial'?'comentarios_predial':'comentarios_equipamentos';
+    try {
+        const{data,error}=await db.from(tabela).select('*').eq('manutencao_id',currentItemId).order('created_at',{ascending:true});
+        if(error)throw error;
+        document.getElementById('commentsCount').textContent=data.length;
+        if(!data.length){document.getElementById('commentsList').innerHTML='<div class="no-comments">💬 Seja o primeiro a comentar!</div>';return;}
+        document.getElementById('commentsList').innerHTML=data.map(c=>{
+            const ini=c.usuario_nome.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+            const dt=formatarData(c.created_at);
+            const imgs=c.imagens&&c.imagens.length?`<div class="comment-imgs">${c.imagens.map(i=>`<img src="${i}" onclick="zoomImg('${i}')">`).join('')}</div>`:'';
+            return `<div class="comment-item"><div class="comment-header"><div class="comment-author"><div class="comment-avatar">${ini}</div><div><div class="comment-author-name">${c.usuario_nome}</div><div class="comment-date">${dt}</div></div></div></div><div class="comment-text">${c.comentario}</div>${imgs}</div>`;
         }).join('');
-
-    } catch (err) {
-        console.error(err);
-        lista.innerHTML = '<div class="loading-text">Erro ao carregar histórico.</div>';
-    }
+    } catch(err){document.getElementById('commentsList').innerHTML='<div class="no-comments">Erro ao carregar comentários.</div>';}
 }
-
-// ── DETALHES MODAL ──
-function verDetalhes(jsonStr) {
-    const item = JSON.parse(jsonStr);
-    const dt = new Date(item.created_at || item.data).toLocaleString('pt-BR');
-
-    let html = `
-        <div class="detail-row"><span class="detail-label">Operador</span><span class="detail-value">${item.operador}</span></div>
-        <div class="detail-row"><span class="detail-label">Matrícula</span><span class="detail-value">${item.matricula}</span></div>
-        <div class="detail-row"><span class="detail-label">Turno</span><span class="detail-value">${item.turno}</span></div>
-        <div class="detail-row"><span class="detail-label">Horímetro</span><span class="detail-value">${item.horimetro}</span></div>
-        <div class="detail-row"><span class="detail-label">Data</span><span class="detail-value">${item.data}</span></div>
-        <div class="detail-row"><span class="detail-label">Hora</span><span class="detail-value">${item.hora}</span></div>
-        <div class="detail-row"><span class="detail-label">Enviado em</span><span class="detail-value">${dt}</span></div>
-    `;
-
-    if (item.respostas) {
-        html += `<hr style="margin:20px 0;border:none;border-top:2px solid #f3f4f6;">`;
-        html += `<h3 style="font-family:'Syne',sans-serif;font-size:16px;margin-bottom:14px;color:#1e1b4b;">Respostas das inspeções</h3>`;
-        Object.entries(item.respostas).forEach(([key, val]) => {
-            const label = PERGUNTAS[key] || key;
-            const problema = isProblema(key, val);
-            const badgeClass = val === 'Sim' ? 'badge-sim' : 'badge-nao';
-            html += `
-                <div class="detail-row" style="${problema ? 'background:#fff5f5;border-radius:8px;padding:10px 12px;margin-bottom:4px;' : ''}">
-                    <span class="detail-label" style="font-size:13px;">${label}</span>
-                    <span class="${badgeClass}">${val}</span>
-                </div>
-            `;
-        });
-    }
-
-    document.getElementById('modalConteudo').innerHTML = html;
-    document.getElementById('modalDetalhes').classList.add('active');
+async function enviarComentario(){
+    const texto=document.getElementById('commentText').value.trim();
+    if(!texto){alert('Digite um comentário!');return;}
+    const tabela=currentItemTipo==='predial'?'comentarios_predial':'comentarios_equipamentos';
+    try {
+        const{error}=await db.from(tabela).insert([{manutencao_id:currentItemId,usuario_nome:currentUser.nome,usuario_id:currentUser.id,comentario:texto,imagens:commentImgs}]);
+        if(error)throw error;
+        document.getElementById('commentText').value='';
+        commentImgs=[]; document.getElementById('commentImgsPreview').innerHTML='';
+        await carregarComentarios();
+        // Notificar @menções e criador da ocorrência
+        const codigo = currentItemData?.codigo || '';
+        await WA.notificarMencoes(texto, `Ocorrência: ${codigo}\nAcesse o sistema para responder.`);
+        if (currentItemData?.criado_por && currentItemData.criado_por !== currentUser.nome) {
+            await WA.notificar(currentItemData.criado_por, `💬 ${currentUser.nome} comentou na ocorrência ${codigo}:\n"${texto.substring(0,100)}"`);
+        }
+    } catch(err){alert('Erro: '+err.message);}
 }
-
-function fecharModal() {
-    document.getElementById('modalDetalhes').classList.remove('active');
+function handleCommentImg(ev){
+    Array.from(ev.target.files).forEach(f=>{if(!f.type.startsWith('image/'))return;const r=new FileReader();r.onload=e=>{commentImgs.push(e.target.result);renderCommentImgs();};r.readAsDataURL(f);});
+    ev.target.value='';
 }
-
-document.getElementById('modalDetalhes').addEventListener('click', e => {
-    if (e.target === document.getElementById('modalDetalhes')) fecharModal();
-});
-
-// ── ALERT ──
-function mostrarAlerta(msg, tipo) {
-    const box = document.getElementById('alertBox');
-    box.className = `alert ${tipo === 'success' ? 'alert-success' : 'alert-error'} visible`;
-    box.innerHTML = (tipo === 'success' ? '✅ ' : '⚠️ ') + msg;
-    box.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    setTimeout(() => { box.classList.remove('visible'); }, 6000);
+function renderCommentImgs(){
+    document.getElementById('commentImgsPreview').innerHTML=commentImgs.map((img,i)=>`<div class="comment-image-item"><img src="${img}"><button class="comment-image-remove" onclick="removeCommentImg(${i})">×</button></div>`).join('');
 }
+function removeCommentImg(i){commentImgs.splice(i,1);renderCommentImgs();}
 
-// ── CLEAR ──
-function limparFormulario() {
-    if (!confirm('Limpar todos os campos?')) return;
-    document.getElementById('checklistForm').reset();
-    document.getElementById('operador').value = currentUser?.nome || '';
-    const now = new Date();
-    document.getElementById('data').value = now.toISOString().split('T')[0];
-    document.getElementById('hora').value = now.toTimeString().slice(0, 5);
-    document.querySelectorAll('.form-card.answered').forEach(c => c.classList.remove('answered'));
-    atualizarProgresso();
+/* UTILS */
+function fecharModal(){
+    document.getElementById('modalForum').classList.remove('active');
+    currentItemId=null;currentItemTipo=null;currentItemData=null;
+    commentImgs=[];editImgs=[];editModeActive=false;
+    document.getElementById('editSection').style.display='none';
+    document.getElementById('btnToggleEdit').textContent='✏️ Editar';
+    document.getElementById('btnSalvarEdit').style.display='none';
 }
+document.getElementById('modalForum').addEventListener('click',e=>{if(e.target===document.getElementById('modalForum'))fecharModal();});
+document.getElementById('modalNova').addEventListener('click',e=>{if(e.target===document.getElementById('modalNova'))fecharModalNova();});
+
+function zoomImg(src){
+    const m=document.createElement('div');
+    m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;padding:20px';
+    m.innerHTML=`<img src="${src}" style="max-width:100%;max-height:90vh;border-radius:12px;object-fit:contain;">`;
+    m.onclick=()=>m.remove(); document.body.appendChild(m);
+}
+function hasPermission(perm){if(!currentUser)return false;if(currentUser.perfil==='admin')return true;return currentUser[perm]===true;}
+function logout(){if(confirm('Deseja realmente sair?')){localStorage.removeItem('currentUser');window.location.href='login.html';}}
+function formatarData(str){
+    const d=new Date(str),agora=new Date(),diff=agora-d,min=Math.floor(diff/60000),h=Math.floor(min/60),dias=Math.floor(h/24);
+    if(min<1)return'Agora mesmo';if(min<60)return`${min} min atrás`;if(h<24)return`${h}h atrás`;if(dias<7)return`${dias}d atrás`;
+    return d.toLocaleDateString('pt-BR')+' às '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
+function gerarCodigo(prefix){const d=new Date().toISOString().split('T')[0].replace(/-/g,'');const r=Math.floor(Math.random()*10000).toString().padStart(4,'0');return`${prefix}-${d}-${r}`;}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function showAlert(id,msg,tipo){const el=document.getElementById(id);el.className=`alert-inline ${tipo} show`;el.textContent=msg;if(tipo==='success')setTimeout(()=>el.classList.remove('show'),4000);}
+function clearAlert(id){const el=document.getElementById(id);el.className='alert-inline';el.textContent='';}
 </script>
 </body>
 </html>
