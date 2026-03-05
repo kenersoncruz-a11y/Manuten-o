@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Check-lists - Sistema de Manutenção</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#f5f5f5; min-height:100vh; }
+
+        /* HEADER */
+        .header { background:linear-gradient(135deg,#5b21b6 0%,#7c3aed 60%,#a78bfa 100%); color:white; padding:16px 20px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 4px 20px rgba(91,33,182,0.3); position:sticky; top:0; z-index:100; }
+        .header-left { display:flex; align-items:center; gap:16px; }
+        .hamburger-btn { display:flex; flex-direction:column; justify-content:center; gap:5px; width:30px; height:30px; background:none; border:none; cursor:pointer; padding:0; z-index:1001; transition:all 0.3s; }
+        .hamburger-btn:hover { transform:scale(1.1); }
+        .hamburger-line { width:100%; height:3px; background:white; border-radius:3px; transition:all 0.3s cubic-bezier(0.68,-0.55,0.265,1.55); transform-origin:center; }
+        .hamburger-btn.active .hamburger-line:nth-child(1) { transform:translateY(8px) rotate(45deg); }
+        .hamburger-btn.active .hamburger-line:nth-child(2) { opacity:0; transform:scaleX(0); }
+        .hamburger-btn.active .hamburger-line:nth-child(3) { transform:translateY(-8px) rotate(-45deg); }
+        .header h1 { font-size:20px; font-weight:700; display:flex; align-items:center; gap:8px; }
+        .user-info { display:flex; align-items:center; gap:12px; }
+        .user-name { font-size:14px; font-weight:500; display:none; }
+        .user-badge { background:rgba(255,255,255,0.2); padding:6px 12px; border-radius:20px; font-size:12px; font-weight:600; }
+        .btn-logout { padding:8px 16px; background:rgba(255,255,255,0.2); color:white; border:2px solid white; border-radius:8px; cursor:pointer; font-weight:600; font-size:13px; transition:all 0.3s; }
+        .btn-logout:hover { background:white; color:#5b21b6; transform:translateY(-2px); }
+
+        /* SIDEBAR */
+        .sidebar-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); opacity:0; visibility:hidden; transition:all 0.3s; z-index:999; }
+        .sidebar-overlay.active { opacity:1; visibility:visible; }
+        .sidebar { position:fixed; top:0; left:-320px; width:300px; height:100vh; background:white; box-shadow:4px 0 24px rgba(0,0,0,0.15); transition:left 0.3s cubic-bezier(0.68,-0.55,0.265,1.55); z-index:1000; overflow-y:auto; padding-top:80px; }
+        .sidebar.active { left:0; }
+        .sidebar-header { padding:24px 20px; border-bottom:2px solid #f0f0f0; }
+        .sidebar-header h2 { font-size:18px; color:#333; font-weight:700; margin-bottom:8px; }
+        .sidebar-header p { font-size:13px; color:#666; }
+        .menu-section { padding:16px 0; }
+        .menu-section-title { padding:8px 20px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#999; }
+        .menu-item { padding:14px 20px; cursor:pointer; transition:all 0.3s; display:flex; align-items:center; gap:14px; color:#555; font-weight:500; font-size:15px; position:relative; overflow:hidden; text-decoration:none; }
+        .menu-item::before { content:''; position:absolute; left:0; top:0; height:100%; width:4px; background:linear-gradient(135deg,#5b21b6,#7c3aed); transform:scaleY(0); transition:transform 0.3s; }
+        .menu-item:hover { background:linear-gradient(90deg,#f5f3ff,#fff); color:#5b21b6; padding-left:28px; }
+        .menu-item:hover .menu-icon { transform:scale(1.2) rotate(5deg); }
+        .menu-item.active { background:linear-gradient(90deg,#ede9fe,#f5f3ff); color:#5b21b6; font-weight:600; padding-left:28px; }
+        .menu-item.active::before { transform:scaleY(1); }
+        .menu-icon { font-size:22px; transition:all 0.3s; filter:grayscale(100%); }
+        .menu-item:hover .menu-icon, .menu-item.active .menu-icon { filter:grayscale(0%); }
+
+        /* MAIN */
+        .main-container { padding:28px 24px; max-width:1400px; margin:0 auto; animation:fadeIn 0.4s; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);} }
+
+        /* HERO */
+        .hero-strip { background:linear-gradient(135deg,#5b21b6,#7c3aed); border-radius:16px; padding:24px 32px; color:white; margin-bottom:24px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; position:relative; overflow:hidden; }
+        .hero-strip::after { content:'📋'; position:absolute; right:30px; top:50%; transform:translateY(-50%); font-size:80px; opacity:0.1; pointer-events:none; }
+        .hero-strip h2 { font-size:22px; font-weight:700; display:flex; align-items:center; gap:10px; }
+        .hero-strip p { font-size:14px; opacity:0.85; margin-top:4px; }
+        .hero-actions { display:flex; gap:10px; flex-wrap:wrap; }
+        .btn-hero { padding:10px 20px; background:rgba(255,255,255,0.2); color:white; border:2px solid rgba(255,255,255,0.5); border-radius:10px; font-weight:600; font-size:14px; cursor:pointer; transition:all 0.3s; text-decoration:none; display:flex; align-items:center; gap:6px; }
+        .btn-hero:hover { background:rgba(255,255,255,0.35); transform:translateY(-2px); }
+
+        /* STATS */
+        .stats-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:24px; }
+        .stat-card { background:white; border-radius:14px; padding:20px; text-align:center; box-shadow:0 2px 10px rgba(0,0,0,0.06); border:2px solid #f0f0f0; transition:all 0.3s; }
+        .stat-card:hover { border-color:#a78bfa; transform:translateY(-3px); box-shadow:0 8px 20px rgba(91,33,182,0.12); }
+        .stat-number { font-size:32px; font-weight:800; color:#5b21b6; line-height:1; margin-bottom:6px; }
+        .stat-label { font-size:12px; color:#666; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }
+        .stat-card.problemas .stat-number { color:#dc2626; }
+        .stat-card.ok .stat-number { color:#059669; }
+        .stat-card.turno-a .stat-number { color:#0369a1; }
+        .stat-card.turno-b .stat-number { color:#7c2d12; }
+
+        /* CARD */
+        .card { background:white; border-radius:16px; padding:28px; box-shadow:0 2px 12px rgba(0,0,0,0.08); margin-bottom:24px; }
+
+        /* FILTERS */
+        .filters-section { background:linear-gradient(135deg,#f5f3ff,#ede9fe); padding:24px; border-radius:12px; margin-bottom:24px; }
+        .filters-section h3 { font-size:16px; font-weight:700; margin-bottom:16px; color:#333; }
+        .form-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; }
+        .form-group { margin-bottom:0; }
+        .form-group label { display:block; margin-bottom:6px; font-weight:600; color:#333; font-size:13px; }
+        .form-group input, .form-group select { width:100%; padding:10px 14px; border:2px solid #e0e0e0; border-radius:10px; font-size:14px; transition:all 0.3s; font-family:inherit; background:#fafafa; }
+        .form-group input:focus, .form-group select:focus { outline:none; border-color:#7c3aed; box-shadow:0 0 0 4px rgba(124,58,237,0.1); background:white; }
+        .filter-actions { display:flex; gap:10px; margin-top:18px; flex-wrap:wrap; }
+
+        /* SEARCH */
+        .search-box { margin-bottom:20px; }
+        .search-input { width:100%; padding:14px 16px; border:2px solid #e0e0e0; border-radius:12px; font-size:14px; transition:all 0.3s; background:#fafafa; font-family:inherit; }
+        .search-input:focus { outline:none; border-color:#7c3aed; box-shadow:0 0 0 4px rgba(124,58,237,0.1); background:white; }
+
+        /* TABLE */
+        .table-container { width:100%; overflow-x:auto; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+        table { width:100%; border-collapse:collapse; min-width:700px; background:white; }
+        thead { background:linear-gradient(135deg,#f5f3ff,#ede9fe); }
+        th { padding:14px 12px; text-align:left; font-weight:700; color:#4c1d95; font-size:12px; border-bottom:2px solid #ddd6fe; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap; }
+        td { padding:14px 12px; border-bottom:1px solid #f0f0f0; color:#333; font-size:14px; vertical-align:middle; }
+        tr { transition:background 0.2s; }
+        tr:hover { background:#f5f3ff; }
+        tr:last-child td { border-bottom:none; }
+
+        /* BADGES */
+        .badge { padding:5px 12px; border-radius:20px; font-size:11px; font-weight:700; display:inline-block; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap; }
+        .badge-ok      { background:linear-gradient(135deg,#d1fae5,#a7f3d0); color:#065f46; }
+        .badge-warning { background:linear-gradient(135deg,#fee2e2,#fecaca); color:#991b1b; }
+        .badge-turno-a { background:linear-gradient(135deg,#dbeafe,#bfdbfe); color:#1e40af; }
+        .badge-turno-b { background:linear-gradient(135deg,#fef3c7,#fde68a); color:#92400e; }
+        .badge-turno-c { background:linear-gradient(135deg,#e0e7ff,#c7d2fe); color:#3730a3; }
+        .badge-purple  { background:linear-gradient(135deg,#ede9fe,#ddd6fe); color:#5b21b6; }
+
+        /* TURNO INDICATOR */
+        .turno-chip { display:inline-flex; align-items:center; gap:6px; font-size:14px; font-weight:700; }
+
+        /* BUTTONS */
+        .btn { padding:10px 22px; background:linear-gradient(135deg,#5b21b6,#7c3aed); color:white; border:none; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; transition:all 0.3s; font-family:inherit; }
+        .btn:hover { transform:translateY(-2px); box-shadow:0 6px 18px rgba(91,33,182,0.4); }
+        .btn:active { transform:translateY(0); }
+        .btn-secondary { background:linear-gradient(135deg,#6c757d,#495057); }
+        .btn-secondary:hover { box-shadow:0 4px 12px rgba(0,0,0,0.2); }
+        .btn-small { padding:7px 14px; font-size:12px; }
+        .action-buttons { display:flex; gap:6px; flex-wrap:wrap; }
+
+        /* LOADING */
+        .loading { text-align:center; padding:48px; color:#666; font-size:15px; }
+        .spinner { border:3px solid #ede9fe; border-top:3px solid #5b21b6; border-radius:50%; width:38px; height:38px; animation:spin 0.9s linear infinite; margin:0 auto 14px; }
+        @keyframes spin { to{transform:rotate(360deg);} }
+        .empty-state { text-align:center; padding:60px 20px; color:#999; }
+        .empty-icon { font-size:52px; margin-bottom:12px; }
+        .total-strip { display:flex; align-items:center; gap:10px; padding:12px 18px; background:linear-gradient(135deg,#ede9fe,#f5f3ff); border-radius:10px; font-weight:700; color:#5b21b6; font-size:14px; margin-bottom:16px; }
+
+        /* MODAL */
+        .modal { display:none; position:fixed; inset:0; background:rgba(30,27,75,0.6); backdrop-filter:blur(6px); z-index:2000; align-items:center; justify-content:center; padding:20px; }
+        .modal.active { display:flex; animation:fadeIn 0.3s; }
+        .modal-content { background:white; border-radius:16px; padding:32px; max-width:800px; width:100%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(91,33,182,0.25); animation:slideUp 0.3s; }
+        @keyframes slideUp { from{transform:translateY(40px);opacity:0;}to{transform:translateY(0);opacity:1;} }
+        .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; padding-bottom:16px; border-bottom:2px solid #ede9fe; }
+        .modal-header h2 { font-size:20px; font-weight:700; color:#1e1b4b; }
+        .modal-close { background:#f0f0f0; border:none; font-size:22px; cursor:pointer; color:#666; width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; transition:all 0.2s; }
+        .modal-close:hover { background:#fee2e2; color:#dc3545; transform:rotate(90deg); }
+        .modal-footer { margin-top:24px; padding-top:18px; border-top:2px solid #f0f0f0; display:flex; justify-content:flex-end; gap:10px; }
+
+        /* DETAIL */
+        .detail-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin:16px 0; }
+        .detail-item { background:#f8f9fa; border-radius:10px; padding:14px; }
+        .detail-item strong { font-size:11px; color:#999; text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:4px; }
+        .detail-item span { font-size:15px; font-weight:600; color:#333; }
+
+        /* RESPOSTAS */
+        .respostas-section { margin-top:20px; }
+        .respostas-section h3 { font-size:15px; font-weight:700; color:#1e1b4b; margin-bottom:14px; }
+        .resposta-row { display:flex; justify-content:space-between; align-items:center; padding:11px 14px; border-bottom:1px solid #f0f0f0; font-size:14px; border-radius:8px; margin-bottom:4px; }
+        .resposta-row:last-child { border-bottom:none; }
+        .resposta-row.problema { background:#fff5f5; border:1px solid #fecaca; }
+        .resposta-label { flex:1; color:#444; font-size:13px; padding-right:10px; }
+        .badge-sim-ok  { background:#d1fae5; color:#065f46; padding:4px 12px; border-radius:20px; font-weight:700; font-size:12px; }
+        .badge-sim-bad { background:#fee2e2; color:#991b1b; padding:4px 12px; border-radius:20px; font-weight:700; font-size:12px; }
+        .badge-nao-ok  { background:#d1fae5; color:#065f46; padding:4px 12px; border-radius:20px; font-weight:700; font-size:12px; }
+        .badge-nao-bad { background:#fee2e2; color:#991b1b; padding:4px 12px; border-radius:20px; font-weight:700; font-size:12px; }
+
+        /* PROGRESS BAR mini */
+        .mini-progress { display:flex; align-items:center; gap:8px; }
+        .mini-bar-bg { flex:1; height:6px; background:#ede9fe; border-radius:10px; overflow:hidden; }
+        .mini-bar-fill { height:100%; background:linear-gradient(90deg,#5b21b6,#a78bfa); border-radius:10px; transition:width 0.5s; }
+
+        /* RESPONSIVE */
+        @media (min-width:769px) { .user-name{display:block;} }
+        @media (max-width:768px) {
+            .header h1{font-size:16px;} .main-container{padding:16px;} .card{padding:18px;}
+            .stats-row{grid-template-columns:repeat(2,1fr);} .hero-strip{padding:18px 20px;}
+            .hero-strip::after{display:none;}
+            .modal-content{padding:22px;max-height:88vh;}
+            .action-buttons{flex-direction:column;} .btn-small{width:100%;margin:2px 0;}
+        }
+        @media (max-width:480px) {
+            th,td{padding:10px 8px;font-size:12px;} .badge{font-size:10px;padding:4px 8px;}
+            .stats-row{gap:10px;} .stat-number{font-size:26px;}
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <div class="header-left">
+        <button class="hamburger-btn" id="hamburgerBtn">
+            <span class="hamburger-line"></span><span class="hamburger-line"></span><span class="hamburger-line"></span>
+        </button>
+        <h1>✅ Painel de Check-lists</h1>
+    </div>
+    <div class="user-info">
+        <span class="user-name" id="userName"></span>
+        <span class="user-badge" id="userBadge">Usuário</span>
+        <button class="btn-logout" id="btnLogout">Sair</button>
+    </div>
+</div>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header"><h2>Menu de Navegação</h2><p>Selecione uma opção abaixo</p></div>
+    <div class="menu-section">
+        <div class="menu-section-title">Principal</div>
+        <div class="menu-item active" onclick="closeSidebar()"><span class="menu-icon">✅</span><span>Painel Check-lists</span></div>
+    </div>
+    <div class="menu-section">
+        <div class="menu-section-title">Sistema</div>
+        <a href="ocorrencias.html" class="menu-item"><span class="menu-icon">📋</span><span>Central de Ocorrências</span></a>
+        <a href="checklist.html" class="menu-item"><span class="menu-icon">📝</span><span>Novo Check-list</span></a>
+        <a href="menu.html" class="menu-item"><span class="menu-icon">⚙️</span><span>Gestão Completa</span></a>
+    </div>
+</div>
+
+<!-- MAIN -->
+<div class="main-container">
+
+    <div class="hero-strip">
+        <div>
+            <h2>✅ Painel de Check-lists</h2>
+            <p>Histórico completo de inspeções diárias de empilhadeiras</p>
+        </div>
+        <div class="hero-actions">
+            <a href="checklist.html" class="btn-hero">📝 Novo Check-list</a>
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row">
+        <div class="stat-card"><div class="stat-number" id="statTotal">–</div><div class="stat-label">Total</div></div>
+        <div class="stat-card ok"><div class="stat-number" id="statOk">–</div><div class="stat-label">Sem Problemas</div></div>
+        <div class="stat-card problemas"><div class="stat-number" id="statProblemas">–</div><div class="stat-label">Com Problemas</div></div>
+        <div class="stat-card turno-a"><div class="stat-number" id="statTurnoA">–</div><div class="stat-label">Turno A</div></div>
+        <div class="stat-card turno-b"><div class="stat-number" id="statTurnoB">–</div><div class="stat-label">Turno B/C</div></div>
+    </div>
+
+    <div class="card">
+        <!-- FILTROS -->
+        <div class="filters-section">
+            <h3>🔍 Filtros</h3>
+            <div class="form-grid">
+                <div class="form-group"><label>Turno</label>
+                    <select id="filtroTurno"><option value="">Todos</option><option value="A">A (06h–14h)</option><option value="B">B (14h–22h)</option><option value="C">C (22h–06h)</option></select>
+                </div>
+                <div class="form-group"><label>Situação</label>
+                    <select id="filtroSituacao"><option value="">Todas</option><option value="ok">Sem Problemas</option><option value="problemas">Com Problemas</option></select>
+                </div>
+                <div class="form-group"><label>Operador</label>
+                    <select id="filtroOperador"><option value="">Todos</option></select>
+                </div>
+                <div class="form-group"><label>Data inicial</label><input type="date" id="filtroDataInicio"></div>
+                <div class="form-group"><label>Data final</label><input type="date" id="filtroDataFim"></div>
+            </div>
+            <div class="filter-actions">
+                <button class="btn" onclick="aplicarFiltros()">🔍 Aplicar</button>
+                <button class="btn btn-secondary" onclick="limparFiltros()">↺ Limpar</button>
+            </div>
+        </div>
+
+        <div class="search-box">
+            <input type="text" class="search-input" id="searchChecklist" placeholder="🔍 Buscar por operador, matrícula, turno...">
+        </div>
+
+        <div id="listaChecklists"><div class="loading"><div class="spinner"></div><p>Carregando check-lists...</p></div></div>
+    </div>
+</div>
+
+<!-- MODAL DETALHES -->
+<div class="modal" id="modalDetalhes">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalTitle">📋 Detalhes do Check-list</h2>
+            <button class="modal-close" onclick="fecharModal()">×</button>
+        </div>
+        <div id="modalConteudo"></div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="fecharModal()">Fechar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://wcfrwsgnxochxvwhxnvy.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjZnJ3c2dueG9jaHh2d2h4bnZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc2MzExMDgsImV4cCI6MjA4MzIwNzEwOH0.Yb4cT5chXp3S8NZaWbLpv436HzxGCO7CZTruPpOPDdU';
+
+let db, currentUser;
+let allChecklists = [], filteredChecklists = [];
+
+const PERGUNTAS = {
+    q1:'Há vazamentos visíveis de água ou óleo?',
+    q2:'A cabine está limpa e sem acúmulo de sujeira ou óleo?',
+    q3:'A corrente da torre possui folgas ou ruídos anormais?',
+    q4:'Há ruídos anormais durante o funcionamento da máquina?',
+    q5:'A estrutura da torre, mastro e garfos apresenta rachaduras, empenos ou soldas quebradas?',
+    q6:'A bateria possui carga o suficiente?',
+    q7:'A bateria está com o nível de água normal?',
+    q8:'Os cabos e terminais da bateria estão limpos e firmes?',
+    q9:'O sinal sonoro (buzina) funciona corretamente?',
+    q10:'As luzes estão funcionando?',
+    q11:'O alarme de ré funciona?',
+    q12:'O sistema de elevação e inclinação está funcionando normalmente?',
+    q13:'Há vazamentos no chão, mangueiras ou cilindros?',
+    q14:'As rodas estão firmes e seguras?',
+    q15:'As rodas estão boas? (sem cortes, desgastadas ou danificadas)',
+    q16:'O freio de serviço está eficiente?',
+    q17:'O freio de estacionamento funciona normalmente?',
+    q18:'A direção está leve e sem folgas?'
+};
+
+// Resposta "Sim" é problema para estas chaves
+const PROBLEMA_SIM = ['q1','q3','q4','q5','q13'];
+// Resposta "Não" é problema para estas chaves
+const PROBLEMA_NAO = ['q2','q6','q7','q8','q9','q10','q11','q12','q14','q15','q16','q17','q18'];
+
+function isProblema(key, val) {
+    if (PROBLEMA_SIM.includes(key) && val === 'Sim') return true;
+    if (PROBLEMA_NAO.includes(key) && val === 'Não') return true;
+    return false;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const saved = localStorage.getItem('currentUser');
+    if (!saved) { window.location.href = 'login.html'; return; }
+    currentUser = JSON.parse(saved);
+    document.getElementById('userName').textContent  = currentUser.nome || '';
+    document.getElementById('userBadge').textContent = currentUser.perfil || 'Usuário';
+    db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    setupSidebar();
+    setupSearch();
+    document.getElementById('btnLogout').addEventListener('click', logout);
+    loadChecklists();
+});
+
+/* SIDEBAR */
+function setupSidebar() {
+    const btn=document.getElementById('hamburgerBtn'),sb=document.getElementById('sidebar'),ov=document.getElementById('sidebarOverlay');
+    btn.addEventListener('click',()=>{btn.classList.toggle('active');sb.classList.toggle('active');ov.classList.toggle('active');});
+    ov.addEventListener('click', closeSidebar);
+    document.addEventListener('keydown', e => { if(e.key==='Escape'){closeSidebar();fecharModal();}});
+}
+function closeSidebar(){['hamburgerBtn','sidebar','sidebarOverlay'].forEach(id=>document.getElementById(id).classList.remove('active'));}
+
+/* LOAD */
+async function loadChecklists() {
+    document.getElementById('listaChecklists').innerHTML='<div class="loading"><div class="spinner"></div><p>Carregando...</p></div>';
+    try {
+        // Try Supabase first
+        const {data, error} = await db.from('checklist_diario').select('*').order('created_at',{ascending:false}).limit(200);
+        if (error) throw error;
+        allChecklists = data || [];
+    } catch(e) {
+        // Fallback to localStorage
+        allChecklists = JSON.parse(localStorage.getItem('checklists') || '[]');
+    }
+    filteredChecklists = [...allChecklists];
+    calcStats();
+    popularFiltroOperadores();
+    renderTabela(filteredChecklists);
+}
+
+function calcStats() {
+    const total = allChecklists.length;
+    const comProblemas = allChecklists.filter(i => (i.total_problemas || 0) > 0).length;
+    const semProblemas = total - comProblemas;
+    const turnoA = allChecklists.filter(i => i.turno === 'A').length;
+    const turnoBC = allChecklists.filter(i => i.turno === 'B' || i.turno === 'C').length;
+    document.getElementById('statTotal').textContent    = total;
+    document.getElementById('statOk').textContent       = semProblemas;
+    document.getElementById('statProblemas').textContent = comProblemas;
+    document.getElementById('statTurnoA').textContent   = turnoA;
+    document.getElementById('statTurnoB').textContent   = turnoBC;
+}
+
+function popularFiltroOperadores() {
+    const ops = [...new Set(allChecklists.map(i=>i.operador).filter(Boolean))].sort();
+    const sel = document.getElementById('filtroOperador');
+    sel.innerHTML='<option value="">Todos</option>';
+    ops.forEach(o=>{const opt=document.createElement('option');opt.value=o;opt.textContent=o;sel.appendChild(opt);});
+}
+
+/* RENDER TABLE */
+function renderTabela(lista) {
+    const el = document.getElementById('listaChecklists');
+    if (!lista.length) {
+        el.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><p>Nenhum check-list encontrado.</p></div>';
+        return;
+    }
+
+    let html=`<div class="total-strip">📊 ${lista.length} check-list(s) encontrado(s)</div>
+    <div class="table-container"><table id="tabelaChecklists">
+    <thead><tr>
+        <th>Data/Hora</th><th>Operador</th><th>Matrícula</th><th>Turno</th><th>Horímetro</th><th>Situação</th><th>Problemas</th><th>Ações</th>
+    </tr></thead><tbody>`;
+
+    lista.forEach(item=>{
+        const dt = new Date(item.created_at || `${item.data}T${item.hora||'00:00'}`);
+        const dataStr = dt.toLocaleDateString('pt-BR') + ' ' + dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+        const prob = item.total_problemas || 0;
+        const turnoClass = item.turno==='A'?'badge-turno-a':item.turno==='B'?'badge-turno-b':'badge-turno-c';
+        const situBadge = prob > 0
+            ? `<span class="badge badge-warning">⚠️ ${prob} problema(s)</span>`
+            : `<span class="badge badge-ok">✅ OK</span>`;
+
+        html+=`<tr>
+            <td style="white-space:nowrap;font-size:13px">${dataStr}</td>
+            <td><strong>${item.operador||'–'}</strong></td>
+            <td>${item.matricula||'–'}</td>
+            <td><span class="badge ${turnoClass}">Turno ${item.turno||'–'}</span></td>
+            <td>${item.horimetro||'–'}</td>
+            <td>${situBadge}</td>
+            <td style="text-align:center"><strong style="color:${prob>0?'#dc2626':'#059669'}">${prob}</strong></td>
+            <td><button class="btn btn-small" onclick='verDetalhes(${JSON.stringify(JSON.stringify(item))})'>👁️ Ver</button></td>
+        </tr>`;
+    });
+
+    html+='</tbody></table></div>';
+    el.innerHTML=html;
+}
+
+/* SEARCH */
+function setupSearch(){
+    document.getElementById('searchChecklist').addEventListener('input',function(){
+        const term=this.value.toLowerCase().trim();
+        const tbody=document.querySelector('#tabelaChecklists tbody');
+        if(!tbody)return;
+        let v=0;
+        tbody.querySelectorAll('tr').forEach(row=>{
+            const m=row.textContent.toLowerCase().includes(term);
+            row.style.display=m?'':'none'; if(m)v++;
+        });
+        const strip=document.querySelector('.total-strip');
+        if(strip)strip.textContent=`📊 ${v} check-list(s) encontrado(s)`;
+    });
+}
+
+/* FILTERS */
+function aplicarFiltros(){
+    const turno=document.getElementById('filtroTurno').value;
+    const situacao=document.getElementById('filtroSituacao').value;
+    const operador=document.getElementById('filtroOperador').value;
+    const ini=document.getElementById('filtroDataInicio').value;
+    const fim=document.getElementById('filtroDataFim').value;
+
+    filteredChecklists=allChecklists.filter(item=>{
+        if(turno&&item.turno!==turno)return false;
+        if(situacao==='ok'&&(item.total_problemas||0)>0)return false;
+        if(situacao==='problemas'&&(item.total_problemas||0)===0)return false;
+        if(operador&&item.operador!==operador)return false;
+        const dt=new Date(item.created_at||item.data);
+        if(ini&&dt<new Date(ini))return false;
+        if(fim){const f=new Date(fim);f.setHours(23,59,59,999);if(dt>f)return false;}
+        return true;
+    });
+    renderTabela(filteredChecklists);
+    document.getElementById('searchChecklist').value='';
+}
+function limparFiltros(){
+    ['filtroTurno','filtroSituacao','filtroOperador','filtroDataInicio','filtroDataFim'].forEach(id=>document.getElementById(id).value='');
+    filteredChecklists=[...allChecklists];
+    renderTabela(filteredChecklists);
+    document.getElementById('searchChecklist').value='';
+}
+
+/* VER DETALHES */
+function verDetalhes(jsonStr) {
+    const item = JSON.parse(jsonStr);
+    const dt = new Date(item.created_at || `${item.data}T${item.hora||'00:00'}`).toLocaleString('pt-BR');
+    const prob = item.total_problemas || 0;
+
+    document.getElementById('modalTitle').textContent = `📋 Check-list — ${item.operador}`;
+
+    let html = `
+        <div class="detail-grid">
+            <div class="detail-item"><strong>Operador</strong><span>${item.operador||'–'}</span></div>
+            <div class="detail-item"><strong>Matrícula</strong><span>${item.matricula||'–'}</span></div>
+            <div class="detail-item"><strong>Turno</strong><span class="badge ${item.turno==='A'?'badge-turno-a':item.turno==='B'?'badge-turno-b':'badge-turno-c'}">Turno ${item.turno||'–'}</span></div>
+            <div class="detail-item"><strong>Horímetro</strong><span>${item.horimetro||'–'}</span></div>
+            <div class="detail-item"><strong>Data</strong><span>${item.data||'–'}</span></div>
+            <div class="detail-item"><strong>Hora</strong><span>${item.hora||'–'}</span></div>
+            <div class="detail-item"><strong>Enviado em</strong><span style="font-size:13px">${dt}</span></div>
+            <div class="detail-item"><strong>Situação</strong><span>${prob>0?`<span class="badge badge-warning">⚠️ ${prob} problema(s)</span>`:'<span class="badge badge-ok">✅ Sem problemas</span>'}</span></div>
+        </div>
+    `;
+
+    if (item.respostas && Object.keys(item.respostas).length) {
+        // Group by sections
+        const sections = [
+            { title: '👁️ Inspeção Visual Geral', keys: ['q1','q2','q3','q4','q5'] },
+            { title: '⚡ Sistema Elétrico',        keys: ['q6','q7','q8','q9','q10','q11'] },
+            { title: '💧 Sistema Hidráulico',       keys: ['q12','q13'] },
+            { title: '🔧 Rodas',                    keys: ['q14','q15'] },
+            { title: '🛑 Freio e Direção',           keys: ['q16','q17','q18'] },
+        ];
+
+        html += '<div class="respostas-section">';
+        html += '<h3>Respostas da Inspeção</h3>';
+
+        sections.forEach(sec => {
+            const anyAnswered = sec.keys.some(k => item.respostas[k]);
+            if (!anyAnswered) return;
+            html += `<p style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#999;margin:16px 0 8px">${sec.title}</p>`;
+            sec.keys.forEach(k => {
+                if (!item.respostas[k]) return;
+                const val = item.respostas[k];
+                const bad = isProblema(k, val);
+                const badgeClass = bad ? (val==='Sim'?'badge-sim-bad':'badge-nao-bad') : (val==='Sim'?'badge-sim-ok':'badge-nao-ok');
+                html += `<div class="resposta-row ${bad?'problema':''}">
+                    <span class="resposta-label">${PERGUNTAS[k]||k}</span>
+                    <span class="${badgeClass}">${val}</span>
+                </div>`;
+            });
+        });
+
+        html += '</div>';
+    }
+
+    document.getElementById('modalConteudo').innerHTML = html;
+    document.getElementById('modalDetalhes').classList.add('active');
+}
+
+function fecharModal(){document.getElementById('modalDetalhes').classList.remove('active');}
+document.getElementById('modalDetalhes').addEventListener('click',e=>{if(e.target===document.getElementById('modalDetalhes'))fecharModal();});
+
+function logout(){if(confirm('Deseja realmente sair?')){localStorage.removeItem('currentUser');window.location.href='login.html';}}
+</script>
+</body>
+</html>
