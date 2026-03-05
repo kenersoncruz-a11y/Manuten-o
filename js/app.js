@@ -102,7 +102,7 @@ async function handleLogin(event) {
         }
 
         saveSession(data);
-        window.location.href = 'menu.html';
+        window.location.href = 'ocorrencias.html';
 
     } catch (error) {
         console.error('Erro:', error);
