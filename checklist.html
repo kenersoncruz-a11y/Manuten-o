@@ -452,38 +452,6 @@
 const SUPABASE_URL = 'https://wcfrwsgnxochxvwhxnvy.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjZnJ3c2dueG9jaHh2d2h4bnZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc2MzExMDgsImV4cCI6MjA4MzIwNzEwOH0.Yb4cT5chXp3S8NZaWbLpv436HzxGCO7CZTruPpOPDdU';
 
-/* ── WhatsApp Helper ─────────────────────────────────────────── */
-const WA = (() => {
-    const _cache = {};
-    async function _buscarTel(nomeOuId) {
-        if (_cache[nomeOuId]) return _cache[nomeOuId];
-        try {
-            const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            const { data } = await sb.from('usuarios').select('nome,telefone')
-                .ilike('nome', nomeOuId).maybeSingle();
-            if (data?.telefone) _cache[nomeOuId] = data.telefone;
-            return data?.telefone || null;
-        } catch { return null; }
-    }
-    function _enviar(tel, msg) {
-        const n = tel.replace(/[^\d+]/g,'').replace(/^\+/,'');
-        window.open(`https://wa.me/${n}?text=${encodeURIComponent(msg)}`, '_blank');
-    }
-    async function notificar(nomeOuId, mensagem) {
-        if (!nomeOuId || !mensagem) return;
-        if (/^\+?\d{8,}$/.test(nomeOuId.replace(/[\s\-()+]/g,''))) { _enviar(nomeOuId, mensagem); return; }
-        const tel = await _buscarTel(nomeOuId);
-        if (tel) _enviar(tel, mensagem);
-    }
-    async function notificarMencoes(texto, contexto) {
-        const m = (texto.match(/@([\wÀ-ú\s]+?)(?=\s@|\s*$|[,.])/g)||[]).map(x=>x.replace('@','').trim());
-        for (const nome of m) await notificar(nome, `💬 Você foi mencionado!\n\n"${texto.substring(0,120)}"\n\n${contexto||''}`);
-    }
-    return { notificar, notificarMencoes };
-})();
-
-let db;
-let currentUser = null;
 
 // ── PERGUNTAS (para rótulos no histórico) ──
 const PERGUNTAS = {
