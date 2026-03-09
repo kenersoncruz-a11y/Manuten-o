@@ -102,6 +102,8 @@ async function handleLogin(event) {
         }
 
         saveSession(data);
+        window.notifInit?.();  // ← adicionar
+        window.pushInit?.();   // ← adicionar
         window.location.href = 'ocorrencias.html';
 
     } catch (error) {
@@ -1027,7 +1029,10 @@ function filterTable(tableId, searchTerm) {
 
 document.addEventListener('DOMContentLoaded', function() {
     db = initSupabase();
-    
+    currentUser = protectPage();  // já existe
+    if (currentUser) {
+        window.notifInit?.();  // ← adicionar
+        window.pushInit?.();   // ← adicionar
     if (!db) {
         alert('Erro ao conectar com o banco de dados. Verifique as credenciais.');
         return;
