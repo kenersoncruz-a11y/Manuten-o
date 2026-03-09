@@ -18,8 +18,6 @@
             --green-pale: #d1fae5;
             --red: #dc2626;
             --red-pale: #fee2e2;
-            --amber: #d97706;
-            --amber-pale: #fef3c7;
             --blue: #2563eb;
             --blue-pale: #dbeafe;
             --whatsapp: #25D366;
@@ -32,111 +30,59 @@
         }
 
         * { margin:0; padding:0; box-sizing:border-box; }
-        body {
-            font-family:'Plus Jakarta Sans',sans-serif;
-            background:#f8f7ff;
-            min-height:100vh;
-            color:var(--text);
-        }
+        body { font-family:'Plus Jakarta Sans',sans-serif; background:#f8f7ff; min-height:100vh; color:var(--text); }
 
-        /* ===== HEADER ===== */
-        .header {
-            background:linear-gradient(135deg,#3b0764 0%,var(--purple) 50%,var(--purple-mid) 100%);
-            color:white;
-            padding:0 24px;
-            height:64px;
-            display:flex;
-            align-items:center;
-            justify-content:space-between;
-            position:sticky;
-            top:0;
-            z-index:100;
-            box-shadow:0 4px 24px rgba(91,33,182,0.35);
-        }
+        /* HEADER */
+        .header { background:linear-gradient(135deg,#3b0764 0%,var(--purple) 50%,var(--purple-mid) 100%); color:white; padding:0 24px; height:64px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; box-shadow:0 4px 24px rgba(91,33,182,0.35); }
         .header-left { display:flex; align-items:center; gap:14px; }
         .header h1 { font-size:18px; font-weight:800; letter-spacing:-0.3px; }
         .header h1 span { opacity:0.7; font-weight:400; font-size:14px; margin-left:6px; }
-
         .hamburger-btn { display:flex; flex-direction:column; justify-content:center; gap:5px; width:32px; height:32px; background:rgba(255,255,255,0.12); border:none; cursor:pointer; padding:6px; border-radius:8px; transition:all 0.3s; }
         .hamburger-btn:hover { background:rgba(255,255,255,0.22); }
         .hamburger-line { width:100%; height:2.5px; background:white; border-radius:3px; transition:all 0.35s cubic-bezier(0.68,-0.55,0.265,1.55); transform-origin:center; }
         .hamburger-btn.active .hamburger-line:nth-child(1) { transform:translateY(7.5px) rotate(45deg); }
         .hamburger-btn.active .hamburger-line:nth-child(2) { opacity:0; transform:scaleX(0); }
         .hamburger-btn.active .hamburger-line:nth-child(3) { transform:translateY(-7.5px) rotate(-45deg); }
-
         .header-right { display:flex; align-items:center; gap:10px; }
         .user-chip { background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.25); padding:6px 14px; border-radius:20px; font-size:13px; font-weight:600; }
         .btn-logout { padding:8px 16px; background:rgba(255,255,255,0.15); color:white; border:1.5px solid rgba(255,255,255,0.4); border-radius:8px; cursor:pointer; font-weight:600; font-size:13px; font-family:inherit; transition:all 0.25s; }
         .btn-logout:hover { background:white; color:var(--purple); }
 
-        /* ===== SIDEBAR ===== */
+        /* SIDEBAR */
         .overlay { position:fixed; inset:0; background:rgba(30,27,75,0.55); backdrop-filter:blur(4px); opacity:0; visibility:hidden; transition:all 0.3s; z-index:999; }
         .overlay.active { opacity:1; visibility:visible; }
-        .sidebar {
-            position:fixed; top:0; left:-300px; width:280px; height:100vh;
-            background:white; box-shadow:6px 0 32px rgba(91,33,182,0.15);
-            transition:left 0.35s cubic-bezier(0.68,-0.55,0.265,1.55);
-            z-index:1000; overflow-y:auto; padding-top:72px;
-        }
+        .sidebar { position:fixed; top:0; left:-300px; width:280px; height:100vh; background:white; box-shadow:6px 0 32px rgba(91,33,182,0.15); transition:left 0.35s cubic-bezier(0.68,-0.55,0.265,1.55); z-index:1000; overflow-y:auto; padding-top:72px; }
         .sidebar.active { left:0; }
         .sidebar-head { padding:20px 18px; border-bottom:1px solid var(--border); }
         .sidebar-head h2 { font-size:16px; font-weight:700; color:var(--text); }
         .sidebar-head p { font-size:12px; color:var(--text-light); margin-top:3px; }
         .s-section { padding:10px 0; }
         .s-title { padding:6px 18px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; color:var(--text-light); }
-        .s-item {
-            display:flex; align-items:center; gap:12px; padding:12px 18px;
-            text-decoration:none; color:var(--text-mid); font-weight:500; font-size:14px;
-            transition:all 0.25s; position:relative; cursor:pointer;
-        }
+        .s-item { display:flex; align-items:center; gap:12px; padding:12px 18px; text-decoration:none; color:var(--text-mid); font-weight:500; font-size:14px; transition:all 0.25s; position:relative; cursor:pointer; }
         .s-item::before { content:''; position:absolute; left:0; top:8px; bottom:8px; width:3px; background:var(--purple-mid); border-radius:0 3px 3px 0; transform:scaleY(0); transition:transform 0.25s; }
-        .s-item:hover { color:var(--purple); background:var(--purple-ultra); padding-left:24px; }
-        .s-item:hover::before { transform:scaleY(1); }
-        .s-item.active { color:var(--purple); background:var(--purple-pale); font-weight:700; padding-left:24px; }
-        .s-item.active::before { transform:scaleY(1); }
+        .s-item:hover, .s-item.active { color:var(--purple); background:var(--purple-pale); padding-left:24px; }
+        .s-item:hover::before, .s-item.active::before { transform:scaleY(1); }
         .s-icon { font-size:20px; }
 
-        /* ===== LAYOUT ===== */
-        .main { padding:28px 24px; max-width:1300px; margin:0 auto; }
+        /* MAIN */
+        .main { padding:28px 24px; max-width:1300px; margin:0 auto; animation:fadeUp 0.4s both; }
         @keyframes fadeUp { from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);} }
-        .main { animation:fadeUp 0.4s both; }
 
-        /* ===== PAGE HERO ===== */
-        .hero {
-            background:linear-gradient(135deg,#3b0764,var(--purple),var(--purple-mid));
-            border-radius:18px;
-            padding:28px 32px;
-            color:white;
-            margin-bottom:24px;
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            gap:16px;
-            flex-wrap:wrap;
-            position:relative;
-            overflow:hidden;
-        }
+        /* HERO */
+        .hero { background:linear-gradient(135deg,#3b0764,var(--purple),var(--purple-mid)); border-radius:18px; padding:28px 32px; color:white; margin-bottom:24px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; position:relative; overflow:hidden; }
         .hero::before { content:''; position:absolute; top:-40px; right:-40px; width:220px; height:220px; background:rgba(255,255,255,0.04); border-radius:50%; }
         .hero::after { content:'👥'; position:absolute; right:32px; top:50%; transform:translateY(-50%); font-size:72px; opacity:0.12; pointer-events:none; }
         .hero h2 { font-size:22px; font-weight:800; display:flex; align-items:center; gap:10px; }
         .hero p { font-size:14px; opacity:0.8; margin-top:5px; }
         .hero-actions { display:flex; gap:10px; flex-wrap:wrap; z-index:1; }
         .btn-hero { display:inline-flex; align-items:center; gap:7px; padding:10px 20px; background:rgba(255,255,255,0.18); border:1.5px solid rgba(255,255,255,0.4); color:white; border-radius:10px; font-weight:700; font-size:14px; cursor:pointer; font-family:inherit; transition:all 0.25s; text-decoration:none; }
-        .btn-hero:hover { background:white; color:var(--purple); transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.15); }
+        .btn-hero:hover { background:white; color:var(--purple); transform:translateY(-2px); }
         .btn-hero.primary { background:white; color:var(--purple); }
         .btn-hero.primary:hover { background:var(--purple-pale); }
 
-        /* ===== STATS ===== */
+        /* STATS */
         .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-bottom:24px; }
-        .stat {
-            background:white;
-            border-radius:14px;
-            padding:20px;
-            box-shadow:var(--card-shadow);
-            border:1.5px solid transparent;
-            transition:all 0.3s;
-            text-align:center;
-        }
+        .stat { background:white; border-radius:14px; padding:20px; box-shadow:var(--card-shadow); border:1.5px solid transparent; transition:all 0.3s; text-align:center; }
         .stat:hover { border-color:var(--purple-light); transform:translateY(-3px); }
         .stat-num { font-size:34px; font-weight:800; line-height:1; margin-bottom:6px; color:var(--purple); }
         .stat-lbl { font-size:12px; color:var(--text-light); font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }
@@ -144,27 +90,19 @@
         .stat.s-ativo .stat-num { color:var(--green); }
         .stat.s-tel .stat-num { color:var(--whatsapp-dark); }
 
-        /* ===== CARD ===== */
+        /* CARD */
         .card { background:white; border-radius:16px; padding:28px; box-shadow:var(--card-shadow); margin-bottom:22px; }
         .card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; flex-wrap:wrap; gap:10px; }
         .card-title { font-size:16px; font-weight:700; display:flex; align-items:center; gap:8px; }
 
-        /* ===== SEARCH ===== */
+        /* SEARCH */
         .search-row { display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
-        .search-input {
-            flex:1; min-width:200px; padding:12px 16px; border:1.5px solid var(--border);
-            border-radius:10px; font-size:14px; font-family:inherit;
-            transition:all 0.25s; background:#fafafa;
-        }
+        .search-input { flex:1; min-width:200px; padding:12px 16px; border:1.5px solid var(--border); border-radius:10px; font-size:14px; font-family:inherit; transition:all 0.25s; background:#fafafa; }
         .search-input:focus { outline:none; border-color:var(--purple-mid); box-shadow:0 0 0 4px rgba(124,58,237,0.08); background:white; }
-        .filter-sel {
-            padding:12px 16px; border:1.5px solid var(--border); border-radius:10px;
-            font-size:14px; font-family:inherit; background:#fafafa; cursor:pointer;
-            transition:all 0.25s;
-        }
+        .filter-sel { padding:12px 16px; border:1.5px solid var(--border); border-radius:10px; font-size:14px; font-family:inherit; background:#fafafa; cursor:pointer; transition:all 0.25s; }
         .filter-sel:focus { outline:none; border-color:var(--purple-mid); background:white; }
 
-        /* ===== TABLE ===== */
+        /* TABLE */
         .table-wrap { overflow-x:auto; border-radius:12px; border:1.5px solid var(--border); }
         table { width:100%; border-collapse:collapse; min-width:700px; }
         thead { background:linear-gradient(135deg,var(--purple-ultra),var(--purple-pale)); }
@@ -173,26 +111,21 @@
         tr:last-child td { border-bottom:none; }
         tr:hover td { background:#faf9ff; }
 
-        /* ===== BADGES ===== */
+        /* BADGES */
         .badge { display:inline-flex; align-items:center; gap:4px; padding:4px 11px; border-radius:20px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.4px; white-space:nowrap; }
-        .b-admin     { background:#fef3c7; color:#92400e; }
-        .b-manager   { background:var(--blue-pale); color:#1e40af; }
-        .b-operador  { background:var(--purple-pale); color:#4c1d95; }
-        .b-viewer    { background:#f3f4f6; color:#374151; }
-        .b-ativo     { background:var(--green-pale); color:#065f46; }
-        .b-inativo   { background:var(--red-pale); color:#991b1b; }
-        .b-tem-tel   { background:#dcfce7; color:#166534; }
-        .b-sem-tel   { background:#fef9c3; color:#854d0e; }
+        .b-admin   { background:#fef3c7; color:#92400e; }
+        .b-manager { background:var(--blue-pale); color:#1e40af; }
+        .b-operador{ background:var(--purple-pale); color:#4c1d95; }
+        .b-viewer  { background:#f3f4f6; color:#374151; }
+        .b-ativo   { background:var(--green-pale); color:#065f46; }
+        .b-inativo { background:var(--red-pale); color:#991b1b; }
+        .b-tem-tel { background:#dcfce7; color:#166534; }
+        .b-sem-tel { background:#fef9c3; color:#854d0e; }
 
-        /* ===== AVATAR ===== */
-        .avatar {
-            width:38px; height:38px; border-radius:50%;
-            display:flex; align-items:center; justify-content:center;
-            font-size:15px; font-weight:800; color:white;
-            flex-shrink:0;
-        }
+        /* AVATAR */
+        .avatar { width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:800; color:white; flex-shrink:0; }
 
-        /* ===== BUTTONS ===== */
+        /* BUTTONS */
         .btn { display:inline-flex; align-items:center; gap:6px; padding:10px 20px; background:linear-gradient(135deg,var(--purple),var(--purple-mid)); color:white; border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; transition:all 0.25s; text-decoration:none; }
         .btn:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(91,33,182,0.35); }
         .btn:active { transform:translateY(0); }
@@ -207,7 +140,7 @@
         .btn-outline:hover { background:var(--purple-pale); box-shadow:none; }
         .action-btns { display:flex; gap:6px; flex-wrap:wrap; }
 
-        /* ===== LOADING ===== */
+        /* LOADING */
         .loading { text-align:center; padding:56px 20px; color:var(--text-light); }
         .spinner { width:36px; height:36px; border:3px solid var(--purple-pale); border-top-color:var(--purple); border-radius:50%; animation:spin 0.85s linear infinite; margin:0 auto 12px; }
         @keyframes spin { to{transform:rotate(360deg);} }
@@ -215,114 +148,68 @@
         .empty-icon { font-size:52px; margin-bottom:10px; }
         .count-strip { display:flex; align-items:center; gap:8px; padding:10px 14px; background:var(--purple-ultra); border-radius:9px; font-weight:700; color:var(--purple); font-size:13px; margin-bottom:14px; }
 
-        /* ===== MODAL ===== */
+        /* MODAL */
         .modal { display:none; position:fixed; inset:0; background:rgba(30,27,75,0.6); backdrop-filter:blur(6px); z-index:2000; align-items:center; justify-content:center; padding:20px; }
         .modal.open { display:flex; }
         @keyframes modalIn { from{transform:scale(0.92) translateY(20px);opacity:0;}to{transform:scale(1) translateY(0);opacity:1;} }
-        .modal-box {
-            background:white; border-radius:18px; padding:32px;
-            max-width:680px; width:100%; max-height:90vh; overflow-y:auto;
-            box-shadow:0 24px 64px rgba(91,33,182,0.22);
-            animation:modalIn 0.3s both;
-        }
+        .modal-box { background:white; border-radius:18px; padding:32px; max-width:720px; width:100%; max-height:90vh; overflow-y:auto; box-shadow:0 24px 64px rgba(91,33,182,0.22); animation:modalIn 0.3s both; }
         .modal-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; padding-bottom:16px; border-bottom:1.5px solid var(--border); }
         .modal-head h2 { font-size:19px; font-weight:800; color:var(--text); display:flex; align-items:center; gap:8px; }
         .modal-close { width:34px; height:34px; background:#f3f4f6; border:none; border-radius:8px; font-size:20px; cursor:pointer; color:var(--text-mid); display:flex; align-items:center; justify-content:center; transition:all 0.2s; }
         .modal-close:hover { background:var(--red-pale); color:var(--red); transform:rotate(90deg); }
         .modal-foot { margin-top:24px; padding-top:18px; border-top:1.5px solid var(--border); display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap; }
 
-        /* ===== FORM ===== */
+        /* FORM */
         .form-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; }
         .form-group { display:flex; flex-direction:column; gap:6px; }
-        .form-group.full { grid-column:1/-1; }
         .form-label { font-size:12px; font-weight:700; color:var(--text-mid); text-transform:uppercase; letter-spacing:0.5px; }
-        .form-input, .form-select {
-            padding:11px 14px; border:1.5px solid var(--border); border-radius:10px;
-            font-size:14px; font-family:inherit; transition:all 0.25s;
-            background:#fafafa; color:var(--text);
-        }
+        .form-input, .form-select { padding:11px 14px; border:1.5px solid var(--border); border-radius:10px; font-size:14px; font-family:inherit; transition:all 0.25s; background:#fafafa; color:var(--text); }
         .form-input:focus, .form-select:focus { outline:none; border-color:var(--purple-mid); box-shadow:0 0 0 4px rgba(124,58,237,0.08); background:white; }
         .form-hint { font-size:11px; color:var(--text-light); }
 
-        /* ===== PERMISSIONS GRID ===== */
-        .perms-title { font-size:13px; font-weight:700; color:var(--text-mid); text-transform:uppercase; letter-spacing:0.5px; margin:20px 0 12px; display:flex; align-items:center; gap:8px; }
-        .perms-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px; }
-        .perm-card {
-            display:flex; align-items:center; gap:10px;
-            padding:12px 14px; border:1.5px solid var(--border);
-            border-radius:10px; cursor:pointer; transition:all 0.22s;
-            user-select:none;
-        }
+        /* PERMISSIONS */
+        .perms-section { margin-top:22px; }
+        .perms-group-title { font-size:12px; font-weight:700; color:var(--text-mid); text-transform:uppercase; letter-spacing:0.5px; margin:18px 0 10px; display:flex; align-items:center; gap:8px; padding:8px 12px; background:var(--purple-ultra); border-radius:8px; border-left:3px solid var(--purple-mid); }
+        .perms-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:10px; }
+        .perm-card { display:flex; align-items:center; gap:10px; padding:12px 14px; border:1.5px solid var(--border); border-radius:10px; cursor:pointer; transition:all 0.22s; user-select:none; }
         .perm-card:hover { border-color:var(--purple-light); background:var(--purple-ultra); }
         .perm-card.checked { border-color:var(--purple-mid); background:var(--purple-pale); }
         .perm-card input[type=checkbox] { display:none; }
-        .perm-box {
-            width:18px; height:18px; border:2px solid var(--border); border-radius:5px;
-            flex-shrink:0; display:flex; align-items:center; justify-content:center;
-            transition:all 0.2s; font-size:11px; color:transparent;
-        }
+        .perm-box { width:18px; height:18px; border:2px solid var(--border); border-radius:5px; flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:all 0.2s; font-size:11px; color:transparent; }
         .perm-card.checked .perm-box { background:var(--purple-mid); border-color:var(--purple-mid); color:white; }
         .perm-text strong { display:block; font-size:13px; font-weight:600; color:var(--text); }
         .perm-text small { font-size:11px; color:var(--text-light); }
 
-        /* ===== WHATSAPP SECTION ===== */
-        .wa-section {
-            background:linear-gradient(135deg,#f0fdf4,#dcfce7);
-            border:1.5px solid #86efac;
-            border-radius:12px;
-            padding:18px;
-            margin-top:20px;
-        }
+        /* WHATSAPP */
+        .wa-section { background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1.5px solid #86efac; border-radius:12px; padding:18px; margin-top:20px; }
         .wa-section h3 { font-size:14px; font-weight:700; color:#166534; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
         .wa-row { display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; }
-        .wa-row .form-group { flex:1; min-width:180px; }
         .phone-preview { display:flex; align-items:center; gap:8px; margin-top:8px; padding:10px 14px; background:white; border:1.5px solid #86efac; border-radius:8px; font-size:13px; }
-        .phone-preview .wa-icon { font-size:20px; }
 
-        /* ===== NOTIFY LOG ===== */
-        .notify-item { display:flex; align-items:center; gap:12px; padding:10px 14px; border-radius:8px; background:#f8f7ff; border:1px solid var(--border); margin-bottom:8px; font-size:13px; }
-        .notify-icon { font-size:18px; flex-shrink:0; }
-        .notify-time { font-size:11px; color:var(--text-light); margin-left:auto; white-space:nowrap; }
-
-        /* ===== ALERT ===== */
+        /* ALERT */
         .alert { padding:12px 16px; border-radius:10px; font-weight:600; font-size:14px; display:none; margin-bottom:12px; }
         .alert.show { display:block; }
         .alert-success { background:var(--green-pale); color:#065f46; border:1px solid #86efac; }
         .alert-error   { background:var(--red-pale); color:#991b1b; border:1px solid #fca5a5; }
-        .alert-info    { background:var(--purple-pale); color:#4c1d95; border:1px solid var(--purple-light); }
 
-        /* ===== USER DETAIL CARD ===== */
-        .user-detail-header {
-            display:flex; align-items:center; gap:16px;
-            padding:20px; background:var(--purple-ultra);
-            border-radius:12px; margin-bottom:20px;
-        }
-        .user-detail-header .avatar-lg {
-            width:60px; height:60px; border-radius:16px;
-            display:flex; align-items:center; justify-content:center;
-            font-size:24px; font-weight:800; color:white; flex-shrink:0;
-        }
+        /* USER DETAIL */
+        .user-detail-header { display:flex; align-items:center; gap:16px; padding:20px; background:var(--purple-ultra); border-radius:12px; margin-bottom:20px; }
+        .user-detail-header .avatar-lg { width:60px; height:60px; border-radius:16px; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:800; color:white; flex-shrink:0; }
         .user-detail-header h3 { font-size:17px; font-weight:700; color:var(--text); }
         .user-detail-header p { font-size:13px; color:var(--text-light); margin-top:3px; }
+        .info-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:18px; }
+        .info-box { background:#f8f7ff; border-radius:10px; padding:14px; }
+        .info-box strong { font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:#9ca3af; display:block; margin-bottom:4px; }
+        .info-box span { font-weight:600; font-size:14px; }
 
-        /* ===== TEST WA MODAL ===== */
+        /* WA TEST */
         .wa-test-box { background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1.5px solid #86efac; border-radius:12px; padding:16px; }
         .wa-test-box textarea { width:100%; min-height:80px; padding:10px; border:1.5px solid #86efac; border-radius:8px; font-family:inherit; font-size:14px; resize:vertical; background:white; }
         .wa-test-box textarea:focus { outline:none; border-color:var(--whatsapp-dark); }
 
         /* RESPONSIVE */
-        @media (max-width:768px) {
-            .main { padding:16px; }
-            .hero { padding:20px; }
-            .hero::after { display:none; }
-            .card { padding:20px; }
-            .modal-box { padding:22px; }
-            .stats { grid-template-columns:repeat(2,1fr); }
-        }
-        @media (max-width:480px) {
-            .form-grid { grid-template-columns:1fr; }
-            .perms-grid { grid-template-columns:1fr; }
-        }
+        @media (max-width:768px) { .main{padding:16px;} .hero{padding:20px;} .hero::after{display:none;} .card{padding:20px;} .modal-box{padding:22px;} .stats{grid-template-columns:repeat(2,1fr);} }
+        @media (max-width:480px) { .form-grid{grid-template-columns:1fr;} .perms-grid{grid-template-columns:1fr;} }
     </style>
 </head>
 <body>
@@ -348,48 +235,22 @@
 <div class="sidebar" id="sidebar">
     <div class="sidebar-head"><h2>Navegação</h2><p>Sistema de Manutenção</p></div>
     <div class="s-section">
-        <div class="s-title">Principal</div>
-        <div class="s-item active"><span class="s-icon">👥</span> Usuários</div>
+        <div class="s-title">Operação</div>
+        <a href="ocorrencias.html" class="s-item"><span class="s-icon">📋</span> Central de Ocorrências</a>
+        <div class="s-title">Manutenção</div>
+        <a href="predial.html" class="s-item"><span class="s-icon">🏢</span> Predial</a>
+        <a href="equipamentos.html" class="s-item"><span class="s-icon">⚙️</span> Equipamentos</a>
+        <div class="s-title">Check-lists</div>
+        <a href="checklist-painel.html" class="s-item"><span class="s-icon">✅</span> Painel Check-lists</a>
+        <a href="checklist.html" class="s-item"><span class="s-icon">📝</span> Novo Check-list</a>
+        <div class="s-title">Gestão</div>
+        <a href="usuarios.html" class="s-item active"><span class="s-icon">👥</span> Usuários</a>
     </div>
-        <div class="menu-section">
-            <div class="menu-section-title">Operação</div>
-            <a href="ocorrencias.html" style="text-decoration:none;">
-                <div class="menu-item" id="menuOcorrenciasExt">
-                    <span class="menu-icon">📋</span>
-                    <span>Central de Ocorrências</span>
-                </div>
-            </a>
-            <div class="menu-section-title">Manutenção</div>
-            <div class="menu-item" id="menuPredial">
-                <span class="menu-icon">🏢</span>
-                <span>Predial</span>
-            </div>
-            <div class="menu-item" id="menuEquipamentos">
-                <span class="menu-icon">⚙️</span>
-                <span>Equipamentos</span>
-            </div>
-            <div class="menu-item" id="menuOcorrencias">
-                <span class="menu-icon">📋</span>
-                <span>Ocorrências</span>
-            </div>
-        </div>
-        <a href="checklist-painel.html" class="menu-item"><span class="menu-icon">✅</span><span>Painel Check-lists</span></a>
-        <a href="checklist.html" class="menu-item"><span class="menu-icon">📝</span><span>Novo Check-list</span></a>
-
-        <div class="menu-section">
-            <div class="menu-section-title">Gestão</div>
-            <a href="usuarios.html" class="menu-item" id="menuUsuarios">
-                <span class="menu-icon">👥</span>
-                <span>Usuários</span>
-            </a>
-        </div>
-
 </div>
 
 <!-- MAIN -->
 <div class="main">
 
-    <!-- HERO -->
     <div class="hero">
         <div>
             <h2>👥 Gestão de Usuários</h2>
@@ -400,7 +261,6 @@
         </div>
     </div>
 
-    <!-- STATS -->
     <div class="stats">
         <div class="stat"><div class="stat-num" id="sTotal">–</div><div class="stat-lbl">Total</div></div>
         <div class="stat s-admin"><div class="stat-num" id="sAdmin">–</div><div class="stat-lbl">Admins</div></div>
@@ -408,14 +268,12 @@
         <div class="stat s-tel"><div class="stat-num" id="sTel">–</div><div class="stat-lbl">Com WhatsApp</div></div>
     </div>
 
-    <!-- CARD LISTA -->
     <div class="card">
         <div class="card-header">
             <div class="card-title">👥 Lista de Usuários</div>
         </div>
-
         <div class="search-row">
-            <input type="text" class="search-input" id="searchInput" placeholder="🔍 Buscar por nome, login, perfil...">
+            <input type="text" class="search-input" id="searchInput" placeholder="🔍 Buscar por nome, usuário, perfil...">
             <select class="filter-sel" id="filtPerfil">
                 <option value="">Todos os perfis</option>
                 <option value="admin">Admin</option>
@@ -429,22 +287,20 @@
                 <option value="inativo">Inativos</option>
             </select>
         </div>
-
         <div id="listaUsuarios">
             <div class="loading"><div class="spinner"></div><p>Carregando usuários...</p></div>
         </div>
     </div>
 
-</div><!-- /main -->
+</div>
 
-<!-- ======= MODAL CRIAR / EDITAR ======= -->
+<!-- ===== MODAL CRIAR / EDITAR ===== -->
 <div class="modal" id="modalForm">
     <div class="modal-box">
         <div class="modal-head">
             <h2 id="modalFormTitle">➕ Novo Usuário</h2>
             <button class="modal-close" onclick="fecharModal('modalForm')">×</button>
         </div>
-
         <div id="alertForm" class="alert"></div>
 
         <div class="form-grid">
@@ -453,13 +309,13 @@
                 <input class="form-input" id="f_nome" placeholder="Ex: João da Silva">
             </div>
             <div class="form-group">
-                <label class="form-label">Login *</label>
-                <input class="form-input" id="f_login" placeholder="Ex: joao.silva">
+                <label class="form-label">Usuário (login) *</label>
+                <input class="form-input" id="f_usuario" placeholder="Ex: joao.silva">
             </div>
             <div class="form-group">
                 <label class="form-label">Senha *</label>
                 <input class="form-input" id="f_senha" type="password" placeholder="Mínimo 6 caracteres">
-                <span class="form-hint" id="f_senha_hint">Deixe em branco para manter ao editar</span>
+                <span class="form-hint" id="f_senha_hint">Mínimo 6 caracteres</span>
             </div>
             <div class="form-group">
                 <label class="form-label">Perfil *</label>
@@ -472,14 +328,10 @@
             </div>
             <div class="form-group">
                 <label class="form-label">Status</label>
-                <select class="form-select" id="f_status">
-                    <option value="ativo">Ativo</option>
-                    <option value="inativo">Inativo</option>
+                <select class="form-select" id="f_ativo">
+                    <option value="true">Ativo</option>
+                    <option value="false">Inativo</option>
                 </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Setor / Área</label>
-                <input class="form-input" id="f_setor" placeholder="Ex: Manutenção">
             </div>
         </div>
 
@@ -495,57 +347,82 @@
                 <button class="btn btn-whatsapp btn-sm" onclick="testarWhatsApp()" type="button">💬 Testar</button>
             </div>
             <div class="phone-preview" id="telPreview" style="display:none">
-                <span class="wa-icon">💬</span>
+                <span style="font-size:20px">💬</span>
                 <span id="telPreviewText"></span>
                 <span style="color:var(--green);font-weight:700;margin-left:auto;">✓ Notificações ativas</span>
             </div>
         </div>
 
         <!-- PERMISSÕES (oculto para admin) -->
-        <div id="permsSection">
-            <div class="perms-title">🔐 Permissões do sistema</div>
+        <div id="permsSection" class="perms-section">
+
+            <div class="perms-group-title">👥 Usuários</div>
             <div class="perms-grid">
                 <label class="perm-card" onclick="togglePerm(this)">
-                    <input type="checkbox" name="perm" value="perm_predial_criar">
+                    <input type="checkbox" value="perm_usuarios_visualizar">
                     <div class="perm-box">✓</div>
-                    <div class="perm-text"><strong>Criar Predial</strong><small>Abrir ocorrências prediais</small></div>
+                    <div class="perm-text"><strong>Visualizar</strong><small>Ver lista de usuários</small></div>
                 </label>
                 <label class="perm-card" onclick="togglePerm(this)">
-                    <input type="checkbox" name="perm" value="perm_predial_editar">
+                    <input type="checkbox" value="perm_usuarios_criar">
                     <div class="perm-box">✓</div>
-                    <div class="perm-text"><strong>Editar Predial</strong><small>Editar ocorrências prediais</small></div>
+                    <div class="perm-text"><strong>Criar</strong><small>Cadastrar novos usuários</small></div>
                 </label>
                 <label class="perm-card" onclick="togglePerm(this)">
-                    <input type="checkbox" name="perm" value="perm_equipamentos_criar">
+                    <input type="checkbox" value="perm_usuarios_editar">
                     <div class="perm-box">✓</div>
-                    <div class="perm-text"><strong>Criar Equipamento</strong><small>Abrir ocorrências de equip.</small></div>
+                    <div class="perm-text"><strong>Editar</strong><small>Editar dados de usuários</small></div>
                 </label>
                 <label class="perm-card" onclick="togglePerm(this)">
-                    <input type="checkbox" name="perm" value="perm_equipamentos_editar">
+                    <input type="checkbox" value="perm_usuarios_excluir">
                     <div class="perm-box">✓</div>
-                    <div class="perm-text"><strong>Editar Equipamento</strong><small>Editar ocorrências de equip.</small></div>
+                    <div class="perm-text"><strong>Excluir</strong><small>Remover usuários</small></div>
                 </label>
                 <label class="perm-card" onclick="togglePerm(this)">
-                    <input type="checkbox" name="perm" value="perm_checklist_realizar">
+                    <input type="checkbox" value="perm_usuarios_permissoes">
                     <div class="perm-box">✓</div>
-                    <div class="perm-text"><strong>Realizar Check-list</strong><small>Preencher inspeções</small></div>
-                </label>
-                <label class="perm-card" onclick="togglePerm(this)">
-                    <input type="checkbox" name="perm" value="perm_checklist_ver">
-                    <div class="perm-box">✓</div>
-                    <div class="perm-text"><strong>Ver Check-lists</strong><small>Visualizar painel de inspeções</small></div>
-                </label>
-                <label class="perm-card" onclick="togglePerm(this)">
-                    <input type="checkbox" name="perm" value="perm_relatorios">
-                    <div class="perm-box">✓</div>
-                    <div class="perm-text"><strong>Relatórios</strong><small>Exportar e visualizar relatórios</small></div>
-                </label>
-                <label class="perm-card" onclick="togglePerm(this)">
-                    <input type="checkbox" name="perm" value="perm_usuarios">
-                    <div class="perm-box">✓</div>
-                    <div class="perm-text"><strong>Gerir Usuários</strong><small>Acessar este painel</small></div>
+                    <div class="perm-text"><strong>Permissões</strong><small>Gerir permissões</small></div>
                 </label>
             </div>
+
+            <div class="perms-group-title">🏢 Predial</div>
+            <div class="perms-grid">
+                <label class="perm-card" onclick="togglePerm(this)">
+                    <input type="checkbox" value="perm_predial_visualizar">
+                    <div class="perm-box">✓</div>
+                    <div class="perm-text"><strong>Visualizar</strong><small>Ver ocorrências prediais</small></div>
+                </label>
+                <label class="perm-card" onclick="togglePerm(this)">
+                    <input type="checkbox" value="perm_predial_criar">
+                    <div class="perm-box">✓</div>
+                    <div class="perm-text"><strong>Criar</strong><small>Abrir ocorrências prediais</small></div>
+                </label>
+                <label class="perm-card" onclick="togglePerm(this)">
+                    <input type="checkbox" value="perm_predial_editar">
+                    <div class="perm-box">✓</div>
+                    <div class="perm-text"><strong>Editar</strong><small>Editar ocorrências prediais</small></div>
+                </label>
+            </div>
+
+            <div class="perms-group-title">⚙️ Equipamentos</div>
+            <div class="perms-grid">
+                <label class="perm-card" onclick="togglePerm(this)">
+                    <input type="checkbox" value="perm_equipamentos_visualizar">
+                    <div class="perm-box">✓</div>
+                    <div class="perm-text"><strong>Visualizar</strong><small>Ver ocorrências de equip.</small></div>
+                </label>
+                <label class="perm-card" onclick="togglePerm(this)">
+                    <input type="checkbox" value="perm_equipamentos_criar">
+                    <div class="perm-box">✓</div>
+                    <div class="perm-text"><strong>Criar</strong><small>Abrir ocorrências de equip.</small></div>
+                </label>
+                <label class="perm-card" onclick="togglePerm(this)">
+                    <input type="checkbox" value="perm_equipamentos_editar">
+                    <div class="perm-box">✓</div>
+                    <div class="perm-text"><strong>Editar</strong><small>Editar ocorrências de equip.</small></div>
+                </label>
+            </div>
+
         </div>
 
         <div class="modal-foot">
@@ -555,7 +432,7 @@
     </div>
 </div>
 
-<!-- ======= MODAL DETALHES ======= -->
+<!-- ===== MODAL DETALHES ===== -->
 <div class="modal" id="modalDetalhe">
     <div class="modal-box" style="max-width:720px">
         <div class="modal-head">
@@ -570,7 +447,7 @@
     </div>
 </div>
 
-<!-- ======= MODAL TESTE WA ======= -->
+<!-- ===== MODAL TESTE WHATSAPP ===== -->
 <div class="modal" id="modalWA">
     <div class="modal-box" style="max-width:460px">
         <div class="modal-head">
@@ -582,9 +459,7 @@
             <p style="font-size:13px;font-weight:700;color:#166534;margin-bottom:8px;">Mensagem de teste:</p>
             <textarea id="waTestMsg">Olá! Esta é uma mensagem de teste do Sistema de Manutenção. Suas notificações estão configuradas corretamente! ✅</textarea>
         </div>
-        <p style="font-size:12px;color:var(--text-light);margin-top:10px">
-            Será enviado para: <strong id="waTestNum"></strong>
-        </p>
+        <p style="font-size:12px;color:var(--text-light);margin-top:10px">Será enviado para: <strong id="waTestNum"></strong></p>
         <div class="modal-foot">
             <button class="btn btn-secondary" onclick="fecharModal('modalWA')">Cancelar</button>
             <button class="btn btn-whatsapp" onclick="enviarTesteWA()">💬 Enviar via WhatsApp</button>
@@ -592,7 +467,7 @@
     </div>
 </div>
 
-<!-- ======= MODAL CONFIRMAR EXCLUSÃO ======= -->
+<!-- ===== MODAL EXCLUSÃO ===== -->
 <div class="modal" id="modalDel">
     <div class="modal-box" style="max-width:400px">
         <div class="modal-head">
@@ -600,8 +475,7 @@
             <button class="modal-close" onclick="fecharModal('modalDel')">×</button>
         </div>
         <p style="font-size:15px;color:var(--text-mid);line-height:1.6">
-            Deseja realmente remover o usuário <strong id="delNome"></strong>?
-            Esta ação não pode ser desfeita.
+            Deseja realmente remover o usuário <strong id="delNome"></strong>? Esta ação não pode ser desfeita.
         </p>
         <div class="modal-foot">
             <button class="btn btn-secondary" onclick="fecharModal('modalDel')">Cancelar</button>
@@ -611,42 +485,71 @@
 </div>
 
 <script>
-/* =========================================================
+/* ================================================================
    CONFIG
-   ========================================================= */
+   ================================================================ */
 const SUPABASE_URL = 'https://wcfrwsgnxochxvwhxnvy.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjZnJ3c2dueG9jaHh2d2h4bnZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc2MzExMDgsImV4cCI6MjA4MzIwNzEwOH0.Yb4cT5chXp3S8NZaWbLpv436HzxGCO7CZTruPpOPDdU';
 
-// ⚠️ Configuração do WhatsApp Gateway
-// Opções suportadas:
-//   'callmebot'   → API gratuita para WhatsApp pessoal (precisa ativar: wa.me/12132891665?text=join+...)
-//   'direct_link' → Abre o wa.me no navegador (sempre funciona)
-const WA_PROVIDER = 'direct_link'; 
-const WA_CALLMEBOT_API = 'https://api.callmebot.com/whatsapp.php';
+const WA_PROVIDER       = 'direct_link'; // 'direct_link' | 'callmebot'
+const WA_CALLMEBOT_API  = 'https://api.callmebot.com/whatsapp.php';
+
+// Campos exatos da tabela usuarios
+const ALL_PERMS = [
+    'perm_usuarios_visualizar',
+    'perm_usuarios_criar',
+    'perm_usuarios_editar',
+    'perm_usuarios_excluir',
+    'perm_usuarios_permissoes',
+    'perm_predial_visualizar',
+    'perm_predial_criar',
+    'perm_predial_editar',
+    'perm_equipamentos_visualizar',
+    'perm_equipamentos_criar',
+    'perm_equipamentos_editar'
+];
+
+const PERMS_LABELS = {
+    perm_usuarios_visualizar:    'Ver Usuários',
+    perm_usuarios_criar:         'Criar Usuários',
+    perm_usuarios_editar:        'Editar Usuários',
+    perm_usuarios_excluir:       'Excluir Usuários',
+    perm_usuarios_permissoes:    'Gerir Permissões',
+    perm_predial_visualizar:     'Ver Predial',
+    perm_predial_criar:          'Criar Predial',
+    perm_predial_editar:         'Editar Predial',
+    perm_equipamentos_visualizar:'Ver Equipamentos',
+    perm_equipamentos_criar:     'Criar Equipamentos',
+    perm_equipamentos_editar:    'Editar Equipamentos'
+};
 
 const AVATAR_COLORS = ['#5b21b6','#0369a1','#065f46','#92400e','#881337','#1e3a8a','#3f6212'];
 
 let db, currentUser;
 let allUsers = [], filteredUsers = [];
-let editingId = null;
-let deleteTargetId = null;
+let editingId = null, deleteTargetId = null;
 
-/* =========================================================
+/* ================================================================
    BOOT
-   ========================================================= */
+   ================================================================ */
 document.addEventListener('DOMContentLoaded', () => {
     const saved = localStorage.getItem('currentUser');
     if (!saved) { window.location.href = 'login.html'; return; }
     currentUser = JSON.parse(saved);
 
-    // Apenas admin e quem tem perm_usuarios pode acessar
-    if (currentUser.perfil !== 'admin' && !currentUser.perm_usuarios) {
-        alert('⛔ Acesso negado. Apenas administradores podem gerir usuários.');
+    const podeAcessar = currentUser.perfil === 'admin'
+        || currentUser.perm_usuarios_visualizar
+        || currentUser.perm_usuarios_criar
+        || currentUser.perm_usuarios_editar
+        || currentUser.perm_usuarios_permissoes;
+
+    if (!podeAcessar) {
+        alert('⛔ Acesso negado.');
         window.location.href = 'menu.html';
         return;
     }
 
-    document.getElementById('userChip').textContent = currentUser.nome || currentUser.perfil || 'Admin';
+    document.getElementById('userChip').textContent = currentUser.nome || 'Admin';
     db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     setupSidebar();
     setupSearch();
@@ -654,17 +557,15 @@ document.addEventListener('DOMContentLoaded', () => {
     loadUsuarios();
 });
 
-/* =========================================================
+/* ================================================================
    SIDEBAR
-   ========================================================= */
+   ================================================================ */
 function setupSidebar() {
     const btn = document.getElementById('hambBtn');
     const sb  = document.getElementById('sidebar');
     const ov  = document.getElementById('overlay');
     btn.addEventListener('click', () => {
-        btn.classList.toggle('active');
-        sb.classList.toggle('active');
-        ov.classList.toggle('active');
+        btn.classList.toggle('active'); sb.classList.toggle('active'); ov.classList.toggle('active');
     });
     ov.addEventListener('click', closeSidebar);
     document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeSidebar(); fecharTodosModais(); } });
@@ -673,42 +574,55 @@ function closeSidebar() {
     ['hambBtn','sidebar','overlay'].forEach(id => document.getElementById(id).classList.remove('active'));
 }
 
-/* =========================================================
-   LOAD
-   ========================================================= */
+/* ================================================================
+   LOAD — usa exatamente os campos da tabela
+   ================================================================ */
 async function loadUsuarios() {
-    document.getElementById('listaUsuarios').innerHTML = '<div class="loading"><div class="spinner"></div><p>Carregando...</p></div>';
+    document.getElementById('listaUsuarios').innerHTML =
+        '<div class="loading"><div class="spinner"></div><p>Carregando...</p></div>';
+
+    // Seleciona os campos exatos da tabela
+    const SELECT_FIELDS = [
+        'id','nome','usuario','senha','perfil','ativo','telefone','created_at','updated_at',
+        ...ALL_PERMS
+    ].join(',');
+
     try {
-        const { data, error } = await db.from('usuarios').select('*').order('nome', { ascending: true });
+        const { data, error } = await db
+            .from('usuarios')
+            .select(SELECT_FIELDS)
+            .order('nome', { ascending: true });
         if (error) throw error;
         allUsers = data || [];
     } catch (e) {
-        // fallback localStorage
+        console.warn('Supabase indisponível, usando localStorage:', e.message);
         allUsers = JSON.parse(localStorage.getItem('usuarios') || '[]');
     }
+
     filteredUsers = [...allUsers];
     calcStats();
     renderTabela(filteredUsers);
 }
 
 function calcStats() {
-    document.getElementById('sTotal').textContent  = allUsers.length;
-    document.getElementById('sAdmin').textContent  = allUsers.filter(u => u.perfil === 'admin').length;
-    document.getElementById('sAtivo').textContent  = allUsers.filter(u => u.status !== 'inativo').length;
-    document.getElementById('sTel').textContent    = allUsers.filter(u => u.telefone && u.telefone.trim()).length;
+    document.getElementById('sTotal').textContent = allUsers.length;
+    document.getElementById('sAdmin').textContent = allUsers.filter(u => u.perfil === 'admin').length;
+    // Campo 'ativo' é boolean na tabela
+    document.getElementById('sAtivo').textContent = allUsers.filter(u => u.ativo !== false).length;
+    document.getElementById('sTel').textContent   = allUsers.filter(u => u.telefone && u.telefone.trim()).length;
 }
 
-/* =========================================================
-   RENDER TABLE
-   ========================================================= */
+/* ================================================================
+   RENDER
+   ================================================================ */
 function avatarColor(nome) {
     const sum = (nome || 'U').split('').reduce((a, c) => a + c.charCodeAt(0), 0);
     return AVATAR_COLORS[sum % AVATAR_COLORS.length];
 }
 function initials(nome) {
     if (!nome) return '?';
-    const parts = nome.trim().split(' ');
-    return (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+    const p = nome.trim().split(' ');
+    return (p[0][0] + (p[1] ? p[1][0] : '')).toUpperCase();
 }
 function perfilBadge(p) {
     const map = { admin:'b-admin Admin', manager:'b-manager Gerente', operador:'b-operador Operador', viewer:'b-viewer Visualizador' };
@@ -722,37 +636,50 @@ function renderTabela(lista) {
         el.innerHTML = '<div class="empty"><div class="empty-icon">👥</div><p>Nenhum usuário encontrado.</p></div>';
         return;
     }
+
+    const podeEditar  = currentUser.perfil === 'admin' || currentUser.perm_usuarios_editar;
+    const podeExcluir = currentUser.perfil === 'admin' || currentUser.perm_usuarios_excluir;
+
     let html = `<div class="count-strip">📊 ${lista.length} usuário(s)</div>
     <div class="table-wrap"><table>
     <thead><tr>
-        <th>Usuário</th><th>Login</th><th>Perfil</th><th>Setor</th>
-        <th>WhatsApp</th><th>Status</th><th>Ações</th>
+        <th>Usuário</th><th>Login</th><th>Perfil</th>
+        <th>WhatsApp</th><th>Status</th><th>Criado em</th><th>Ações</th>
     </tr></thead><tbody>`;
 
     lista.forEach(u => {
-        const tel = u.telefone ? `<span class="badge b-tem-tel">💬 ${formatTel(u.telefone)}</span>` : `<span class="badge b-sem-tel">–</span>`;
-        const status = u.status === 'inativo' ? `<span class="badge b-inativo">Inativo</span>` : `<span class="badge b-ativo">Ativo</span>`;
-        const notifyBtn = u.telefone ? `<button class="btn btn-sm btn-whatsapp" onclick="abrirTesteWA('${u.id}','${escStr(u.nome)}','${escStr(u.telefone)}')">💬</button>` : '';
+        // 'ativo' é boolean: true = ativo, false = inativo
+        const isAtivo = u.ativo !== false;
+        const tel     = u.telefone
+            ? `<span class="badge b-tem-tel">💬 ${escStr(u.telefone)}</span>`
+            : `<span class="badge b-sem-tel">–</span>`;
+        const status  = isAtivo
+            ? `<span class="badge b-ativo">Ativo</span>`
+            : `<span class="badge b-inativo">Inativo</span>`;
+        const criado  = u.created_at ? new Date(u.created_at).toLocaleDateString('pt-BR') : '–';
+
+        const waBtn   = u.telefone
+            ? `<button class="btn btn-sm btn-whatsapp" title="Enviar WhatsApp"
+                onclick="abrirTesteWA('${u.id}','${escStr(u.nome)}','${escStr(u.telefone)}')">💬</button>` : '';
+        const editBtn = podeEditar
+            ? `<button class="btn btn-sm" onclick="abrirEditar('${u.id}')">✏️</button>` : '';
+        const delBtn  = podeExcluir
+            ? `<button class="btn btn-sm btn-danger" onclick="confirmarDeletar('${u.id}','${escStr(u.nome)}')">🗑️</button>` : '';
+
         html += `<tr>
-            <td>
-                <div style="display:flex;align-items:center;gap:10px">
-                    <div class="avatar" style="background:${avatarColor(u.nome)}">${initials(u.nome)}</div>
-                    <strong>${escStr(u.nome)}</strong>
-                </div>
-            </td>
-            <td style="color:var(--text-mid);font-size:13px">${escStr(u.login||'')}</td>
+            <td><div style="display:flex;align-items:center;gap:10px">
+                <div class="avatar" style="background:${avatarColor(u.nome)}">${initials(u.nome)}</div>
+                <strong>${escStr(u.nome)}</strong>
+            </div></td>
+            <td style="color:var(--text-mid);font-size:13px">${escStr(u.usuario || '')}</td>
             <td>${perfilBadge(u.perfil)}</td>
-            <td style="font-size:13px;color:var(--text-mid)">${escStr(u.setor||'–')}</td>
             <td>${tel}</td>
             <td>${status}</td>
-            <td>
-                <div class="action-btns">
-                    <button class="btn btn-sm btn-outline" onclick="verDetalhe('${u.id}')">👁️ Ver</button>
-                    <button class="btn btn-sm" onclick="abrirEditar('${u.id}')">✏️</button>
-                    ${notifyBtn}
-                    <button class="btn btn-sm btn-danger" onclick="confirmarDeletar('${u.id}','${escStr(u.nome)}')">🗑️</button>
-                </div>
-            </td>
+            <td style="font-size:12px;color:var(--text-light)">${criado}</td>
+            <td><div class="action-btns">
+                <button class="btn btn-sm btn-outline" onclick="verDetalhe('${u.id}')">👁️ Ver</button>
+                ${editBtn}${waBtn}${delBtn}
+            </div></td>
         </tr>`;
     });
 
@@ -760,50 +687,50 @@ function renderTabela(lista) {
     el.innerHTML = html;
 }
 
-function escStr(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function formatTel(t) { return (t||'').replace(/[^\d+]/g,'').substring(0,16); }
+function escStr(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 
-/* =========================================================
+/* ================================================================
    SEARCH & FILTER
-   ========================================================= */
+   ================================================================ */
 function setupSearch() {
     document.getElementById('searchInput').addEventListener('input', aplicarFiltros);
     document.getElementById('filtPerfil').addEventListener('change', aplicarFiltros);
     document.getElementById('filtStatus').addEventListener('change', aplicarFiltros);
 }
 function aplicarFiltros() {
-    const q   = document.getElementById('searchInput').value.toLowerCase().trim();
+    const q    = document.getElementById('searchInput').value.toLowerCase().trim();
     const pfil = document.getElementById('filtPerfil').value;
     const sfil = document.getElementById('filtStatus').value;
     filteredUsers = allUsers.filter(u => {
-        const haystack = `${u.nome} ${u.login} ${u.perfil} ${u.setor}`.toLowerCase();
-        if (q && !haystack.includes(q)) return false;
+        const hay = `${u.nome} ${u.usuario} ${u.perfil}`.toLowerCase();
+        if (q && !hay.includes(q)) return false;
         if (pfil && u.perfil !== pfil) return false;
-        if (sfil === 'ativo'   && u.status === 'inativo') return false;
-        if (sfil === 'inativo' && u.status !== 'inativo') return false;
+        if (sfil === 'ativo'  && u.ativo === false)  return false;
+        if (sfil === 'inativo' && u.ativo !== false) return false;
         return true;
     });
     renderTabela(filteredUsers);
 }
 
-/* =========================================================
+/* ================================================================
    MODAL CRIAR / EDITAR
-   ========================================================= */
+   ================================================================ */
 function abrirModalNovo() {
     editingId = null;
     document.getElementById('modalFormTitle').textContent = '➕ Novo Usuário';
-    document.getElementById('f_nome').value    = '';
-    document.getElementById('f_login').value   = '';
-    document.getElementById('f_senha').value   = '';
+    document.getElementById('f_nome').value     = '';
+    document.getElementById('f_usuario').value  = '';
+    document.getElementById('f_senha').value    = '';
     document.getElementById('f_senha_hint').textContent = 'Mínimo 6 caracteres';
-    document.getElementById('f_perfil').value  = 'operador';
-    document.getElementById('f_status').value  = 'ativo';
-    document.getElementById('f_setor').value   = '';
+    document.getElementById('f_perfil').value   = 'operador';
+    document.getElementById('f_ativo').value    = 'true';
     document.getElementById('f_telefone').value = '';
     document.getElementById('telPreview').style.display = 'none';
     limparPerms();
     onPerfilChange();
-    showAlert('alertForm', '', '');
+    showAlert('alertForm','','');
     document.getElementById('modalForm').classList.add('open');
 }
 
@@ -812,41 +739,41 @@ function abrirEditar(id) {
     if (!u) return;
     editingId = u.id;
     document.getElementById('modalFormTitle').textContent = '✏️ Editar Usuário';
-    document.getElementById('f_nome').value    = u.nome || '';
-    document.getElementById('f_login').value   = u.login || '';
-    document.getElementById('f_senha').value   = '';
+    document.getElementById('f_nome').value     = u.nome    || '';
+    document.getElementById('f_usuario').value  = u.usuario || '';
+    document.getElementById('f_senha').value    = '';
     document.getElementById('f_senha_hint').textContent = 'Deixe em branco para manter a senha atual';
-    document.getElementById('f_perfil').value  = u.perfil || 'operador';
-    document.getElementById('f_status').value  = u.status || 'ativo';
-    document.getElementById('f_setor').value   = u.setor || '';
+    document.getElementById('f_perfil').value   = u.perfil  || 'operador';
+    document.getElementById('f_ativo').value    = u.ativo === false ? 'false' : 'true';
     document.getElementById('f_telefone').value = u.telefone || '';
     atualizarPreviewTel();
     limparPerms();
-    // Marcar permissões existentes
-    const PERMS = ['perm_predial_criar','perm_predial_editar','perm_equipamentos_criar','perm_equipamentos_editar','perm_checklist_realizar','perm_checklist_ver','perm_relatorios','perm_usuarios'];
-    PERMS.forEach(p => {
+    ALL_PERMS.forEach(p => {
         if (u[p]) {
-            document.querySelectorAll(`.perm-card input[value="${p}"]`).forEach(inp => {
-                inp.closest('.perm-card').classList.add('checked');
-                inp.checked = true;
-            });
+            const inp = document.querySelector(`.perm-card input[value="${p}"]`);
+            if (inp) { inp.checked = true; inp.closest('.perm-card').classList.add('checked'); }
         }
     });
     onPerfilChange();
-    showAlert('alertForm', '', '');
+    showAlert('alertForm','','');
     document.getElementById('modalForm').classList.add('open');
 }
 
 function limparPerms() {
-    document.querySelectorAll('.perm-card').forEach(c => { c.classList.remove('checked'); c.querySelector('input').checked = false; });
+    document.querySelectorAll('.perm-card').forEach(c => {
+        c.classList.remove('checked');
+        c.querySelector('input').checked = false;
+    });
 }
 
 function onPerfilChange() {
     const p = document.getElementById('f_perfil').value;
-    document.getElementById('permsSection').style.display = (p === 'admin') ? 'none' : 'block';
+    document.getElementById('permsSection').style.display = p === 'admin' ? 'none' : 'block';
     if (p === 'manager') {
-        // Pré-marcar todas para gerente
-        document.querySelectorAll('.perm-card').forEach(c => { c.classList.add('checked'); c.querySelector('input').checked = true; });
+        document.querySelectorAll('.perm-card').forEach(c => {
+            c.classList.add('checked');
+            c.querySelector('input').checked = true;
+        });
     }
 }
 
@@ -857,44 +784,43 @@ function togglePerm(card) {
 
 function atualizarPreviewTel() {
     const tel = document.getElementById('f_telefone').value.trim();
-    const preview = document.getElementById('telPreview');
+    const prv = document.getElementById('telPreview');
     if (tel.length > 5) {
         document.getElementById('telPreviewText').textContent = tel;
-        preview.style.display = 'flex';
+        prv.style.display = 'flex';
     } else {
-        preview.style.display = 'none';
+        prv.style.display = 'none';
     }
 }
 
-/* =========================================================
-   SALVAR USUÁRIO
-   ========================================================= */
+/* ================================================================
+   SALVAR — payload usa campos exatos da tabela
+   ================================================================ */
 async function salvarUsuario() {
-    const nome  = document.getElementById('f_nome').value.trim();
-    const login = document.getElementById('f_login').value.trim();
-    const senha = document.getElementById('f_senha').value.trim();
-    const perfil = document.getElementById('f_perfil').value;
-    const status = document.getElementById('f_status').value;
-    const setor  = document.getElementById('f_setor').value.trim();
-    const tel    = document.getElementById('f_telefone').value.trim();
+    const nome    = document.getElementById('f_nome').value.trim();
+    const usuario = document.getElementById('f_usuario').value.trim();
+    const senha   = document.getElementById('f_senha').value.trim();
+    const perfil  = document.getElementById('f_perfil').value;
+    // campo boolean na tabela
+    const ativo   = document.getElementById('f_ativo').value === 'true';
+    const tel     = document.getElementById('f_telefone').value.trim();
 
-    if (!nome || !login) { showAlert('alertForm', '⚠️ Nome e login são obrigatórios.', 'error'); return; }
-    if (!editingId && !senha) { showAlert('alertForm', '⚠️ Informe uma senha para o novo usuário.', 'error'); return; }
-    if (senha && senha.length < 6) { showAlert('alertForm', '⚠️ Senha deve ter mínimo 6 caracteres.', 'error'); return; }
+    if (!nome || !usuario) { showAlert('alertForm','⚠️ Nome e usuário são obrigatórios.','error'); return; }
+    if (!editingId && !senha) { showAlert('alertForm','⚠️ Informe uma senha para o novo usuário.','error'); return; }
+    if (senha && senha.length < 6) { showAlert('alertForm','⚠️ Senha deve ter mínimo 6 caracteres.','error'); return; }
 
-    // Montar payload
-    const payload = { nome, login, perfil, status, setor, telefone: tel };
+    // Payload com campos exatos da tabela
+    const payload = { nome, usuario, perfil, ativo, telefone: tel };
+    if (senha) payload.senha = senha;
 
-    const PERMS = ['perm_predial_criar','perm_predial_editar','perm_equipamentos_criar','perm_equipamentos_editar','perm_checklist_realizar','perm_checklist_ver','perm_relatorios','perm_usuarios'];
     if (perfil === 'admin') {
-        PERMS.forEach(p => payload[p] = true);
+        ALL_PERMS.forEach(p => payload[p] = true);
     } else {
-        PERMS.forEach(p => {
+        ALL_PERMS.forEach(p => {
             const inp = document.querySelector(`.perm-card input[value="${p}"]`);
             payload[p] = inp ? inp.checked : false;
         });
     }
-    if (senha) payload.senha = senha;
 
     const btn = document.getElementById('btnSalvarUser');
     btn.disabled = true; btn.textContent = '⏳ Salvando...';
@@ -903,103 +829,91 @@ async function salvarUsuario() {
         if (editingId) {
             const { error } = await db.from('usuarios').update(payload).eq('id', editingId);
             if (error) throw error;
-            // Atualizar localStorage se for currentUser
             if (String(currentUser.id) === String(editingId)) {
-                const updated = { ...currentUser, ...payload };
-                localStorage.setItem('currentUser', JSON.stringify(updated));
+                localStorage.setItem('currentUser', JSON.stringify({ ...currentUser, ...payload }));
             }
         } else {
             const { error } = await db.from('usuarios').insert([payload]);
             if (error) throw error;
         }
-        showAlert('alertForm', '✅ Usuário salvo com sucesso!', 'success');
+        showAlert('alertForm','✅ Usuário salvo com sucesso!','success');
         setTimeout(() => { fecharModal('modalForm'); loadUsuarios(); }, 900);
     } catch (e) {
-        // Fallback localStorage
         try {
             let list = JSON.parse(localStorage.getItem('usuarios') || '[]');
             if (editingId) {
                 list = list.map(u => String(u.id) === String(editingId) ? { ...u, ...payload } : u);
             } else {
                 payload.id = Date.now();
+                payload.created_at = new Date().toISOString();
                 list.push(payload);
             }
             localStorage.setItem('usuarios', JSON.stringify(list));
-            showAlert('alertForm', '✅ Salvo localmente (sem banco).', 'success');
+            showAlert('alertForm','✅ Salvo localmente (sem banco).','success');
             setTimeout(() => { fecharModal('modalForm'); loadUsuarios(); }, 900);
         } catch (e2) {
-            showAlert('alertForm', '❌ Erro ao salvar: ' + e.message, 'error');
+            showAlert('alertForm','❌ Erro ao salvar: ' + e.message,'error');
         }
     } finally {
         btn.disabled = false; btn.textContent = '💾 Salvar';
     }
 }
 
-/* =========================================================
+/* ================================================================
    VER DETALHE
-   ========================================================= */
+   ================================================================ */
 function verDetalhe(id) {
     const u = allUsers.find(x => String(x.id) === String(id));
     if (!u) return;
     document.getElementById('modalDetalheTitle').textContent = `👤 ${u.nome}`;
 
-    const PERMS_LABELS = {
-        perm_predial_criar:'Criar Predial', perm_predial_editar:'Editar Predial',
-        perm_equipamentos_criar:'Criar Equip.', perm_equipamentos_editar:'Editar Equip.',
-        perm_checklist_realizar:'Realizar Check-list', perm_checklist_ver:'Ver Check-lists',
-        perm_relatorios:'Relatórios', perm_usuarios:'Gerir Usuários'
-    };
-    const activePerms = Object.entries(PERMS_LABELS).filter(([k]) => u[k]).map(([,v]) => v);
+    const activePerms = ALL_PERMS.filter(p => u[p]).map(p => PERMS_LABELS[p]);
     const permsHtml = u.perfil === 'admin'
         ? '<span class="badge b-admin">Todas as permissões (Admin)</span>'
         : activePerms.length
-            ? activePerms.map(p=>`<span class="badge" style="background:var(--purple-pale);color:var(--purple);margin:2px">${p}</span>`).join('')
-            : '<span style="color:var(--text-light);font-size:13px">Nenhuma permissão específica</span>';
+            ? activePerms.map(p => `<span class="badge" style="background:var(--purple-pale);color:var(--purple);margin:2px">${p}</span>`).join('')
+            : '<span style="color:var(--text-light);font-size:13px">Nenhuma permissão ativa</span>';
 
-    const html = `
+    const criado     = u.created_at ? new Date(u.created_at).toLocaleString('pt-BR') : '–';
+    const atualizado = u.updated_at ? new Date(u.updated_at).toLocaleString('pt-BR') : '–';
+
+    document.getElementById('modalDetalheConteudo').innerHTML = `
         <div class="user-detail-header">
             <div class="avatar-lg" style="background:${avatarColor(u.nome)}">${initials(u.nome)}</div>
             <div>
                 <h3>${escStr(u.nome)}</h3>
-                <p>@${escStr(u.login||'')} • ${escStr(u.setor||'Sem setor')}</p>
-                <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">${perfilBadge(u.perfil)} ${u.status==='inativo'?'<span class="badge b-inativo">Inativo</span>':'<span class="badge b-ativo">Ativo</span>'}</div>
+                <p>@${escStr(u.usuario || '')} • ${perfilBadge(u.perfil)}</p>
+                <div style="margin-top:6px">
+                    ${u.ativo === false ? '<span class="badge b-inativo">Inativo</span>' : '<span class="badge b-ativo">Ativo</span>'}
+                </div>
             </div>
         </div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
-            <div style="background:#f8f7ff;border-radius:10px;padding:14px">
-                <strong style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#9ca3af">Login</strong>
-                <p style="font-weight:600;margin-top:4px">${escStr(u.login||'–')}</p>
-            </div>
-            <div style="background:#f8f7ff;border-radius:10px;padding:14px">
-                <strong style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#9ca3af">WhatsApp</strong>
-                <p style="font-weight:600;margin-top:4px;color:${u.telefone?'var(--whatsapp-dark)':'var(--text-light)'}">
-                    ${u.telefone ? '💬 ' + escStr(u.telefone) : 'Não configurado'}
-                </p>
-            </div>
+        <div class="info-grid">
+            <div class="info-box"><strong>Login (usuário)</strong><span>${escStr(u.usuario || '–')}</span></div>
+            <div class="info-box"><strong>WhatsApp</strong><span style="color:${u.telefone ? 'var(--whatsapp-dark)' : 'var(--text-light)'}">
+                ${u.telefone ? '💬 ' + escStr(u.telefone) : 'Não configurado'}
+            </span></div>
+            <div class="info-box"><strong>Criado em</strong><span style="font-size:13px">${criado}</span></div>
+            <div class="info-box"><strong>Atualizado em</strong><span style="font-size:13px">${atualizado}</span></div>
         </div>
-
         <div>
-            <strong style="font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:#9ca3af;display:block;margin-bottom:8px">Permissões</strong>
+            <strong style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#9ca3af;display:block;margin-bottom:8px">🔐 Permissões ativas</strong>
             <div style="display:flex;flex-wrap:wrap;gap:4px">${permsHtml}</div>
         </div>
-
-        ${u.telefone ? `
-        <div style="margin-top:16px">
-            <button class="btn btn-whatsapp btn-sm" onclick="abrirTesteWA('${u.id}','${escStr(u.nome)}','${escStr(u.telefone)}')">
-                💬 Enviar mensagem de teste no WhatsApp
+        ${u.telefone ? `<div style="margin-top:16px">
+            <button class="btn btn-whatsapp btn-sm"
+                onclick="abrirTesteWA('${u.id}','${escStr(u.nome)}','${escStr(u.telefone)}')">
+                💬 Enviar mensagem de teste
             </button>
         </div>` : ''}
     `;
-
-    document.getElementById('modalDetalheConteudo').innerHTML = html;
     document.getElementById('btnEditarDetalhe').onclick = () => { fecharModal('modalDetalhe'); abrirEditar(id); };
     document.getElementById('modalDetalhe').classList.add('open');
 }
 
-/* =========================================================
+/* ================================================================
    DELETAR
-   ========================================================= */
+   ================================================================ */
 function confirmarDeletar(id, nome) {
     deleteTargetId = id;
     document.getElementById('delNome').textContent = nome;
@@ -1013,82 +927,67 @@ async function deletarUsuario() {
         if (error) throw error;
     } catch (e) {
         let list = JSON.parse(localStorage.getItem('usuarios') || '[]');
-        list = list.filter(u => String(u.id) !== String(deleteTargetId));
-        localStorage.setItem('usuarios', JSON.stringify(list));
+        localStorage.setItem('usuarios', JSON.stringify(list.filter(u => String(u.id) !== String(deleteTargetId))));
     }
     fecharModal('modalDel');
     loadUsuarios();
 }
 
-/* =========================================================
+/* ================================================================
    WHATSAPP
-   ========================================================= */
+   ================================================================ */
 function testarWhatsApp() {
-    const tel = document.getElementById('f_telefone').value.trim();
+    const tel  = document.getElementById('f_telefone').value.trim();
     const nome = document.getElementById('f_nome').value.trim() || 'Usuário';
-    if (!tel) { showAlert('alertForm', '⚠️ Informe o número de telefone primeiro.', 'error'); return; }
+    if (!tel) { showAlert('alertForm','⚠️ Informe o número de telefone primeiro.','error'); return; }
     abrirTesteWA(null, nome, tel);
 }
-
 function abrirTesteWA(id, nome, tel) {
     document.getElementById('waTestNum').textContent = tel;
-    document.getElementById('waTestMsg').value = `Olá, ${nome}! Esta é uma notificação de teste do Sistema de Manutenção. ✅\nSuas notificações estão configuradas corretamente.`;
-    showAlert('alertWA', '', '');
+    document.getElementById('waTestMsg').value =
+        `Olá, ${nome}! Esta é uma notificação de teste do Sistema de Manutenção. ✅\nSuas notificações estão configuradas corretamente.`;
+    showAlert('alertWA','','');
     document.getElementById('modalWA').classList.add('open');
 }
-
 function enviarTesteWA() {
     const tel = document.getElementById('waTestNum').textContent.trim();
     const msg = document.getElementById('waTestMsg').value.trim();
-    if (!msg) { showAlert('alertWA', '⚠️ Digite uma mensagem.', 'error'); return; }
+    if (!msg) { showAlert('alertWA','⚠️ Digite uma mensagem.','error'); return; }
     enviarWhatsApp(tel, msg, 'alertWA');
 }
-
-// ─── Função principal de envio WA ────────────────────────
 function enviarWhatsApp(tel, msg, alertEl) {
-    const telClean = tel.replace(/[^\d+]/g, '');
+    const n = tel.replace(/[^\d+]/g, '');
     if (WA_PROVIDER === 'callmebot') {
-        // Requer ativação prévia: wa.me/12132891665?text=join+seu-codigo
-        const url = `${WA_CALLMEBOT_API}?phone=${encodeURIComponent(telClean)}&text=${encodeURIComponent(msg)}&apikey=SUA_APIKEY`;
-        fetch(url)
-            .then(r => r.text())
-            .then(resp => {
-                if (alertEl) showAlert(alertEl, '✅ Mensagem enviada via CallMeBot!', 'success');
-            })
-            .catch(e => {
-                if (alertEl) showAlert(alertEl, '❌ Erro CallMeBot: ' + e.message, 'error');
-            });
+        fetch(`${WA_CALLMEBOT_API}?phone=${encodeURIComponent(n)}&text=${encodeURIComponent(msg)}&apikey=SUA_APIKEY`)
+            .then(() => { if (alertEl) showAlert(alertEl,'✅ Enviado via CallMeBot!','success'); })
+            .catch(e => { if (alertEl) showAlert(alertEl,'❌ Erro: ' + e.message,'error'); });
     } else {
-        // Direct link — sempre funciona, abre o WhatsApp
-        const waUrl = `https://wa.me/${telClean.replace(/^\+/,'')}?text=${encodeURIComponent(msg)}`;
-        window.open(waUrl, '_blank');
-        if (alertEl) showAlert(alertEl, '✅ WhatsApp aberto! Clique em Enviar no app.', 'success');
+        window.open(`https://wa.me/${n.replace(/^\+/,'')}?text=${encodeURIComponent(msg)}`, '_blank');
+        if (alertEl) showAlert(alertEl,'✅ WhatsApp aberto! Clique em Enviar no app.','success');
     }
 }
 
-// ─── Notificar usuário mencionado ────────────────────────
-// Chamado de qualquer outro arquivo: notificarUsuario(nomeOuId, mensagem)
+// Função global acessível por outros arquivos
 window.notificarUsuario = async function(nomeOuId, mensagem) {
     let u = allUsers.find(x =>
         String(x.id) === String(nomeOuId) ||
-        x.nome?.toLowerCase() === String(nomeOuId).toLowerCase()
+        (x.nome || '').toLowerCase() === String(nomeOuId).toLowerCase()
     );
-    // Se não carregado, busca no banco
     if (!u && db) {
         try {
-            const { data } = await db.from('usuarios').select('*')
-                .or(`id.eq.${nomeOuId},nome.ilike.${nomeOuId}`)
-                .single();
+            const { data } = await db.from('usuarios')
+                .select('id,nome,usuario,telefone')
+                .or(`id.eq.${nomeOuId},nome.ilike.%${nomeOuId}%`)
+                .maybeSingle();
             u = data;
         } catch {}
     }
-    if (!u?.telefone) return;
-    enviarWhatsApp(u.telefone, mensagem, null);
+    if (u?.telefone) enviarWhatsApp(u.telefone, mensagem, null);
 };
 
-/* =========================================================
-   UTILITÁRIOS
-   ========================================================= */
+/* ================================================================
+   UTILS
+   ================================================================ */
 function showAlert(elId, msg, type) {
     const el = document.getElementById(elId);
     if (!el) return;
@@ -1097,15 +996,11 @@ function showAlert(elId, msg, type) {
     el.textContent = msg;
     el.style.display = 'block';
 }
-
 function fecharModal(id) { document.getElementById(id).classList.remove('open'); }
-function fecharTodosModais() {
-    document.querySelectorAll('.modal').forEach(m => m.classList.remove('open'));
-}
+function fecharTodosModais() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('open')); }
 document.querySelectorAll('.modal').forEach(m => {
     m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
 });
-
 function logout() {
     if (confirm('Deseja realmente sair?')) {
         localStorage.removeItem('currentUser');
