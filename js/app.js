@@ -1029,9 +1029,6 @@ function filterTable(tableId, searchTerm) {
 
 document.addEventListener('DOMContentLoaded', function() {
     db = initSupabase();
-    if (currentUser) {
-        window.notifInit?.();  // ← adicionar
-        window.pushInit?.();   // ← adicionar
     if (!db) {
         alert('Erro ao conectar com o banco de dados. Verifique as credenciais.');
         return;
