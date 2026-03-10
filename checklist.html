@@ -13,8 +13,6 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
-    <script src="notifications.js"></script>
-    <script src="push.js"></script>
 <body>
 
 <!-- HEADER -->
@@ -503,6 +501,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Pre-fill operator name
         document.getElementById('operador').value = currentUser.nome || '';
         atualizarCard('operador', document.getElementById('operador'));
+        // Notificações
+        window.notifInit?.();
+        window.pushInit?.();
     } else {
         window.location.href = 'login.html';
         return;
@@ -814,5 +815,7 @@ function limparFormulario() {
     atualizarProgresso();
 }
 </script>
+    <script src="notifications.js"></script>
+    <script src="push.js"></script>
 </body>
 </html>
