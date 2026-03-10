@@ -15,6 +15,7 @@ const CACHE_URLS = [
     '/usuarios.html',
     '/notifications.js',
     '/push.js',
+    '/menu.html',
     '/manifest.json',
 ];
 
