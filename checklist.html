@@ -72,6 +72,13 @@
             <input type="text" id="matricula" name="matricula" placeholder="Número da matrícula" required>
         </div>
 
+        <!-- NOVO: Número da Máquina -->
+        <div class="form-card" id="card_numero_maquina">
+            <span class="check-icon">✓</span>
+            <label class="main-label">Número da Máquina *</label>
+            <input type="text" id="numero_maquina" name="numero_maquina" placeholder="Ex: EMP-01, 003, M-12..." required>
+        </div>
+
         <div class="form-card" id="card_turno">
             <span class="check-icon">✓</span>
             <label class="main-label">Turno *</label>
@@ -450,8 +457,6 @@
 const SUPABASE_URL = 'https://wcfrwsgnxochxvwhxnvy.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjZnJ3c2dueG9jaHh2d2h4bnZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc2MzExMDgsImV4cCI6MjA4MzIwNzEwOH0.Yb4cT5chXp3S8NZaWbLpv436HzxGCO7CZTruPpOPDdU';
 
-
-// ── PERGUNTAS (para rótulos no histórico) ──
 const PERGUNTAS = {
     q1:  'Há vazamentos visíveis de água ou óleo?',
     q2:  'A cabine está limpa e sem acúmulo de sujeira ou óleo?',
@@ -473,18 +478,14 @@ const PERGUNTAS = {
     q18: 'A direção está leve e sem folgas?'
 };
 
-// Respostas que indicam problema (alerta)
-const ALERTA_SIM  = ['q1','q3','q4','q5','q13'];
-const ALERTA_NAO  = ['q2','q6','q7','q8','q9','q10','q11','q12','q14','q15','q16','q17','q18'];
+const ALERTA_SIM = ['q1','q3','q4','q5','q13'];
+const ALERTA_NAO = ['q2','q6','q7','q8','q9','q10','q11','q12','q14','q15','q16','q17','q18'];
 
-// Número de WhatsApp do supervisor/responsável para notificações de problemas.
-// Pode ser um número direto (ex: '+5511999990000') ou o nome de um usuário
-// cadastrado na tabela 'usuarios' que tenha o campo 'telefone' preenchido.
-const WA_SUPERVISOR = '';  // ← preencha aqui se desejar notificações automáticas
+const WA_SUPERVISOR = '';
 
 function isProblema(key, value) {
-    if (ALERTA_SIM.includes(key)  && value === 'Sim') return true;
-    if (ALERTA_NAO.includes(key)  && value === 'Não') return true;
+    if (ALERTA_SIM.includes(key) && value === 'Sim') return true;
+    if (ALERTA_NAO.includes(key) && value === 'Não') return true;
     return false;
 }
 
@@ -498,10 +499,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (saved) {
         currentUser = JSON.parse(saved);
         document.getElementById('userBadge').textContent = currentUser.nome || 'Operador';
-        // Pre-fill operator name
         document.getElementById('operador').value = currentUser.nome || '';
         atualizarCard('operador', document.getElementById('operador'));
-        // Notificações
         window.notifInit?.();
         window.pushInit?.();
     } else {
@@ -509,7 +508,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // Pre-fill date/time
     const now = new Date();
     document.getElementById('data').value = now.toISOString().split('T')[0];
     document.getElementById('hora').value = now.toTimeString().slice(0,5);
@@ -525,7 +523,6 @@ document.addEventListener('DOMContentLoaded', () => {
 function setupListeners() {
     const form = document.getElementById('checklistForm');
 
-    // Text/date/time/number inputs
     form.querySelectorAll('input[type="text"], input[type="date"], input[type="time"], input[type="number"]').forEach(input => {
         input.addEventListener('input', () => {
             atualizarCard(input.name || input.id, input);
@@ -533,7 +530,6 @@ function setupListeners() {
         });
     });
 
-    // Radio inputs
     form.querySelectorAll('input[type="radio"]').forEach(radio => {
         radio.addEventListener('change', () => {
             atualizarCard(radio.name, radio);
@@ -541,7 +537,6 @@ function setupListeners() {
         });
     });
 
-    // Turno radios
     form.querySelectorAll('input[name="turno"]').forEach(r => {
         r.addEventListener('change', () => {
             atualizarCard('turno', r);
@@ -561,21 +556,19 @@ function atualizarCard(fieldName, el) {
 }
 
 // ── PROGRESS ──
+// Agora são 25 campos: 7 identificação + 18 perguntas
 function atualizarProgresso() {
     const form = document.getElementById('checklistForm');
-    const totalCampos = 24; // 6 id + 18 perguntas
+    const totalCampos = 25;
     let preenchidos = 0;
 
-    // Text/number/date/time
-    ['operador','matricula','horimetro','data','hora'].forEach(id => {
+    ['operador','matricula','numero_maquina','horimetro','data','hora'].forEach(id => {
         const el = document.getElementById(id);
         if (el && el.value.trim()) preenchidos++;
     });
 
-    // Turno
     if (form.querySelector('input[name="turno"]:checked')) preenchidos++;
 
-    // Questions q1–q18
     for (let i = 1; i <= 18; i++) {
         if (form.querySelector(`input[name="q${i}"]:checked`)) preenchidos++;
     }
@@ -593,7 +586,6 @@ async function enviarChecklist(e) {
     const form = document.getElementById('checklistForm');
     const btn  = document.getElementById('btnSubmit');
 
-    // Validate mandatory radio questions
     let missing = [];
     for (let i = 1; i <= 18; i++) {
         if (!form.querySelector(`input[name="q${i}"]:checked`)) {
@@ -612,24 +604,23 @@ async function enviarChecklist(e) {
     btn.disabled = true;
     btn.innerHTML = '<span style="animation:spin 0.8s linear infinite;display:inline-block">⏳</span> Enviando...';
 
-    // Collect data
     const respostas = {};
     for (let i = 1; i <= 18; i++) {
         respostas[`q${i}`] = form.querySelector(`input[name="q${i}"]:checked`)?.value || '';
     }
 
     const payload = {
-        operador:   document.getElementById('operador').value.trim(),
-        matricula:  document.getElementById('matricula').value.trim(),
-        turno:      form.querySelector('input[name="turno"]:checked')?.value || '',
-        horimetro:  document.getElementById('horimetro').value,
-        data:       document.getElementById('data').value,
-        hora:       document.getElementById('hora').value,
-        usuario_id: currentUser?.id || null,
-        respostas:  respostas
+        operador:       document.getElementById('operador').value.trim(),
+        matricula:      document.getElementById('matricula').value.trim(),
+        numero_maquina: document.getElementById('numero_maquina').value.trim(), // ← NOVO
+        turno:          form.querySelector('input[name="turno"]:checked')?.value || '',
+        horimetro:      document.getElementById('horimetro').value,
+        data:           document.getElementById('data').value,
+        hora:           document.getElementById('hora').value,
+        usuario_id:     currentUser?.id || null,
+        respostas:      respostas
     };
 
-    // Count problems
     payload.total_problemas = Object.entries(respostas).filter(([k, v]) => isProblema(k, v)).length;
 
     try {
@@ -637,7 +628,6 @@ async function enviarChecklist(e) {
             const { error } = await db.from('checklist_diario').insert([payload]);
             if (error) throw error;
         } else {
-            // Fallback: store locally for demo
             const existing = JSON.parse(localStorage.getItem('checklists') || '[]');
             existing.unshift({ ...payload, id: Date.now(), created_at: new Date().toISOString() });
             localStorage.setItem('checklists', JSON.stringify(existing.slice(0, 50)));
@@ -645,8 +635,7 @@ async function enviarChecklist(e) {
 
         mostrarAlerta('✅ Check-list enviado com sucesso!', 'success');
 
-        // ── NOTIFICAÇÕES WHATSAPP ──────────────────────────────────────
-        // 1. Se houver problemas, notifica o supervisor (se configurado)
+        // ── NOTIFICAÇÕES WHATSAPP ──
         if (payload.total_problemas > 0 && WA_SUPERVISOR) {
             const problemasDesc = Object.entries(respostas)
                 .filter(([k, v]) => isProblema(k, v))
@@ -657,18 +646,19 @@ async function enviarChecklist(e) {
                 WA_SUPERVISOR,
                 `⚠️ Check-list com problema(s) registrado!\n\n` +
                 `Operador: ${payload.operador}\n` +
+                `Máquina: ${payload.numero_maquina}\n` +
                 `Turno: ${payload.turno} | Horímetro: ${payload.horimetro}\n` +
                 `Data: ${payload.data} às ${payload.hora}\n\n` +
                 `🔴 ${payload.total_problemas} problema(s) encontrado(s):\n${problemasDesc}`
             );
         }
 
-        // 2. Notifica o próprio operador confirmando o envio (se tiver telefone cadastrado)
         if (currentUser?.nome) {
             await WA.notificar(
                 currentUser.nome,
                 `✅ Check-list enviado com sucesso!\n\n` +
                 `Operador: ${payload.operador}\n` +
+                `Máquina: ${payload.numero_maquina}\n` +
                 `Turno: ${payload.turno} | Horímetro: ${payload.horimetro}\n` +
                 `Data: ${payload.data} às ${payload.hora}\n` +
                 (payload.total_problemas > 0
@@ -676,17 +666,14 @@ async function enviarChecklist(e) {
                     : `\n✅ Nenhum problema encontrado. Bom turno!`)
             );
         }
-        // ─────────────────────────────────────────────────────────────
 
         form.reset();
 
-        // Re-fill after reset
         document.getElementById('operador').value = currentUser?.nome || '';
         const now = new Date();
         document.getElementById('data').value = now.toISOString().split('T')[0];
         document.getElementById('hora').value = now.toTimeString().slice(0,5);
 
-        // Clear answered classes
         document.querySelectorAll('.form-card.answered').forEach(c => c.classList.remove('answered'));
         atualizarProgresso();
         carregarHistorico();
@@ -728,6 +715,7 @@ async function carregarHistorico() {
         lista.innerHTML = data.map(item => {
             const dt = new Date(item.created_at || item.data).toLocaleString('pt-BR');
             const prob = item.total_problemas || 0;
+            const maquina = item.numero_maquina ? `<span class="meta-tag">🏭 Máq. ${item.numero_maquina}</span>` : '';
             return `
                 <div class="history-card" onclick="verDetalhes(${JSON.stringify(JSON.stringify(item))})">
                     <div class="history-top">
@@ -736,6 +724,7 @@ async function carregarHistorico() {
                     </div>
                     <div class="history-meta">
                         <span class="meta-tag">Turno ${item.turno}</span>
+                        ${maquina}
                         <span class="meta-tag">Horímetro: ${item.horimetro}</span>
                         ${prob > 0
                             ? `<span class="meta-tag danger">⚠️ ${prob} problema(s)</span>`
@@ -759,6 +748,7 @@ function verDetalhes(jsonStr) {
     let html = `
         <div class="detail-row"><span class="detail-label">Operador</span><span class="detail-value">${item.operador}</span></div>
         <div class="detail-row"><span class="detail-label">Matrícula</span><span class="detail-value">${item.matricula}</span></div>
+        <div class="detail-row"><span class="detail-label">Nº da Máquina</span><span class="detail-value">${item.numero_maquina || '–'}</span></div>
         <div class="detail-row"><span class="detail-label">Turno</span><span class="detail-value">${item.turno}</span></div>
         <div class="detail-row"><span class="detail-label">Horímetro</span><span class="detail-value">${item.horimetro}</span></div>
         <div class="detail-row"><span class="detail-label">Data</span><span class="detail-value">${item.data}</span></div>
