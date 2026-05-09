@@ -12,6 +12,119 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <style>
+        /* ── Máquinas permitidas ── */
+        .maquinas-section {
+            margin-top: 20px;
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            border: 1.5px solid #7dd3fc;
+            border-radius: 12px;
+            padding: 18px;
+        }
+        .maquinas-section h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0369a1;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .maquinas-toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+        .toggle-btn {
+            padding: 7px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 2px solid #e5e7eb;
+            background: white;
+            color: #6b7280;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .toggle-btn.active {
+            background: #0369a1;
+            border-color: #0369a1;
+            color: white;
+        }
+        .maquinas-input-area {
+            display: none;
+        }
+        .maquinas-input-area.visible {
+            display: block;
+        }
+        .maquinas-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 10px;
+            min-height: 36px;
+        }
+        .maquina-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #0369a1;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .maquina-tag button {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.8);
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+            padding: 0;
+            display: flex;
+            align-items: center;
+        }
+        .maquina-tag button:hover { color: white; }
+        .maquinas-add-row {
+            display: flex;
+            gap: 8px;
+        }
+        .maquinas-add-row input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1.5px solid #bae6fd;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            background: white;
+        }
+        .maquinas-add-row input:focus {
+            outline: none;
+            border-color: #0369a1;
+            box-shadow: 0 0 0 3px rgba(3,105,161,0.1);
+        }
+        .maquinas-add-row button {
+            padding: 10px 18px;
+            background: #0369a1;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+        }
+        .maquinas-add-row button:hover { background: #0284c7; }
+        .maquinas-hint {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 8px;
+        }
+    </style>
 </head>
 <body>
 
@@ -224,6 +337,44 @@
                 </label>
             </div>
 
+            <!-- ✅ NOVO: Permissões de Check-list -->
+            <div class="perms-group-title">✅ Check-list</div>
+            <div class="perms-grid">
+                <label class="perm-card" onclick="togglePerm(this)">
+                    <input type="checkbox" value="perm_checklist_visualizar">
+                    <div class="perm-box">✓</div>
+                    <div class="perm-text"><strong>Visualizar Painel</strong><small>Ver histórico de check-lists</small></div>
+                </label>
+                <label class="perm-card" onclick="togglePerm(this)">
+                    <input type="checkbox" value="perm_checklist_criar">
+                    <div class="perm-box">✓</div>
+                    <div class="perm-text"><strong>Preencher</strong><small>Registrar novo check-list</small></div>
+                </label>
+            </div>
+
+            <!-- ✅ NOVO: Máquinas permitidas -->
+            <div class="maquinas-section">
+                <h3>🏭 Máquinas permitidas no check-list</h3>
+                <div class="maquinas-toggle">
+                    <button type="button" class="toggle-btn active" id="btnMaqTodas" onclick="setModoMaquinas('todas')">
+                        Todas as máquinas
+                    </button>
+                    <button type="button" class="toggle-btn" id="btnMaqEspecificas" onclick="setModoMaquinas('especificas')">
+                        Apenas máquinas específicas
+                    </button>
+                </div>
+
+                <div class="maquinas-input-area" id="maquinasInputArea">
+                    <div class="maquinas-tags" id="maquinasTags"></div>
+                    <div class="maquinas-add-row">
+                        <input type="text" id="maquinaInput" placeholder="Ex: EMP-01, 003, M-12..." 
+                               onkeydown="if(event.key==='Enter'){event.preventDefault();adicionarMaquina();}">
+                        <button type="button" onclick="adicionarMaquina()">+ Adicionar</button>
+                    </div>
+                    <p class="maquinas-hint">O operador só poderá selecionar as máquinas listadas acima ao preencher o check-list.</p>
+                </div>
+            </div>
+
         </div>
 
         <div class="modal-foot">
@@ -286,16 +437,12 @@
 </div>
 
 <script>
-/* ================================================================
-   CONFIG
-   ================================================================ */
 const SUPABASE_URL = 'https://wcfrwsgnxochxvwhxnvy.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjZnJ3c2dueG9jaHh2d2h4bnZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc2MzExMDgsImV4cCI6MjA4MzIwNzEwOH0.Yb4cT5chXp3S8NZaWbLpv436HzxGCO7CZTruPpOPDdU';
 
-const WA_PROVIDER       = 'direct_link'; // 'direct_link' | 'callmebot'
-const WA_CALLMEBOT_API  = 'https://api.callmebot.com/whatsapp.php';
+const WA_PROVIDER      = 'direct_link';
+const WA_CALLMEBOT_API = 'https://api.callmebot.com/whatsapp.php';
 
-// Campos exatos da tabela usuarios
 const ALL_PERMS = [
     'perm_usuarios_visualizar',
     'perm_usuarios_criar',
@@ -307,7 +454,9 @@ const ALL_PERMS = [
     'perm_predial_editar',
     'perm_equipamentos_visualizar',
     'perm_equipamentos_criar',
-    'perm_equipamentos_editar'
+    'perm_equipamentos_editar',
+    'perm_checklist_visualizar',   // ← NOVO
+    'perm_checklist_criar'         // ← NOVO
 ];
 
 const PERMS_LABELS = {
@@ -321,7 +470,9 @@ const PERMS_LABELS = {
     perm_predial_editar:         'Editar Predial',
     perm_equipamentos_visualizar:'Ver Equipamentos',
     perm_equipamentos_criar:     'Criar Equipamentos',
-    perm_equipamentos_editar:    'Editar Equipamentos'
+    perm_equipamentos_editar:    'Editar Equipamentos',
+    perm_checklist_visualizar:   'Ver Painel Check-list',   // ← NOVO
+    perm_checklist_criar:        'Preencher Check-list'     // ← NOVO
 };
 
 const AVATAR_COLORS = ['#5b21b6','#0369a1','#065f46','#92400e','#881337','#1e3a8a','#3f6212'];
@@ -329,10 +480,10 @@ const AVATAR_COLORS = ['#5b21b6','#0369a1','#065f46','#92400e','#881337','#1e3a8
 let db, currentUser;
 let allUsers = [], filteredUsers = [];
 let editingId = null, deleteTargetId = null;
+let maquinasPermitidas = []; // ← NOVO: lista de máquinas do usuário sendo editado
+let modoMaquinas = 'todas';  // 'todas' | 'especificas'
 
-/* ================================================================
-   BOOT
-   ================================================================ */
+/* ── BOOT ── */
 document.addEventListener('DOMContentLoaded', () => {
     const saved = localStorage.getItem('currentUser');
     if (!saved) { window.location.href = 'login.html'; return; }
@@ -344,11 +495,7 @@ document.addEventListener('DOMContentLoaded', () => {
         || currentUser.perm_usuarios_editar
         || currentUser.perm_usuarios_permissoes;
 
-    if (!podeAcessar) {
-        alert('⛔ Acesso negado.');
-        window.location.href = 'menu.html';
-        return;
-    }
+    if (!podeAcessar) { alert('⛔ Acesso negado.'); window.location.href = 'menu.html'; return; }
 
     document.getElementById('userChip').textContent = currentUser.nome || 'Admin';
     db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -356,21 +503,16 @@ document.addEventListener('DOMContentLoaded', () => {
     setupSearch();
     document.getElementById('btnLogout').addEventListener('click', logout);
     loadUsuarios();
-    // Notificações
     window.notifInit?.();
     window.pushInit?.();
 });
 
-/* ================================================================
-   SIDEBAR
-   ================================================================ */
+/* ── SIDEBAR ── */
 function setupSidebar() {
     const btn = document.getElementById('hambBtn');
     const sb  = document.getElementById('sidebar');
     const ov  = document.getElementById('overlay');
-    btn.addEventListener('click', () => {
-        btn.classList.toggle('active'); sb.classList.toggle('active'); ov.classList.toggle('active');
-    });
+    btn.addEventListener('click', () => { btn.classList.toggle('active'); sb.classList.toggle('active'); ov.classList.toggle('active'); });
     ov.addEventListener('click', closeSidebar);
     document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeSidebar(); fecharTodosModais(); } });
 }
@@ -378,16 +520,14 @@ function closeSidebar() {
     ['hambBtn','sidebar','overlay'].forEach(id => document.getElementById(id).classList.remove('active'));
 }
 
-/* ================================================================
-   LOAD — usa exatamente os campos da tabela
-   ================================================================ */
+/* ── LOAD ── */
 async function loadUsuarios() {
     document.getElementById('listaUsuarios').innerHTML =
         '<div class="loading"><div class="spinner"></div><p>Carregando...</p></div>';
 
-    // Seleciona os campos exatos da tabela
     const SELECT_FIELDS = [
         'id','nome','usuario','senha','perfil','ativo','telefone','created_at','updated_at',
+        'maquinas_permitidas',
         ...ALL_PERMS
     ].join(',');
 
@@ -399,7 +539,7 @@ async function loadUsuarios() {
         if (error) throw error;
         allUsers = data || [];
     } catch (e) {
-        console.warn('Supabase indisponível, usando localStorage:', e.message);
+        console.warn('Supabase indisponível:', e.message);
         allUsers = JSON.parse(localStorage.getItem('usuarios') || '[]');
     }
 
@@ -411,14 +551,11 @@ async function loadUsuarios() {
 function calcStats() {
     document.getElementById('sTotal').textContent = allUsers.length;
     document.getElementById('sAdmin').textContent = allUsers.filter(u => u.perfil === 'admin').length;
-    // Campo 'ativo' é boolean na tabela
     document.getElementById('sAtivo').textContent = allUsers.filter(u => u.ativo !== false).length;
     document.getElementById('sTel').textContent   = allUsers.filter(u => u.telefone && u.telefone.trim()).length;
 }
 
-/* ================================================================
-   RENDER
-   ================================================================ */
+/* ── RENDER ── */
 function avatarColor(nome) {
     const sum = (nome || 'U').split('').reduce((a, c) => a + c.charCodeAt(0), 0);
     return AVATAR_COLORS[sum % AVATAR_COLORS.length];
@@ -448,21 +585,34 @@ function renderTabela(lista) {
     <div class="table-wrap"><table>
     <thead><tr>
         <th>Usuário</th><th>Login</th><th>Perfil</th>
-        <th>WhatsApp</th><th>Status</th><th>Criado em</th><th>Ações</th>
+        <th>Check-list</th><th>WhatsApp</th><th>Status</th><th>Criado em</th><th>Ações</th>
     </tr></thead><tbody>`;
 
     lista.forEach(u => {
-        // 'ativo' é boolean: true = ativo, false = inativo
         const isAtivo = u.ativo !== false;
-        const tel     = u.telefone
+        const tel = u.telefone
             ? `<span class="badge b-tem-tel">💬 ${escStr(u.telefone)}</span>`
             : `<span class="badge b-sem-tel">–</span>`;
-        const status  = isAtivo
+        const status = isAtivo
             ? `<span class="badge b-ativo">Ativo</span>`
             : `<span class="badge b-inativo">Inativo</span>`;
-        const criado  = u.created_at ? new Date(u.created_at).toLocaleDateString('pt-BR') : '–';
+        const criado = u.created_at ? new Date(u.created_at).toLocaleDateString('pt-BR') : '–';
 
-        const waBtn   = u.telefone
+        // Badge de permissão de check-list
+        const temChecklist = u.perfil === 'admin' || (u.perm_checklist_criar);
+        const temPainel    = u.perfil === 'admin' || (u.perm_checklist_visualizar);
+        let checkBadge = '';
+        if (temChecklist && temPainel) {
+            checkBadge = `<span class="badge" style="background:#d1fae5;color:#065f46">✅ Completo</span>`;
+        } else if (temChecklist) {
+            checkBadge = `<span class="badge" style="background:#e0f2fe;color:#0369a1">📝 Preenche</span>`;
+        } else if (temPainel) {
+            checkBadge = `<span class="badge" style="background:#f3f4f6;color:#374151">👁️ Visualiza</span>`;
+        } else {
+            checkBadge = `<span class="badge" style="background:#fee2e2;color:#991b1b">✗ Sem acesso</span>`;
+        }
+
+        const waBtn  = u.telefone
             ? `<button class="btn btn-sm btn-whatsapp" title="Enviar WhatsApp"
                 onclick="abrirTesteWA('${u.id}','${escStr(u.nome)}','${escStr(u.telefone)}')">💬</button>` : '';
         const editBtn = podeEditar
@@ -477,6 +627,7 @@ function renderTabela(lista) {
             </div></td>
             <td style="color:var(--text-mid);font-size:13px">${escStr(u.usuario || '')}</td>
             <td>${perfilBadge(u.perfil)}</td>
+            <td>${checkBadge}</td>
             <td>${tel}</td>
             <td>${status}</td>
             <td style="font-size:12px;color:var(--text-light)">${criado}</td>
@@ -495,9 +646,7 @@ function escStr(s) {
     return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-/* ================================================================
-   SEARCH & FILTER
-   ================================================================ */
+/* ── SEARCH & FILTER ── */
 function setupSearch() {
     document.getElementById('searchInput').addEventListener('input', aplicarFiltros);
     document.getElementById('filtPerfil').addEventListener('change', aplicarFiltros);
@@ -511,18 +660,55 @@ function aplicarFiltros() {
         const hay = `${u.nome} ${u.usuario} ${u.perfil}`.toLowerCase();
         if (q && !hay.includes(q)) return false;
         if (pfil && u.perfil !== pfil) return false;
-        if (sfil === 'ativo'  && u.ativo === false)  return false;
-        if (sfil === 'inativo' && u.ativo !== false) return false;
+        if (sfil === 'ativo'   && u.ativo === false)  return false;
+        if (sfil === 'inativo' && u.ativo !== false)  return false;
         return true;
     });
     renderTabela(filteredUsers);
 }
 
-/* ================================================================
-   MODAL CRIAR / EDITAR
-   ================================================================ */
+/* ── MÁQUINAS: controles ── */
+function setModoMaquinas(modo) {
+    modoMaquinas = modo;
+    document.getElementById('btnMaqTodas').classList.toggle('active', modo === 'todas');
+    document.getElementById('btnMaqEspecificas').classList.toggle('active', modo === 'especificas');
+    document.getElementById('maquinasInputArea').classList.toggle('visible', modo === 'especificas');
+}
+
+function adicionarMaquina() {
+    const input = document.getElementById('maquinaInput');
+    const val = input.value.trim().toUpperCase();
+    if (!val) return;
+    if (maquinasPermitidas.includes(val)) { input.value = ''; return; }
+    maquinasPermitidas.push(val);
+    input.value = '';
+    renderMaquinasTags();
+}
+
+function removerMaquina(idx) {
+    maquinasPermitidas.splice(idx, 1);
+    renderMaquinasTags();
+}
+
+function renderMaquinasTags() {
+    const el = document.getElementById('maquinasTags');
+    if (!maquinasPermitidas.length) {
+        el.innerHTML = '<span style="color:#94a3b8;font-size:13px">Nenhuma máquina adicionada ainda.</span>';
+        return;
+    }
+    el.innerHTML = maquinasPermitidas.map((m, i) => `
+        <span class="maquina-tag">
+            🏭 ${escStr(m)}
+            <button onclick="removerMaquina(${i})" title="Remover">×</button>
+        </span>
+    `).join('');
+}
+
+/* ── MODAL CRIAR / EDITAR ── */
 function abrirModalNovo() {
     editingId = null;
+    maquinasPermitidas = [];
+    modoMaquinas = 'todas';
     document.getElementById('modalFormTitle').textContent = '➕ Novo Usuário';
     document.getElementById('f_nome').value     = '';
     document.getElementById('f_usuario').value  = '';
@@ -533,6 +719,8 @@ function abrirModalNovo() {
     document.getElementById('f_telefone').value = '';
     document.getElementById('telPreview').style.display = 'none';
     limparPerms();
+    setModoMaquinas('todas');
+    renderMaquinasTags();
     onPerfilChange();
     showAlert('alertForm','','');
     document.getElementById('modalForm').classList.add('open');
@@ -542,6 +730,10 @@ function abrirEditar(id) {
     const u = allUsers.find(x => String(x.id) === String(id));
     if (!u) return;
     editingId = u.id;
+
+    maquinasPermitidas = Array.isArray(u.maquinas_permitidas) ? [...u.maquinas_permitidas] : [];
+    modoMaquinas = maquinasPermitidas.length > 0 ? 'especificas' : 'todas';
+
     document.getElementById('modalFormTitle').textContent = '✏️ Editar Usuário';
     document.getElementById('f_nome').value     = u.nome    || '';
     document.getElementById('f_usuario').value  = u.usuario || '';
@@ -558,6 +750,8 @@ function abrirEditar(id) {
             if (inp) { inp.checked = true; inp.closest('.perm-card').classList.add('checked'); }
         }
     });
+    setModoMaquinas(modoMaquinas);
+    renderMaquinasTags();
     onPerfilChange();
     showAlert('alertForm','','');
     document.getElementById('modalForm').classList.add('open');
@@ -597,15 +791,12 @@ function atualizarPreviewTel() {
     }
 }
 
-/* ================================================================
-   SALVAR — payload usa campos exatos da tabela
-   ================================================================ */
+/* ── SALVAR ── */
 async function salvarUsuario() {
     const nome    = document.getElementById('f_nome').value.trim();
     const usuario = document.getElementById('f_usuario').value.trim();
     const senha   = document.getElementById('f_senha').value.trim();
     const perfil  = document.getElementById('f_perfil').value;
-    // campo boolean na tabela
     const ativo   = document.getElementById('f_ativo').value === 'true';
     const tel     = document.getElementById('f_telefone').value.trim();
 
@@ -613,8 +804,12 @@ async function salvarUsuario() {
     if (!editingId && !senha) { showAlert('alertForm','⚠️ Informe uma senha para o novo usuário.','error'); return; }
     if (senha && senha.length < 6) { showAlert('alertForm','⚠️ Senha deve ter mínimo 6 caracteres.','error'); return; }
 
-    // Payload com campos exatos da tabela
-    const payload = { nome, usuario, perfil, ativo, telefone: tel };
+    const payload = {
+        nome, usuario, perfil, ativo, telefone: tel,
+        maquinas_permitidas: modoMaquinas === 'especificas' && maquinasPermitidas.length > 0
+            ? maquinasPermitidas
+            : null  // null = sem restrição
+    };
     if (senha) payload.senha = senha;
 
     if (perfil === 'admin') {
@@ -643,29 +838,13 @@ async function salvarUsuario() {
         showAlert('alertForm','✅ Usuário salvo com sucesso!','success');
         setTimeout(() => { fecharModal('modalForm'); loadUsuarios(); }, 900);
     } catch (e) {
-        try {
-            let list = JSON.parse(localStorage.getItem('usuarios') || '[]');
-            if (editingId) {
-                list = list.map(u => String(u.id) === String(editingId) ? { ...u, ...payload } : u);
-            } else {
-                payload.id = Date.now();
-                payload.created_at = new Date().toISOString();
-                list.push(payload);
-            }
-            localStorage.setItem('usuarios', JSON.stringify(list));
-            showAlert('alertForm','✅ Salvo localmente (sem banco).','success');
-            setTimeout(() => { fecharModal('modalForm'); loadUsuarios(); }, 900);
-        } catch (e2) {
-            showAlert('alertForm','❌ Erro ao salvar: ' + e.message,'error');
-        }
+        showAlert('alertForm','❌ Erro ao salvar: ' + e.message,'error');
     } finally {
         btn.disabled = false; btn.textContent = '💾 Salvar';
     }
 }
 
-/* ================================================================
-   VER DETALHE
-   ================================================================ */
+/* ── VER DETALHE ── */
 function verDetalhe(id) {
     const u = allUsers.find(x => String(x.id) === String(id));
     if (!u) return;
@@ -677,6 +856,12 @@ function verDetalhe(id) {
         : activePerms.length
             ? activePerms.map(p => `<span class="badge" style="background:var(--purple-pale);color:var(--purple);margin:2px">${p}</span>`).join('')
             : '<span style="color:var(--text-light);font-size:13px">Nenhuma permissão ativa</span>';
+
+    // Máquinas permitidas
+    const maqArr = u.maquinas_permitidas;
+    const maqHtml = !maqArr || maqArr.length === 0
+        ? '<span style="color:#059669;font-weight:600">✅ Todas as máquinas</span>'
+        : maqArr.map(m => `<span class="badge" style="background:#e0f2fe;color:#0369a1;margin:2px">🏭 ${escStr(m)}</span>`).join('');
 
     const criado     = u.created_at ? new Date(u.created_at).toLocaleString('pt-BR') : '–';
     const atualizado = u.updated_at ? new Date(u.updated_at).toLocaleString('pt-BR') : '–';
@@ -700,6 +885,10 @@ function verDetalhe(id) {
             <div class="info-box"><strong>Criado em</strong><span style="font-size:13px">${criado}</span></div>
             <div class="info-box"><strong>Atualizado em</strong><span style="font-size:13px">${atualizado}</span></div>
         </div>
+        <div style="margin-bottom:16px">
+            <strong style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#9ca3af;display:block;margin-bottom:8px">🏭 Máquinas no check-list</strong>
+            <div style="display:flex;flex-wrap:wrap;gap:4px">${maqHtml}</div>
+        </div>
         <div>
             <strong style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#9ca3af;display:block;margin-bottom:8px">🔐 Permissões ativas</strong>
             <div style="display:flex;flex-wrap:wrap;gap:4px">${permsHtml}</div>
@@ -715,9 +904,7 @@ function verDetalhe(id) {
     document.getElementById('modalDetalhe').classList.add('open');
 }
 
-/* ================================================================
-   DELETAR
-   ================================================================ */
+/* ── DELETAR ── */
 function confirmarDeletar(id, nome) {
     deleteTargetId = id;
     document.getElementById('delNome').textContent = nome;
@@ -737,9 +924,7 @@ async function deletarUsuario() {
     loadUsuarios();
 }
 
-/* ================================================================
-   WHATSAPP
-   ================================================================ */
+/* ── WHATSAPP ── */
 function testarWhatsApp() {
     const tel  = document.getElementById('f_telefone').value.trim();
     const nome = document.getElementById('f_nome').value.trim() || 'Usuário';
@@ -771,7 +956,6 @@ function enviarWhatsApp(tel, msg, alertEl) {
     }
 }
 
-// Função global acessível por outros arquivos
 window.notificarUsuario = async function(nomeOuId, mensagem) {
     let u = allUsers.find(x =>
         String(x.id) === String(nomeOuId) ||
@@ -789,9 +973,7 @@ window.notificarUsuario = async function(nomeOuId, mensagem) {
     if (u?.telefone) enviarWhatsApp(u.telefone, mensagem, null);
 };
 
-/* ================================================================
-   UTILS
-   ================================================================ */
+/* ── UTILS ── */
 function showAlert(elId, msg, type) {
     const el = document.getElementById(elId);
     if (!el) return;
