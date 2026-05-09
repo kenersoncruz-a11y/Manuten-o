@@ -272,27 +272,27 @@
 
             <div class="perms-group-title">👥 Usuários</div>
             <div class="perms-grid">
-                <label class="perm-card" onclick="togglePerm(this)">
+                <label class="perm-card">
                     <input type="checkbox" value="perm_usuarios_visualizar">
                     <div class="perm-box">✓</div>
                     <div class="perm-text"><strong>Visualizar</strong><small>Ver lista de usuários</small></div>
                 </label>
-                <label class="perm-card" onclick="togglePerm(this)">
+                <label class="perm-card">
                     <input type="checkbox" value="perm_usuarios_criar">
                     <div class="perm-box">✓</div>
                     <div class="perm-text"><strong>Criar</strong><small>Cadastrar novos usuários</small></div>
                 </label>
-                <label class="perm-card" onclick="togglePerm(this)">
+                <label class="perm-card">
                     <input type="checkbox" value="perm_usuarios_editar">
                     <div class="perm-box">✓</div>
                     <div class="perm-text"><strong>Editar</strong><small>Editar dados de usuários</small></div>
                 </label>
-                <label class="perm-card" onclick="togglePerm(this)">
+                <label class="perm-card">
                     <input type="checkbox" value="perm_usuarios_excluir">
                     <div class="perm-box">✓</div>
                     <div class="perm-text"><strong>Excluir</strong><small>Remover usuários</small></div>
                 </label>
-                <label class="perm-card" onclick="togglePerm(this)">
+                <label class="perm-card">
                     <input type="checkbox" value="perm_usuarios_permissoes">
                     <div class="perm-box">✓</div>
                     <div class="perm-text"><strong>Permissões</strong><small>Gerir permissões</small></div>
@@ -301,17 +301,17 @@
 
             <div class="perms-group-title">🏢 Predial</div>
             <div class="perms-grid">
-                <label class="perm-card" onclick="togglePerm(this)">
+                <label class="perm-card">
                     <input type="checkbox" value="perm_predial_visualizar">
                     <div class="perm-box">✓</div>
                     <div class="perm-text"><strong>Visualizar</strong><small>Ver ocorrências prediais</small></div>
                 </label>
-                <label class="perm-card" onclick="togglePerm(this)">
+                <label class="perm-card">
                     <input type="checkbox" value="perm_predial_criar">
                     <div class="perm-box">✓</div>
                     <div class="perm-text"><strong>Criar</strong><small>Abrir ocorrências prediais</small></div>
                 </label>
-                <label class="perm-card" onclick="togglePerm(this)">
+                <label class="perm-card">
                     <input type="checkbox" value="perm_predial_editar">
                     <div class="perm-box">✓</div>
                     <div class="perm-text"><strong>Editar</strong><small>Editar ocorrências prediais</small></div>
@@ -320,39 +320,39 @@
 
             <div class="perms-group-title">⚙️ Equipamentos</div>
             <div class="perms-grid">
-                <label class="perm-card" onclick="togglePerm(this)">
+                <label class="perm-card">
                     <input type="checkbox" value="perm_equipamentos_visualizar">
                     <div class="perm-box">✓</div>
                     <div class="perm-text"><strong>Visualizar</strong><small>Ver ocorrências de equip.</small></div>
                 </label>
-                <label class="perm-card" onclick="togglePerm(this)">
+                <label class="perm-card">
                     <input type="checkbox" value="perm_equipamentos_criar">
                     <div class="perm-box">✓</div>
                     <div class="perm-text"><strong>Criar</strong><small>Abrir ocorrências de equip.</small></div>
                 </label>
-                <label class="perm-card" onclick="togglePerm(this)">
+                <label class="perm-card">
                     <input type="checkbox" value="perm_equipamentos_editar">
                     <div class="perm-box">✓</div>
                     <div class="perm-text"><strong>Editar</strong><small>Editar ocorrências de equip.</small></div>
                 </label>
             </div>
 
-            <!-- ✅ NOVO: Permissões de Check-list -->
+            <!-- Check-list -->
             <div class="perms-group-title">✅ Check-list</div>
             <div class="perms-grid">
-                <label class="perm-card" onclick="togglePerm(this)">
+                <label class="perm-card">
                     <input type="checkbox" value="perm_checklist_visualizar">
                     <div class="perm-box">✓</div>
                     <div class="perm-text"><strong>Visualizar Painel</strong><small>Ver histórico de check-lists</small></div>
                 </label>
-                <label class="perm-card" onclick="togglePerm(this)">
+                <label class="perm-card">
                     <input type="checkbox" value="perm_checklist_criar">
                     <div class="perm-box">✓</div>
                     <div class="perm-text"><strong>Preencher</strong><small>Registrar novo check-list</small></div>
                 </label>
             </div>
 
-            <!-- ✅ NOVO: Máquinas permitidas -->
+            <!-- Máquinas permitidas -->
             <div class="maquinas-section">
                 <h3>🏭 Máquinas permitidas no check-list</h3>
                 <div class="maquinas-toggle">
@@ -367,7 +367,7 @@
                 <div class="maquinas-input-area" id="maquinasInputArea">
                     <div class="maquinas-tags" id="maquinasTags"></div>
                     <div class="maquinas-add-row">
-                        <input type="text" id="maquinaInput" placeholder="Ex: EMP-01, 003, M-12..." 
+                        <input type="text" id="maquinaInput" placeholder="Ex: EMP-01, 003, M-12..."
                                onkeydown="if(event.key==='Enter'){event.preventDefault();adicionarMaquina();}">
                         <button type="button" onclick="adicionarMaquina()">+ Adicionar</button>
                     </div>
@@ -455,8 +455,8 @@ const ALL_PERMS = [
     'perm_equipamentos_visualizar',
     'perm_equipamentos_criar',
     'perm_equipamentos_editar',
-    'perm_checklist_visualizar',   // ← NOVO
-    'perm_checklist_criar'         // ← NOVO
+    'perm_checklist_visualizar',
+    'perm_checklist_criar'
 ];
 
 const PERMS_LABELS = {
@@ -471,8 +471,8 @@ const PERMS_LABELS = {
     perm_equipamentos_visualizar:'Ver Equipamentos',
     perm_equipamentos_criar:     'Criar Equipamentos',
     perm_equipamentos_editar:    'Editar Equipamentos',
-    perm_checklist_visualizar:   'Ver Painel Check-list',   // ← NOVO
-    perm_checklist_criar:        'Preencher Check-list'     // ← NOVO
+    perm_checklist_visualizar:   'Ver Painel Check-list',
+    perm_checklist_criar:        'Preencher Check-list'
 };
 
 const AVATAR_COLORS = ['#5b21b6','#0369a1','#065f46','#92400e','#881337','#1e3a8a','#3f6212'];
@@ -480,8 +480,8 @@ const AVATAR_COLORS = ['#5b21b6','#0369a1','#065f46','#92400e','#881337','#1e3a8
 let db, currentUser;
 let allUsers = [], filteredUsers = [];
 let editingId = null, deleteTargetId = null;
-let maquinasPermitidas = []; // ← NOVO: lista de máquinas do usuário sendo editado
-let modoMaquinas = 'todas';  // 'todas' | 'especificas'
+let maquinasPermitidas = [];
+let modoMaquinas = 'todas'; // 'todas' | 'especificas'
 
 /* ── BOOT ── */
 document.addEventListener('DOMContentLoaded', () => {
@@ -501,20 +501,36 @@ document.addEventListener('DOMContentLoaded', () => {
     db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     setupSidebar();
     setupSearch();
+    setupPermCards(); // ← FIX: registra listeners corretos nos checkboxes
     document.getElementById('btnLogout').addEventListener('click', logout);
     loadUsuarios();
     window.notifInit?.();
     window.pushInit?.();
 });
 
+/* ── FIX: listeners nos perm-cards (sem onclick no label) ── */
+function setupPermCards() {
+    document.querySelectorAll('.perm-card input[type="checkbox"]').forEach(inp => {
+        inp.addEventListener('change', function () {
+            this.closest('.perm-card').classList.toggle('checked', this.checked);
+        });
+    });
+}
+
 /* ── SIDEBAR ── */
 function setupSidebar() {
     const btn = document.getElementById('hambBtn');
     const sb  = document.getElementById('sidebar');
     const ov  = document.getElementById('overlay');
-    btn.addEventListener('click', () => { btn.classList.toggle('active'); sb.classList.toggle('active'); ov.classList.toggle('active'); });
+    btn.addEventListener('click', () => {
+        btn.classList.toggle('active');
+        sb.classList.toggle('active');
+        ov.classList.toggle('active');
+    });
     ov.addEventListener('click', closeSidebar);
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeSidebar(); fecharTodosModais(); } });
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { closeSidebar(); fecharTodosModais(); }
+    });
 }
 function closeSidebar() {
     ['hambBtn','sidebar','overlay'].forEach(id => document.getElementById(id).classList.remove('active'));
@@ -598,9 +614,8 @@ function renderTabela(lista) {
             : `<span class="badge b-inativo">Inativo</span>`;
         const criado = u.created_at ? new Date(u.created_at).toLocaleDateString('pt-BR') : '–';
 
-        // Badge de permissão de check-list
-        const temChecklist = u.perfil === 'admin' || (u.perm_checklist_criar);
-        const temPainel    = u.perfil === 'admin' || (u.perm_checklist_visualizar);
+        const temChecklist = u.perfil === 'admin' || u.perm_checklist_criar;
+        const temPainel    = u.perfil === 'admin' || u.perm_checklist_visualizar;
         let checkBadge = '';
         if (temChecklist && temPainel) {
             checkBadge = `<span class="badge" style="background:#d1fae5;color:#065f46">✅ Completo</span>`;
@@ -660,14 +675,14 @@ function aplicarFiltros() {
         const hay = `${u.nome} ${u.usuario} ${u.perfil}`.toLowerCase();
         if (q && !hay.includes(q)) return false;
         if (pfil && u.perfil !== pfil) return false;
-        if (sfil === 'ativo'   && u.ativo === false)  return false;
-        if (sfil === 'inativo' && u.ativo !== false)  return false;
+        if (sfil === 'ativo'   && u.ativo === false) return false;
+        if (sfil === 'inativo' && u.ativo !== false) return false;
         return true;
     });
     renderTabela(filteredUsers);
 }
 
-/* ── MÁQUINAS: controles ── */
+/* ── MÁQUINAS ── */
 function setModoMaquinas(modo) {
     modoMaquinas = modo;
     document.getElementById('btnMaqTodas').classList.toggle('active', modo === 'todas');
@@ -747,7 +762,10 @@ function abrirEditar(id) {
     ALL_PERMS.forEach(p => {
         if (u[p]) {
             const inp = document.querySelector(`.perm-card input[value="${p}"]`);
-            if (inp) { inp.checked = true; inp.closest('.perm-card').classList.add('checked'); }
+            if (inp) {
+                inp.checked = true;
+                inp.closest('.perm-card').classList.add('checked');
+            }
         }
     });
     setModoMaquinas(modoMaquinas);
@@ -773,11 +791,6 @@ function onPerfilChange() {
             c.querySelector('input').checked = true;
         });
     }
-}
-
-function togglePerm(card) {
-    card.classList.toggle('checked');
-    card.querySelector('input').checked = card.classList.contains('checked');
 }
 
 function atualizarPreviewTel() {
@@ -808,7 +821,7 @@ async function salvarUsuario() {
         nome, usuario, perfil, ativo, telefone: tel,
         maquinas_permitidas: modoMaquinas === 'especificas' && maquinasPermitidas.length > 0
             ? maquinasPermitidas
-            : null  // null = sem restrição
+            : null
     };
     if (senha) payload.senha = senha;
 
@@ -857,7 +870,6 @@ function verDetalhe(id) {
             ? activePerms.map(p => `<span class="badge" style="background:var(--purple-pale);color:var(--purple);margin:2px">${p}</span>`).join('')
             : '<span style="color:var(--text-light);font-size:13px">Nenhuma permissão ativa</span>';
 
-    // Máquinas permitidas
     const maqArr = u.maquinas_permitidas;
     const maqHtml = !maqArr || maqArr.length === 0
         ? '<span style="color:#059669;font-weight:600">✅ Todas as máquinas</span>'
