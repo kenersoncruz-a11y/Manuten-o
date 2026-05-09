@@ -110,6 +110,10 @@
                 <div class="form-group"><label>Operador</label>
                     <select id="filtroOperador"><option value="">Todos</option></select>
                 </div>
+                <!-- NOVO: filtro por máquina -->
+                <div class="form-group"><label>Máquina</label>
+                    <select id="filtroMaquina"><option value="">Todas</option></select>
+                </div>
                 <div class="form-group"><label>Data inicial</label><input type="date" id="filtroDataInicio"></div>
                 <div class="form-group"><label>Data final</label><input type="date" id="filtroDataFim"></div>
             </div>
@@ -120,7 +124,7 @@
         </div>
 
         <div class="search-box">
-            <input type="text" class="search-input" id="searchChecklist" placeholder="🔍 Buscar por operador, matrícula, turno...">
+            <input type="text" class="search-input" id="searchChecklist" placeholder="🔍 Buscar por operador, matrícula, máquina, turno...">
         </div>
 
         <div id="listaChecklists"><div class="loading"><div class="spinner"></div><p>Carregando check-lists...</p></div></div>
@@ -169,9 +173,7 @@ const PERGUNTAS = {
     q18:'A direção está leve e sem folgas?'
 };
 
-// Resposta "Sim" é problema para estas chaves
 const PROBLEMA_SIM = ['q1','q3','q4','q5','q13'];
-// Resposta "Não" é problema para estas chaves
 const PROBLEMA_NAO = ['q2','q6','q7','q8','q9','q10','q11','q12','q14','q15','q16','q17','q18'];
 
 function isProblema(key, val) {
@@ -206,17 +208,15 @@ function closeSidebar(){['hamburgerBtn','sidebar','sidebarOverlay'].forEach(id=>
 async function loadChecklists() {
     document.getElementById('listaChecklists').innerHTML='<div class="loading"><div class="spinner"></div><p>Carregando...</p></div>';
     try {
-        // Try Supabase first
         const {data, error} = await db.from('checklist_diario').select('*').order('created_at',{ascending:false}).limit(200);
         if (error) throw error;
         allChecklists = data || [];
     } catch(e) {
-        // Fallback to localStorage
         allChecklists = JSON.parse(localStorage.getItem('checklists') || '[]');
     }
     filteredChecklists = [...allChecklists];
     calcStats();
-    popularFiltroOperadores();
+    popularFiltros();
     renderTabela(filteredChecklists);
 }
 
@@ -233,11 +233,18 @@ function calcStats() {
     document.getElementById('statTurnoB').textContent   = turnoBC;
 }
 
-function popularFiltroOperadores() {
+function popularFiltros() {
+    // Operadores
     const ops = [...new Set(allChecklists.map(i=>i.operador).filter(Boolean))].sort();
-    const sel = document.getElementById('filtroOperador');
-    sel.innerHTML='<option value="">Todos</option>';
-    ops.forEach(o=>{const opt=document.createElement('option');opt.value=o;opt.textContent=o;sel.appendChild(opt);});
+    const selOp = document.getElementById('filtroOperador');
+    selOp.innerHTML='<option value="">Todos</option>';
+    ops.forEach(o=>{const opt=document.createElement('option');opt.value=o;opt.textContent=o;selOp.appendChild(opt);});
+
+    // Máquinas
+    const maquinas = [...new Set(allChecklists.map(i=>i.numero_maquina).filter(Boolean))].sort();
+    const selMaq = document.getElementById('filtroMaquina');
+    selMaq.innerHTML='<option value="">Todas</option>';
+    maquinas.forEach(m=>{const opt=document.createElement('option');opt.value=m;opt.textContent=m;selMaq.appendChild(opt);});
 }
 
 /* RENDER TABLE */
@@ -251,7 +258,7 @@ function renderTabela(lista) {
     let html=`<div class="total-strip">📊 ${lista.length} check-list(s) encontrado(s)</div>
     <div class="table-container"><table id="tabelaChecklists">
     <thead><tr>
-        <th>Data/Hora</th><th>Operador</th><th>Matrícula</th><th>Turno</th><th>Horímetro</th><th>Situação</th><th>Problemas</th><th>Ações</th>
+        <th>Data/Hora</th><th>Operador</th><th>Matrícula</th><th>Máquina</th><th>Turno</th><th>Horímetro</th><th>Situação</th><th>Problemas</th><th>Ações</th>
     </tr></thead><tbody>`;
 
     lista.forEach(item=>{
@@ -262,11 +269,15 @@ function renderTabela(lista) {
         const situBadge = prob > 0
             ? `<span class="badge badge-warning">⚠️ ${prob} problema(s)</span>`
             : `<span class="badge badge-ok">✅ OK</span>`;
+        const maquinaStr = item.numero_maquina
+            ? `<span class="badge badge-purple">🏭 ${item.numero_maquina}</span>`
+            : '<span style="color:#aaa;font-size:12px">–</span>';
 
         html+=`<tr>
             <td style="white-space:nowrap;font-size:13px">${dataStr}</td>
             <td><strong>${item.operador||'–'}</strong></td>
             <td>${item.matricula||'–'}</td>
+            <td>${maquinaStr}</td>
             <td><span class="badge ${turnoClass}">Turno ${item.turno||'–'}</span></td>
             <td>${item.horimetro||'–'}</td>
             <td>${situBadge}</td>
@@ -300,6 +311,7 @@ function aplicarFiltros(){
     const turno=document.getElementById('filtroTurno').value;
     const situacao=document.getElementById('filtroSituacao').value;
     const operador=document.getElementById('filtroOperador').value;
+    const maquina=document.getElementById('filtroMaquina').value;
     const ini=document.getElementById('filtroDataInicio').value;
     const fim=document.getElementById('filtroDataFim').value;
 
@@ -308,6 +320,7 @@ function aplicarFiltros(){
         if(situacao==='ok'&&(item.total_problemas||0)>0)return false;
         if(situacao==='problemas'&&(item.total_problemas||0)===0)return false;
         if(operador&&item.operador!==operador)return false;
+        if(maquina&&item.numero_maquina!==maquina)return false;
         const dt=new Date(item.created_at||item.data);
         if(ini&&dt<new Date(ini))return false;
         if(fim){const f=new Date(fim);f.setHours(23,59,59,999);if(dt>f)return false;}
@@ -317,7 +330,7 @@ function aplicarFiltros(){
     document.getElementById('searchChecklist').value='';
 }
 function limparFiltros(){
-    ['filtroTurno','filtroSituacao','filtroOperador','filtroDataInicio','filtroDataFim'].forEach(id=>document.getElementById(id).value='');
+    ['filtroTurno','filtroSituacao','filtroOperador','filtroMaquina','filtroDataInicio','filtroDataFim'].forEach(id=>document.getElementById(id).value='');
     filteredChecklists=[...allChecklists];
     renderTabela(filteredChecklists);
     document.getElementById('searchChecklist').value='';
@@ -335,6 +348,7 @@ function verDetalhes(jsonStr) {
         <div class="detail-grid">
             <div class="detail-item"><strong>Operador</strong><span>${item.operador||'–'}</span></div>
             <div class="detail-item"><strong>Matrícula</strong><span>${item.matricula||'–'}</span></div>
+            <div class="detail-item"><strong>Nº da Máquina</strong><span>${item.numero_maquina||'–'}</span></div>
             <div class="detail-item"><strong>Turno</strong><span class="badge ${item.turno==='A'?'badge-turno-a':item.turno==='B'?'badge-turno-b':'badge-turno-c'}">Turno ${item.turno||'–'}</span></div>
             <div class="detail-item"><strong>Horímetro</strong><span>${item.horimetro||'–'}</span></div>
             <div class="detail-item"><strong>Data</strong><span>${item.data||'–'}</span></div>
@@ -345,7 +359,6 @@ function verDetalhes(jsonStr) {
     `;
 
     if (item.respostas && Object.keys(item.respostas).length) {
-        // Group by sections
         const sections = [
             { title: '👁️ Inspeção Visual Geral', keys: ['q1','q2','q3','q4','q5'] },
             { title: '⚡ Sistema Elétrico',        keys: ['q6','q7','q8','q9','q10','q11'] },
