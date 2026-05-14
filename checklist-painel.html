@@ -7,11 +7,211 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/checklist-painel.css">
-
     <meta name="theme-color" content="#1e293b">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <style>
+        /* ── RESUMO POR MÁQUINA NO SIDEBAR ── */
+        .sidebar-machines-section {
+            margin-top: 8px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            padding-top: 8px;
+        }
+
+        .sidebar-machines-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background 0.2s;
+            user-select: none;
+        }
+        .sidebar-machines-header:hover {
+            background: rgba(255,255,255,0.07);
+        }
+        .sidebar-machines-header-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+        }
+        .sidebar-machines-header-left .icon {
+            font-size: 15px;
+        }
+        .sidebar-machines-chevron {
+            font-size: 10px;
+            color: #64748b;
+            transition: transform 0.3s ease;
+            line-height: 1;
+        }
+        .sidebar-machines-chevron.open {
+            transform: rotate(180deg);
+        }
+
+        /* Lista de máquinas (colapsável) */
+        .sidebar-machines-list {
+            overflow: hidden;
+            max-height: 0;
+            transition: max-height 0.35s ease;
+        }
+        .sidebar-machines-list.open {
+            max-height: 2000px;
+        }
+
+        /* Card de cada máquina */
+        .machine-card {
+            margin: 4px 8px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.07);
+            overflow: hidden;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .machine-card:hover {
+            background: rgba(255,255,255,0.09);
+            border-color: rgba(255,255,255,0.14);
+        }
+        .machine-card.active-machine {
+            background: rgba(99,102,241,0.15);
+            border-color: rgba(99,102,241,0.4);
+        }
+
+        /* Cabeçalho do card (sempre visível) */
+        .machine-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 9px 12px;
+        }
+        .machine-card-name {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+        .machine-card-name .machine-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            flex-shrink: 0;
+        }
+        .machine-card-name .machine-dot.has-issues {
+            background: #f59e0b;
+        }
+        .machine-badge-count {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.1);
+            color: #94a3b8;
+            min-width: 26px;
+            text-align: center;
+        }
+        .machine-card-chevron {
+            font-size: 9px;
+            color: #64748b;
+            transition: transform 0.25s ease;
+            margin-left: 6px;
+        }
+        .machine-card-chevron.open {
+            transform: rotate(180deg);
+        }
+
+        /* Detalhes expandidos */
+        .machine-card-body {
+            overflow: hidden;
+            max-height: 0;
+            transition: max-height 0.3s ease;
+        }
+        .machine-card-body.open {
+            max-height: 400px;
+        }
+        .machine-card-stats {
+            padding: 0 12px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .machine-stat-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+        }
+        .machine-stat-label {
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .machine-stat-value {
+            font-weight: 600;
+            color: #cbd5e1;
+        }
+        .machine-stat-value.green  { color: #4ade80; }
+        .machine-stat-value.amber  { color: #fbbf24; }
+        .machine-stat-value.red    { color: #f87171; }
+
+        .machine-last-check {
+            font-size: 11px;
+            color: #475569;
+            padding: 0 12px 8px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            margin-top: 4px;
+            padding-top: 6px;
+        }
+
+        .machine-filter-btn {
+            display: block;
+            width: calc(100% - 24px);
+            margin: 2px 12px 8px;
+            padding: 5px;
+            font-size: 11px;
+            font-weight: 600;
+            text-align: center;
+            border-radius: 6px;
+            background: rgba(99,102,241,0.2);
+            color: #818cf8;
+            border: 1px solid rgba(99,102,241,0.3);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .machine-filter-btn:hover {
+            background: rgba(99,102,241,0.35);
+        }
+
+        /* Badge de problemas no cabeçalho */
+        .machine-issues-badge {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 20px;
+            background: rgba(245,158,11,0.2);
+            color: #fbbf24;
+            border: 1px solid rgba(245,158,11,0.3);
+        }
+
+        /* Estado de carregando no sidebar */
+        .sidebar-machines-loading {
+            padding: 12px 16px;
+            font-size: 12px;
+            color: #475569;
+            text-align: center;
+        }
+    </style>
 </head>
     <script src="notifications.js"></script>
     <script src="push.js"></script>
@@ -39,38 +239,43 @@
         <div class="menu-section-title">Principal</div>
         <div class="menu-item active" onclick="closeSidebar()"><span class="menu-icon">✅</span><span>Painel Check-lists</span></div>
     </div>
-        <div class="menu-section">
-            <div class="menu-section-title">Operação</div>
-            <a href="ocorrencias.html" style="text-decoration:none;">
-                <div class="menu-item" id="menuOcorrenciasExt">
-                    <span class="menu-icon">📋</span>
-                    <span>Central de Ocorrências</span>
-                </div>
-            </a>
-            <div class="menu-section-title">Manutenção</div>
-            <div class="menu-item" id="menuPredial">
-                <span class="menu-icon">🏢</span>
-                <span>Predial</span>
-            </div>
-            <div class="menu-item" id="menuEquipamentos">
-                <span class="menu-icon">⚙️</span>
-                <span>Equipamentos</span>
-            </div>
-            <div class="menu-item" id="menuOcorrencias">
+    <div class="menu-section">
+        <div class="menu-section-title">Operação</div>
+        <a href="ocorrencias.html" style="text-decoration:none;">
+            <div class="menu-item" id="menuOcorrenciasExt">
                 <span class="menu-icon">📋</span>
-                <span>Ocorrências</span>
+                <span>Central de Ocorrências</span>
             </div>
-        </div>
-        <a href="checklist-painel.html" class="menu-item"><span class="menu-icon">✅</span><span>Painel Check-lists</span></a>
-        <a href="checklist.html" class="menu-item"><span class="menu-icon">📝</span><span>Novo Check-list</span></a>
+        </a>
+        <div class="menu-section-title">Manutenção</div>
+        <div class="menu-item" id="menuPredial"><span class="menu-icon">🏢</span><span>Predial</span></div>
+        <div class="menu-item" id="menuEquipamentos"><span class="menu-icon">⚙️</span><span>Equipamentos</span></div>
+        <div class="menu-item" id="menuOcorrencias"><span class="menu-icon">📋</span><span>Ocorrências</span></div>
+    </div>
+    <a href="checklist-painel.html" class="menu-item"><span class="menu-icon">✅</span><span>Painel Check-lists</span></a>
+    <a href="checklist.html" class="menu-item"><span class="menu-icon">📝</span><span>Novo Check-list</span></a>
 
-        <div class="menu-section">
-            <div class="menu-section-title">Gestão</div>
-            <a href="usuarios.html" class="menu-item" id="menuUsuarios">
-                <span class="menu-icon">👥</span>
-                <span>Usuários</span>
-            </a>
+    <div class="menu-section">
+        <div class="menu-section-title">Gestão</div>
+        <a href="usuarios.html" class="menu-item" id="menuUsuarios">
+            <span class="menu-icon">👥</span>
+            <span>Usuários</span>
+        </a>
+    </div>
+
+    <!-- ── RESUMO POR MÁQUINA (expansível) ── -->
+    <div class="sidebar-machines-section">
+        <div class="sidebar-machines-header" id="machinesSidebarToggle" onclick="toggleMachinesSidebar()">
+            <div class="sidebar-machines-header-left">
+                <span class="icon">🏭</span>
+                <span>Resumo por Máquina</span>
+            </div>
+            <span class="sidebar-machines-chevron" id="machinesSidebarChevron">▼</span>
         </div>
+        <div class="sidebar-machines-list" id="machinesSidebarList">
+            <div class="sidebar-machines-loading" id="machinesSidebarLoading">⏳ Carregando...</div>
+        </div>
+    </div>
 
 </div>
 
@@ -110,7 +315,6 @@
                 <div class="form-group"><label>Operador</label>
                     <select id="filtroOperador"><option value="">Todos</option></select>
                 </div>
-                <!-- NOVO: filtro por máquina -->
                 <div class="form-group"><label>Máquina</label>
                     <select id="filtroMaquina"><option value="">Todas</option></select>
                 </div>
@@ -195,20 +399,128 @@ document.addEventListener('DOMContentLoaded', () => {
     loadChecklists();
 });
 
-/* SIDEBAR */
+/* ── SIDEBAR ── */
 function setupSidebar() {
-    const btn=document.getElementById('hamburgerBtn'),sb=document.getElementById('sidebar'),ov=document.getElementById('sidebarOverlay');
-    btn.addEventListener('click',()=>{btn.classList.toggle('active');sb.classList.toggle('active');ov.classList.toggle('active');});
+    const btn = document.getElementById('hamburgerBtn');
+    const sb  = document.getElementById('sidebar');
+    const ov  = document.getElementById('sidebarOverlay');
+    btn.addEventListener('click', () => {
+        btn.classList.toggle('active');
+        sb.classList.toggle('active');
+        ov.classList.toggle('active');
+    });
     ov.addEventListener('click', closeSidebar);
-    document.addEventListener('keydown', e => { if(e.key==='Escape'){closeSidebar();fecharModal();}});
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { closeSidebar(); fecharModal(); }
+    });
 }
-function closeSidebar(){['hamburgerBtn','sidebar','sidebarOverlay'].forEach(id=>document.getElementById(id).classList.remove('active'));}
+function closeSidebar() {
+    ['hamburgerBtn','sidebar','sidebarOverlay'].forEach(id => document.getElementById(id).classList.remove('active'));
+}
 
-/* LOAD */
+/* ── TOGGLE RESUMO MÁQUINAS ── */
+let machinesSidebarOpen = false;
+function toggleMachinesSidebar() {
+    machinesSidebarOpen = !machinesSidebarOpen;
+    document.getElementById('machinesSidebarList').classList.toggle('open', machinesSidebarOpen);
+    document.getElementById('machinesSidebarChevron').classList.toggle('open', machinesSidebarOpen);
+}
+
+/* ── MONTAR RESUMO POR MÁQUINA NO SIDEBAR ── */
+function buildMachinesSidebar(checklists) {
+    const container = document.getElementById('machinesSidebarList');
+
+    // Agrupar por número de máquina
+    const map = {};
+    checklists.forEach(item => {
+        const maq = item.numero_maquina || '(sem nº)';
+        if (!map[maq]) map[maq] = { total: 0, problemas: 0, ok: 0, ultimo: null };
+        map[maq].total++;
+        if ((item.total_problemas || 0) > 0) map[maq].problemas++;
+        else map[maq].ok++;
+
+        const dt = new Date(item.created_at || item.data);
+        if (!map[maq].ultimo || dt > new Date(map[maq].ultimo)) map[maq].ultimo = item.created_at || item.data;
+    });
+
+    const maquinas = Object.keys(map).sort();
+
+    if (!maquinas.length) {
+        container.innerHTML = '<div class="sidebar-machines-loading">Nenhuma máquina encontrada.</div>';
+        return;
+    }
+
+    let html = '';
+    maquinas.forEach((maq, idx) => {
+        const d = map[maq];
+        const taxaOk = d.total ? Math.round((d.ok / d.total) * 100) : 0;
+        const hasIssues = d.problemas > 0;
+        const dotClass = hasIssues ? 'machine-dot has-issues' : 'machine-dot';
+        const lastDt = d.ultimo ? new Date(d.ultimo).toLocaleDateString('pt-BR') : '–';
+
+        html += `
+        <div class="machine-card" id="mcard-${idx}">
+            <div class="machine-card-header" onclick="toggleMachineCard(${idx})">
+                <div class="machine-card-name">
+                    <span class="${dotClass}"></span>
+                    <span>Máq. ${maq}</span>
+                    ${hasIssues ? `<span class="machine-issues-badge">⚠️ ${d.problemas}</span>` : ''}
+                </div>
+                <div style="display:flex;align-items:center;gap:4px">
+                    <span class="machine-badge-count">${d.total}</span>
+                    <span class="machine-card-chevron" id="mcard-chev-${idx}">▼</span>
+                </div>
+            </div>
+            <div class="machine-card-body" id="mcard-body-${idx}">
+                <div class="machine-card-stats">
+                    <div class="machine-stat-row">
+                        <span class="machine-stat-label">✅ Sem problemas</span>
+                        <span class="machine-stat-value green">${d.ok}</span>
+                    </div>
+                    <div class="machine-stat-row">
+                        <span class="machine-stat-label">⚠️ Com problemas</span>
+                        <span class="machine-stat-value ${d.problemas > 0 ? 'amber' : ''}">${d.problemas}</span>
+                    </div>
+                    <div class="machine-stat-row">
+                        <span class="machine-stat-label">📊 Taxa OK</span>
+                        <span class="machine-stat-value ${taxaOk >= 80 ? 'green' : taxaOk >= 50 ? 'amber' : 'red'}">${taxaOk}%</span>
+                    </div>
+                </div>
+                <div class="machine-last-check">🕒 Última inspeção: ${lastDt}</div>
+                <button class="machine-filter-btn" onclick="filtrarPorMaquina('${maq}')">
+                    🔍 Ver apenas esta máquina
+                </button>
+            </div>
+        </div>`;
+    });
+
+    container.innerHTML = html;
+}
+
+function toggleMachineCard(idx) {
+    const body = document.getElementById(`mcard-body-${idx}`);
+    const chev = document.getElementById(`mcard-chev-${idx}`);
+    const card = document.getElementById(`mcard-${idx}`);
+    const isOpen = body.classList.contains('open');
+    body.classList.toggle('open', !isOpen);
+    chev.classList.toggle('open', !isOpen);
+    card.classList.toggle('active-machine', !isOpen);
+}
+
+/* Filtra tabela por máquina clicando no sidebar */
+function filtrarPorMaquina(maq) {
+    document.getElementById('filtroMaquina').value = maq;
+    aplicarFiltros();
+    closeSidebar();
+    // Scroll suave até a tabela
+    document.querySelector('.card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ── LOAD ── */
 async function loadChecklists() {
-    document.getElementById('listaChecklists').innerHTML='<div class="loading"><div class="spinner"></div><p>Carregando...</p></div>';
+    document.getElementById('listaChecklists').innerHTML = '<div class="loading"><div class="spinner"></div><p>Carregando...</p></div>';
     try {
-        const {data, error} = await db.from('checklist_diario').select('*').order('created_at',{ascending:false}).limit(200);
+        const { data, error } = await db.from('checklist_diario').select('*').order('created_at', { ascending: false }).limit(200);
         if (error) throw error;
         allChecklists = data || [];
     } catch(e) {
@@ -217,6 +529,7 @@ async function loadChecklists() {
     filteredChecklists = [...allChecklists];
     calcStats();
     popularFiltros();
+    buildMachinesSidebar(allChecklists);   // ← monta o resumo no sidebar
     renderTabela(filteredChecklists);
 }
 
@@ -224,48 +537,46 @@ function calcStats() {
     const total = allChecklists.length;
     const comProblemas = allChecklists.filter(i => (i.total_problemas || 0) > 0).length;
     const semProblemas = total - comProblemas;
-    const turnoA = allChecklists.filter(i => i.turno === 'A').length;
+    const turnoA  = allChecklists.filter(i => i.turno === 'A').length;
     const turnoBC = allChecklists.filter(i => i.turno === 'B' || i.turno === 'C').length;
-    document.getElementById('statTotal').textContent    = total;
-    document.getElementById('statOk').textContent       = semProblemas;
+    document.getElementById('statTotal').textContent     = total;
+    document.getElementById('statOk').textContent        = semProblemas;
     document.getElementById('statProblemas').textContent = comProblemas;
-    document.getElementById('statTurnoA').textContent   = turnoA;
-    document.getElementById('statTurnoB').textContent   = turnoBC;
+    document.getElementById('statTurnoA').textContent    = turnoA;
+    document.getElementById('statTurnoB').textContent    = turnoBC;
 }
 
 function popularFiltros() {
-    // Operadores
-    const ops = [...new Set(allChecklists.map(i=>i.operador).filter(Boolean))].sort();
+    const ops = [...new Set(allChecklists.map(i => i.operador).filter(Boolean))].sort();
     const selOp = document.getElementById('filtroOperador');
-    selOp.innerHTML='<option value="">Todos</option>';
-    ops.forEach(o=>{const opt=document.createElement('option');opt.value=o;opt.textContent=o;selOp.appendChild(opt);});
+    selOp.innerHTML = '<option value="">Todos</option>';
+    ops.forEach(o => { const opt = document.createElement('option'); opt.value = o; opt.textContent = o; selOp.appendChild(opt); });
 
-    // Máquinas
-    const maquinas = [...new Set(allChecklists.map(i=>i.numero_maquina).filter(Boolean))].sort();
+    const maquinas = [...new Set(allChecklists.map(i => i.numero_maquina).filter(Boolean))].sort();
     const selMaq = document.getElementById('filtroMaquina');
-    selMaq.innerHTML='<option value="">Todas</option>';
-    maquinas.forEach(m=>{const opt=document.createElement('option');opt.value=m;opt.textContent=m;selMaq.appendChild(opt);});
+    selMaq.innerHTML = '<option value="">Todas</option>';
+    maquinas.forEach(m => { const opt = document.createElement('option'); opt.value = m; opt.textContent = m; selMaq.appendChild(opt); });
 }
 
-/* RENDER TABLE */
+/* ── RENDER TABLE ── */
 function renderTabela(lista) {
     const el = document.getElementById('listaChecklists');
     if (!lista.length) {
-        el.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><p>Nenhum check-list encontrado.</p></div>';
+        el.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><p>Nenhum check-list encontrado.</p></div>';
         return;
     }
 
-    let html=`<div class="total-strip">📊 ${lista.length} check-list(s) encontrado(s)</div>
+    let html = `<div class="total-strip">📊 ${lista.length} check-list(s) encontrado(s)</div>
     <div class="table-container"><table id="tabelaChecklists">
     <thead><tr>
         <th>Data/Hora</th><th>Operador</th><th>Matrícula</th><th>Máquina</th><th>Turno</th><th>Horímetro</th><th>Situação</th><th>Problemas</th><th>Ações</th>
     </tr></thead><tbody>`;
 
-    lista.forEach(item=>{
-        const dt = new Date(item.created_at || `${item.data}T${item.hora||'00:00'}`);
-        const dataStr = dt.toLocaleDateString('pt-BR') + ' ' + dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    lista.forEach(item => {
+        const dt = new Date(item.created_at || `${item.data}T${item.hora || '00:00'}`);
+        const dataStr = dt.toLocaleDateString('pt-BR') + ' ' + dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
         const prob = item.total_problemas || 0;
-        const turnoClass = item.turno==='A'?'badge-turno-a':item.turno==='B'?'badge-turno-b':'badge-turno-c';
+        const turnoClass = item.turno === 'A' ? 'badge-turno-a' : item.turno === 'B' ? 'badge-turno-b' : 'badge-turno-c';
         const situBadge = prob > 0
             ? `<span class="badge badge-warning">⚠️ ${prob} problema(s)</span>`
             : `<span class="badge badge-ok">✅ OK</span>`;
@@ -273,90 +584,92 @@ function renderTabela(lista) {
             ? `<span class="badge badge-purple">🏭 ${item.numero_maquina}</span>`
             : '<span style="color:#aaa;font-size:12px">–</span>';
 
-        html+=`<tr>
+        html += `<tr>
             <td style="white-space:nowrap;font-size:13px">${dataStr}</td>
-            <td><strong>${item.operador||'–'}</strong></td>
-            <td>${item.matricula||'–'}</td>
+            <td><strong>${item.operador || '–'}</strong></td>
+            <td>${item.matricula || '–'}</td>
             <td>${maquinaStr}</td>
-            <td><span class="badge ${turnoClass}">Turno ${item.turno||'–'}</span></td>
-            <td>${item.horimetro||'–'}</td>
+            <td><span class="badge ${turnoClass}">Turno ${item.turno || '–'}</span></td>
+            <td>${item.horimetro || '–'}</td>
             <td>${situBadge}</td>
-            <td style="text-align:center"><strong style="color:${prob>0?'#dc2626':'#059669'}">${prob}</strong></td>
+            <td style="text-align:center"><strong style="color:${prob > 0 ? '#dc2626' : '#059669'}">${prob}</strong></td>
             <td><button class="btn btn-small" onclick='verDetalhes(${JSON.stringify(JSON.stringify(item))})'>👁️ Ver</button></td>
         </tr>`;
     });
 
-    html+='</tbody></table></div>';
-    el.innerHTML=html;
+    html += '</tbody></table></div>';
+    el.innerHTML = html;
 }
 
-/* SEARCH */
-function setupSearch(){
-    document.getElementById('searchChecklist').addEventListener('input',function(){
-        const term=this.value.toLowerCase().trim();
-        const tbody=document.querySelector('#tabelaChecklists tbody');
-        if(!tbody)return;
-        let v=0;
-        tbody.querySelectorAll('tr').forEach(row=>{
-            const m=row.textContent.toLowerCase().includes(term);
-            row.style.display=m?'':'none'; if(m)v++;
+/* ── SEARCH ── */
+function setupSearch() {
+    document.getElementById('searchChecklist').addEventListener('input', function() {
+        const term = this.value.toLowerCase().trim();
+        const tbody = document.querySelector('#tabelaChecklists tbody');
+        if (!tbody) return;
+        let v = 0;
+        tbody.querySelectorAll('tr').forEach(row => {
+            const m = row.textContent.toLowerCase().includes(term);
+            row.style.display = m ? '' : 'none';
+            if (m) v++;
         });
-        const strip=document.querySelector('.total-strip');
-        if(strip)strip.textContent=`📊 ${v} check-list(s) encontrado(s)`;
+        const strip = document.querySelector('.total-strip');
+        if (strip) strip.textContent = `📊 ${v} check-list(s) encontrado(s)`;
     });
 }
 
-/* FILTERS */
-function aplicarFiltros(){
-    const turno=document.getElementById('filtroTurno').value;
-    const situacao=document.getElementById('filtroSituacao').value;
-    const operador=document.getElementById('filtroOperador').value;
-    const maquina=document.getElementById('filtroMaquina').value;
-    const ini=document.getElementById('filtroDataInicio').value;
-    const fim=document.getElementById('filtroDataFim').value;
+/* ── FILTERS ── */
+function aplicarFiltros() {
+    const turno    = document.getElementById('filtroTurno').value;
+    const situacao = document.getElementById('filtroSituacao').value;
+    const operador = document.getElementById('filtroOperador').value;
+    const maquina  = document.getElementById('filtroMaquina').value;
+    const ini      = document.getElementById('filtroDataInicio').value;
+    const fim      = document.getElementById('filtroDataFim').value;
 
-    filteredChecklists=allChecklists.filter(item=>{
-        if(turno&&item.turno!==turno)return false;
-        if(situacao==='ok'&&(item.total_problemas||0)>0)return false;
-        if(situacao==='problemas'&&(item.total_problemas||0)===0)return false;
-        if(operador&&item.operador!==operador)return false;
-        if(maquina&&item.numero_maquina!==maquina)return false;
-        const dt=new Date(item.created_at||item.data);
-        if(ini&&dt<new Date(ini))return false;
-        if(fim){const f=new Date(fim);f.setHours(23,59,59,999);if(dt>f)return false;}
+    filteredChecklists = allChecklists.filter(item => {
+        if (turno    && item.turno !== turno) return false;
+        if (situacao === 'ok'       && (item.total_problemas || 0) > 0) return false;
+        if (situacao === 'problemas' && (item.total_problemas || 0) === 0) return false;
+        if (operador && item.operador !== operador) return false;
+        if (maquina  && item.numero_maquina !== maquina) return false;
+        const dt = new Date(item.created_at || item.data);
+        if (ini && dt < new Date(ini)) return false;
+        if (fim) { const f = new Date(fim); f.setHours(23, 59, 59, 999); if (dt > f) return false; }
         return true;
     });
     renderTabela(filteredChecklists);
-    document.getElementById('searchChecklist').value='';
-}
-function limparFiltros(){
-    ['filtroTurno','filtroSituacao','filtroOperador','filtroMaquina','filtroDataInicio','filtroDataFim'].forEach(id=>document.getElementById(id).value='');
-    filteredChecklists=[...allChecklists];
-    renderTabela(filteredChecklists);
-    document.getElementById('searchChecklist').value='';
+    document.getElementById('searchChecklist').value = '';
 }
 
-/* VER DETALHES */
+function limparFiltros() {
+    ['filtroTurno','filtroSituacao','filtroOperador','filtroMaquina','filtroDataInicio','filtroDataFim']
+        .forEach(id => document.getElementById(id).value = '');
+    filteredChecklists = [...allChecklists];
+    renderTabela(filteredChecklists);
+    document.getElementById('searchChecklist').value = '';
+}
+
+/* ── VER DETALHES ── */
 function verDetalhes(jsonStr) {
     const item = JSON.parse(jsonStr);
-    const dt = new Date(item.created_at || `${item.data}T${item.hora||'00:00'}`).toLocaleString('pt-BR');
+    const dt   = new Date(item.created_at || `${item.data}T${item.hora || '00:00'}`).toLocaleString('pt-BR');
     const prob = item.total_problemas || 0;
 
     document.getElementById('modalTitle').textContent = `📋 Check-list — ${item.operador}`;
 
     let html = `
         <div class="detail-grid">
-            <div class="detail-item"><strong>Operador</strong><span>${item.operador||'–'}</span></div>
-            <div class="detail-item"><strong>Matrícula</strong><span>${item.matricula||'–'}</span></div>
-            <div class="detail-item"><strong>Nº da Máquina</strong><span>${item.numero_maquina||'–'}</span></div>
-            <div class="detail-item"><strong>Turno</strong><span class="badge ${item.turno==='A'?'badge-turno-a':item.turno==='B'?'badge-turno-b':'badge-turno-c'}">Turno ${item.turno||'–'}</span></div>
-            <div class="detail-item"><strong>Horímetro</strong><span>${item.horimetro||'–'}</span></div>
-            <div class="detail-item"><strong>Data</strong><span>${item.data||'–'}</span></div>
-            <div class="detail-item"><strong>Hora</strong><span>${item.hora||'–'}</span></div>
+            <div class="detail-item"><strong>Operador</strong><span>${item.operador || '–'}</span></div>
+            <div class="detail-item"><strong>Matrícula</strong><span>${item.matricula || '–'}</span></div>
+            <div class="detail-item"><strong>Nº da Máquina</strong><span>${item.numero_maquina || '–'}</span></div>
+            <div class="detail-item"><strong>Turno</strong><span class="badge ${item.turno === 'A' ? 'badge-turno-a' : item.turno === 'B' ? 'badge-turno-b' : 'badge-turno-c'}">Turno ${item.turno || '–'}</span></div>
+            <div class="detail-item"><strong>Horímetro</strong><span>${item.horimetro || '–'}</span></div>
+            <div class="detail-item"><strong>Data</strong><span>${item.data || '–'}</span></div>
+            <div class="detail-item"><strong>Hora</strong><span>${item.hora || '–'}</span></div>
             <div class="detail-item"><strong>Enviado em</strong><span style="font-size:13px">${dt}</span></div>
-            <div class="detail-item"><strong>Situação</strong><span>${prob>0?`<span class="badge badge-warning">⚠️ ${prob} problema(s)</span>`:'<span class="badge badge-ok">✅ Sem problemas</span>'}</span></div>
-        </div>
-    `;
+            <div class="detail-item"><strong>Situação</strong><span>${prob > 0 ? `<span class="badge badge-warning">⚠️ ${prob} problema(s)</span>` : '<span class="badge badge-ok">✅ Sem problemas</span>'}</span></div>
+        </div>`;
 
     if (item.respostas && Object.keys(item.respostas).length) {
         const sections = [
@@ -367,9 +680,7 @@ function verDetalhes(jsonStr) {
             { title: '🛑 Freio e Direção',           keys: ['q16','q17','q18'] },
         ];
 
-        html += '<div class="respostas-section">';
-        html += '<h3>Respostas da Inspeção</h3>';
-
+        html += '<div class="respostas-section"><h3>Respostas da Inspeção</h3>';
         sections.forEach(sec => {
             const anyAnswered = sec.keys.some(k => item.respostas[k]);
             if (!anyAnswered) return;
@@ -378,14 +689,13 @@ function verDetalhes(jsonStr) {
                 if (!item.respostas[k]) return;
                 const val = item.respostas[k];
                 const bad = isProblema(k, val);
-                const badgeClass = bad ? (val==='Sim'?'badge-sim-bad':'badge-nao-bad') : (val==='Sim'?'badge-sim-ok':'badge-nao-ok');
-                html += `<div class="resposta-row ${bad?'problema':''}">
-                    <span class="resposta-label">${PERGUNTAS[k]||k}</span>
+                const badgeClass = bad ? (val === 'Sim' ? 'badge-sim-bad' : 'badge-nao-bad') : (val === 'Sim' ? 'badge-sim-ok' : 'badge-nao-ok');
+                html += `<div class="resposta-row ${bad ? 'problema' : ''}">
+                    <span class="resposta-label">${PERGUNTAS[k] || k}</span>
                     <span class="${badgeClass}">${val}</span>
                 </div>`;
             });
         });
-
         html += '</div>';
     }
 
@@ -393,10 +703,14 @@ function verDetalhes(jsonStr) {
     document.getElementById('modalDetalhes').classList.add('active');
 }
 
-function fecharModal(){document.getElementById('modalDetalhes').classList.remove('active');}
-document.getElementById('modalDetalhes').addEventListener('click',e=>{if(e.target===document.getElementById('modalDetalhes'))fecharModal();});
+function fecharModal() { document.getElementById('modalDetalhes').classList.remove('active'); }
+document.getElementById('modalDetalhes').addEventListener('click', e => {
+    if (e.target === document.getElementById('modalDetalhes')) fecharModal();
+});
 
-function logout(){if(confirm('Deseja realmente sair?')){localStorage.removeItem('currentUser');window.location.href='login.html';}}
+function logout() {
+    if (confirm('Deseja realmente sair?')) { localStorage.removeItem('currentUser'); window.location.href = 'login.html'; }
+}
 </script>
 </body>
 </html>
