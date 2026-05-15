@@ -588,15 +588,14 @@ function abrirImpressao(jsonStr) {
     const item = JSON.parse(jsonStr);
     fecharModal();
 
-    const dt  = new Date(item.created_at || `${item.data}T${item.hora||'00:00'}`);
+    const dt    = new Date(item.created_at || `${item.data}T${item.hora||'00:00'}`);
     const dtStr = dt.toLocaleString('pt-BR');
-    const prob = item.total_problemas || 0;
+    const prob  = item.total_problemas || 0;
     const situacaoClass = prob > 0 ? 'print-situacao-bad' : 'print-situacao-ok';
     const situacaoText  = prob > 0 ? `⚠️ ${prob} problema(s) identificado(s)` : '✅ Inspeção sem problemas';
     const now = new Date().toLocaleString('pt-BR');
 
-    let html = `
-    <!-- CABEÇALHO -->
+    let corpo = `<!-- CABEÇALHO -->
     <div class="print-header">
         <div class="print-header-left">
             <h1>📋 Check-list Diário de Empilhadeira</h1>
@@ -608,7 +607,6 @@ function abrirImpressao(jsonStr) {
         </div>
     </div>
 
-    <!-- DADOS GERAIS -->
     <table class="print-info-table">
         <tr>
             <td class="info-label">Data</td>
@@ -634,86 +632,58 @@ function abrirImpressao(jsonStr) {
         </tr>
     </table>`;
 
-    // RESULTADOS
-    html += '<div class="print-section-title">RESULTADOS DA INSPEÇÃO</div>';
+    corpo += '<div class="print-section-title">RESULTADOS DA INSPEÇÃO</div>';
 
     SECTIONS.forEach(sec => {
         const keys = sec.keys.filter(k => item.respostas && item.respostas[k]);
         if (!keys.length) return;
-
-        // Remove emoji para o título limpo
-        const titleClean = sec.title.replace(/[^\w\s\u00C0-\u024F]/g, '').trim();
-
-        html += `<div class="print-subsection-title">${sec.title}</div>
+        corpo += `<div class="print-subsection-title">${sec.title}</div>
         <table class="print-answers-table">
-            <thead><tr><th>#</th><th>Pergunta</th><th>Resposta</th></tr></thead>
-            <tbody>`;
-
-        keys.forEach((k, i) => {
+            <thead><tr><th>#</th><th>Pergunta</th><th>Resposta</th></tr></thead><tbody>`;
+        keys.forEach(k => {
             const val = item.respostas[k];
             const bad = isProblema(k, val);
-            const badgeClass = bad ? 'print-badge-bad' : 'print-badge-ok';
-            const rowClass = bad ? 'row-problem' : '';
-            const num = k.replace('q','');
-            html += `<tr class="${rowClass}">
-                <td style="width:32px;text-align:center;color:#64748b;font-size:9pt">${num}</td>
+            corpo += `<tr class="${bad ? 'row-problem' : ''}">
+                <td style="width:32px;text-align:center;color:#64748b;font-size:9pt">${k.replace('q','')}</td>
                 <td>${PERGUNTAS[k] || k}</td>
-                <td style="width:60px;text-align:center"><span class="${badgeClass}">${val}</span></td>
+                <td style="width:60px;text-align:center"><span class="${bad ? 'print-badge-bad' : 'print-badge-ok'}">${val}</span></td>
             </tr>`;
         });
-
-        html += '</tbody></table>';
+        corpo += '</tbody></table>';
     });
 
-    // COMENTÁRIO
     if (item.comentario) {
-        html += `<div class="print-section-title" style="margin-top:14px">OBSERVAÇÕES</div>
+        corpo += `<div class="print-section-title" style="margin-top:14px">OBSERVAÇÕES</div>
         <div class="print-comentario">${item.comentario}</div>`;
     }
 
-    // FOTOS — carrega imagem direto via thumbnail do Drive
-    if (item.foto_drive_url || item.assinatura_drive_url) {
-        html += '<div class="print-section-title" style="margin-top:14px">REGISTROS FOTOGRÁFICOS</div>';
-        html += '<div class="print-images-row">';
+    const fotoImgUrl = getDriveImgUrl(item.foto_drive_url);
+    const assImgUrl  = getDriveImgUrl(item.assinatura_drive_url);
 
-        const fotoImgUrl = getDriveImgUrl(item.foto_drive_url);
-        if (fotoImgUrl) {
-            html += `<div class="print-image-box">
+    if (fotoImgUrl) {
+        corpo += `<div class="print-section-title" style="margin-top:14px">REGISTROS FOTOGRÁFICOS</div>
+        <div class="print-images-row">
+            <div class="print-image-box">
                 <div class="print-image-label">📷 Foto da Inspeção</div>
                 <div class="print-image-content">
-                    <img src="${fotoImgUrl}"
-                         alt="Foto da inspeção"
-                         onerror="this.parentElement.innerHTML='<span style=\\'color:#94a3b8;font-size:10pt\\'>Imagem não carregada.<br>Verifique o compartilhamento.</span>'"
+                    <img src="${fotoImgUrl}" alt="Foto" onerror="this.parentElement.innerHTML='Imagem não carregada.'"
                          style="max-width:100%;max-height:220px;object-fit:contain;border-radius:4px">
                 </div>
-            </div>`;
-        } else {
-            html += `<div class="print-image-box">
-                <div class="print-image-label">📷 Foto da Inspeção</div>
-                <div class="print-image-content" style="color:#94a3b8;font-size:10pt">Não enviada</div>
-            </div>`;
-        }
-
-        html += '</div>'; // fecha print-images-row
+            </div>
+        </div>`;
     }
 
-    // ASSINATURA — carrega imagem direto via thumbnail do Drive
-    const assImgUrl = getDriveImgUrl(item.assinatura_drive_url);
-
-    html += `<div class="print-signature-section">
+    corpo += `<div class="print-signature-section">
         <div class="print-signature-row">
             <div class="print-signature-box" style="flex:2">
-                ${assImgUrl
-                    ? `<div class="print-signature-img" style="min-height:90px">
-                            <img src="${assImgUrl}"
-                                 alt="Assinatura do operador"
-                                 onerror="this.parentElement.innerHTML='<span style=\\'color:#94a3b8;font-size:9pt\\'>Assinatura não carregada</span>'"
-                                 style="max-height:90px;max-width:100%;object-fit:contain">
-                       </div>`
-                    : `<div class="print-signature-img" style="min-height:90px">
-                            <span style="color:#94a3b8;font-size:10pt">[ Campo para assinatura ]</span>
-                       </div>`
-                }
+                <div class="print-signature-img" style="min-height:90px">
+                    ${assImgUrl
+                        ? `<img src="${assImgUrl}" alt="Assinatura"
+                               onerror="this.parentElement.innerHTML='Assinatura não carregada'"
+                               style="max-height:90px;max-width:100%;object-fit:contain">`
+                        : '<span style="color:#94a3b8;font-size:10pt">[ Campo para assinatura ]</span>'
+                    }
+                </div>
                 <div class="print-signature-line">${item.operador || '____________________________'}</div>
                 <div class="print-signature-sub">Assinatura do Operador — Matrícula: ${item.matricula || '–'}</div>
             </div>
@@ -726,22 +696,65 @@ function abrirImpressao(jsonStr) {
             </div>
         </div>
     </div>
-
-    <!-- RODAPÉ -->
     <div class="print-footer">
         <span>Sistema de Gestão a Vista — Check-list Diário de Empilhadeiras</span>
         <span>Impresso em: ${now}</span>
     </div>`;
 
-    document.getElementById('printDoc').innerHTML = html;
-    document.getElementById('printArea').classList.add('show');
-    window.scrollTo(0,0);
+    // Abre em nova janela
+    const win = window.open('', '_blank', 'width=900,height=700');
+    win.document.write(`<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Check-list — ${item.operador || ''} — ${item.data || ''}</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; font-size: 10pt; color: #1e293b; padding: 20px; background: #fff; }
+        .print-header { display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #1e293b; padding-bottom:12px; margin-bottom:14px; }
+        .print-header h1 { font-size:14pt; color:#1e293b; margin-bottom:4px; }
+        .print-header p { font-size:9pt; color:#64748b; }
+        .print-header-right { text-align:right; font-size:9pt; color:#64748b; }
+        .print-logo { font-size:14pt; font-weight:900; color:#4f46e5; margin-bottom:4px; }
+        .print-info-table { width:100%; border-collapse:collapse; margin-bottom:14px; font-size:9pt; }
+        .print-info-table td { border:1px solid #cbd5e1; padding:5px 8px; }
+        .info-label { background:#f1f5f9; font-weight:700; color:#475569; width:80px; }
+        .info-value { color:#1e293b; }
+        .print-situacao-box { display:inline-block; padding:2px 10px; border-radius:4px; font-weight:700; font-size:9pt; }
+        .print-situacao-ok  { background:#dcfce7; color:#166534; border:1px solid #86efac; }
+        .print-situacao-bad { background:#fef3c7; color:#92400e; border:1px solid #fcd34d; }
+        .print-section-title { background:#1e293b; color:#fff; font-weight:700; font-size:9pt; padding:5px 10px; margin:10px 0 6px; border-radius:3px; letter-spacing:1px; }
+        .print-subsection-title { font-weight:700; font-size:9pt; color:#4f46e5; margin:8px 0 4px; padding-left:4px; border-left:3px solid #4f46e5; }
+        .print-answers-table { width:100%; border-collapse:collapse; font-size:9pt; margin-bottom:8px; }
+        .print-answers-table th { background:#f1f5f9; border:1px solid #e2e8f0; padding:4px 8px; text-align:left; font-size:8pt; color:#64748b; }
+        .print-answers-table td { border:1px solid #e2e8f0; padding:4px 8px; }
+        .row-problem { background:#fff7ed; }
+        .print-badge-ok  { background:#dcfce7; color:#166534; border:1px solid #86efac; padding:1px 8px; border-radius:10px; font-weight:700; font-size:8pt; }
+        .print-badge-bad { background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; padding:1px 8px; border-radius:10px; font-weight:700; font-size:8pt; }
+        .print-comentario { border:1px solid #e2e8f0; border-radius:4px; padding:10px; font-size:9pt; color:#374151; background:#f9fafb; margin-bottom:10px; }
+        .print-images-row { display:flex; gap:16px; margin-bottom:12px; }
+        .print-image-box { flex:1; border:1px solid #e2e8f0; border-radius:6px; overflow:hidden; }
+        .print-image-label { background:#f1f5f9; padding:5px 10px; font-size:8pt; font-weight:700; color:#475569; }
+        .print-image-content { padding:8px; text-align:center; min-height:60px; display:flex; align-items:center; justify-content:center; }
+        .print-signature-section { margin-top:20px; border-top:2px solid #e2e8f0; padding-top:12px; }
+        .print-signature-row { display:flex; gap:20px; }
+        .print-signature-box { flex:1; text-align:center; }
+        .print-signature-img { min-height:80px; border:1px dashed #cbd5e1; border-radius:4px; margin-bottom:8px; display:flex; align-items:center; justify-content:center; background:#f9fafb; }
+        .print-signature-line { border-top:1px solid #1e293b; padding-top:4px; font-size:9pt; font-weight:700; }
+        .print-signature-sub { font-size:8pt; color:#64748b; margin-top:2px; }
+        .print-footer { margin-top:20px; border-top:1px solid #e2e8f0; padding-top:8px; display:flex; justify-content:space-between; font-size:8pt; color:#94a3b8; }
+        @media print { body { padding: 10px; } }
+    </style>
+</head>
+<body>
+${corpo}
+<script>window.onload = function(){ window.print(); }<\/script>
+</body>
+</html>`);
+    win.document.close();
 }
 
-function fecharImpressao() {
-    document.getElementById('printArea').classList.remove('show');
-    currentPrintItem = null;
-}
+function fecharImpressao() { /* não usada mais, mantida por compatibilidade */ }
 
 /* ── CONVERTE URL DO DRIVE PARA URL DE IMAGEM DIRETA ── */
 function getDriveImgUrl(driveUrl) {
