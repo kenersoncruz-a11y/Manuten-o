@@ -964,21 +964,21 @@ function abrirImpressao(jsonStr) {
         <div class="print-comentario">${item.comentario}</div>`;
     }
 
-    // FOTOS — links clicáveis (no print aparece o URL)
+    // FOTOS — carrega imagem direto via thumbnail do Drive
     if (item.foto_drive_url || item.assinatura_drive_url) {
         html += '<div class="print-section-title" style="margin-top:14px">REGISTROS FOTOGRÁFICOS</div>';
         html += '<div class="print-images-row">';
 
-        if (item.foto_drive_url) {
+        const fotoImgUrl = getDriveImgUrl(item.foto_drive_url);
+        if (fotoImgUrl) {
             html += `<div class="print-image-box">
                 <div class="print-image-label">📷 Foto da Inspeção</div>
                 <div class="print-image-content">
-                    <div style="text-align:center;color:#334155;font-size:11pt">
-                        <div style="font-size:32pt;margin-bottom:8px">📷</div>
-                        <div style="font-size:9pt;color:#64748b">Acesse pelo link:</div>
-                    </div>
+                    <img src="${fotoImgUrl}"
+                         alt="Foto da inspeção"
+                         onerror="this.parentElement.innerHTML='<span style=\\'color:#94a3b8;font-size:10pt\\'>Imagem não carregada.<br>Verifique o compartilhamento.</span>'"
+                         style="max-width:100%;max-height:220px;object-fit:contain;border-radius:4px">
                 </div>
-                <div class="print-image-url">🔗 ${item.foto_drive_url}</div>
             </div>`;
         } else {
             html += `<div class="print-image-box">
@@ -990,14 +990,18 @@ function abrirImpressao(jsonStr) {
         html += '</div>'; // fecha print-images-row
     }
 
-    // ASSINATURA
+    // ASSINATURA — carrega imagem direto via thumbnail do Drive
+    const assImgUrl = getDriveImgUrl(item.assinatura_drive_url);
+
     html += `<div class="print-signature-section">
         <div class="print-signature-row">
             <div class="print-signature-box" style="flex:2">
-                ${item.assinatura_drive_url
-                    ? `<div class="print-signature-img" style="min-height:90px;flex-direction:column;gap:6px">
-                            <div style="font-size:24pt">✍️</div>
-                            <div style="font-size:8pt;color:#64748b;word-break:break-all;max-width:300px">${item.assinatura_drive_url}</div>
+                ${assImgUrl
+                    ? `<div class="print-signature-img" style="min-height:90px">
+                            <img src="${assImgUrl}"
+                                 alt="Assinatura do operador"
+                                 onerror="this.parentElement.innerHTML='<span style=\\'color:#94a3b8;font-size:9pt\\'>Assinatura não carregada</span>'"
+                                 style="max-height:90px;max-width:100%;object-fit:contain">
                        </div>`
                     : `<div class="print-signature-img" style="min-height:90px">
                             <span style="color:#94a3b8;font-size:10pt">[ Campo para assinatura ]</span>
@@ -1030,6 +1034,23 @@ function abrirImpressao(jsonStr) {
 function fecharImpressao() {
     document.getElementById('printArea').classList.remove('show');
     currentPrintItem = null;
+}
+
+/* ── CONVERTE URL DO DRIVE PARA URL DE IMAGEM DIRETA ── */
+function getDriveImgUrl(driveUrl) {
+    if (!driveUrl) return null;
+    // Extrai o file ID do link do Drive
+    // Formatos possíveis:
+    // https://drive.google.com/file/d/FILE_ID/view?usp=...
+    // https://drive.google.com/open?id=FILE_ID
+    let fileId = null;
+    const m1 = driveUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+    const m2 = driveUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (m1) fileId = m1[1];
+    else if (m2) fileId = m2[1];
+    if (!fileId) return null;
+    // thumbnail endpoint do Google — funciona sem autenticação para arquivos com compartilhamento público
+    return `https://drive.google.com/thumbnail?id=${fileId}&sz=w600`;
 }
 
 function logout() {
