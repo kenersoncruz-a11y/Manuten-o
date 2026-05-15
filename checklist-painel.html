@@ -14,208 +14,370 @@
 
     <style>
         /* ── RESUMO POR MÁQUINA NO SIDEBAR ── */
-        .sidebar-machines-section {
-            margin-top: 8px;
-            border-top: 1px solid rgba(255,255,255,0.08);
-            padding-top: 8px;
-        }
+        .sidebar-machines-section { margin-top:8px; border-top:1px solid rgba(255,255,255,0.08); padding-top:8px; }
+        .sidebar-machines-header { display:flex; align-items:center; justify-content:space-between; padding:10px 16px; cursor:pointer; border-radius:8px; transition:background 0.2s; user-select:none; }
+        .sidebar-machines-header:hover { background:rgba(255,255,255,0.07); }
+        .sidebar-machines-header-left { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:#94a3b8; text-transform:uppercase; letter-spacing:0.7px; }
+        .sidebar-machines-header-left .icon { font-size:15px; }
+        .sidebar-machines-chevron { font-size:10px; color:#64748b; transition:transform 0.3s ease; line-height:1; }
+        .sidebar-machines-chevron.open { transform:rotate(180deg); }
+        .sidebar-machines-list { overflow:hidden; max-height:0; transition:max-height 0.35s ease; }
+        .sidebar-machines-list.open { max-height:2000px; }
+        .machine-card { margin:4px 8px; border-radius:10px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); overflow:hidden; cursor:pointer; transition:background 0.2s,border-color 0.2s; }
+        .machine-card:hover { background:rgba(255,255,255,0.09); border-color:rgba(255,255,255,0.14); }
+        .machine-card.active-machine { background:rgba(99,102,241,0.15); border-color:rgba(99,102,241,0.4); }
+        .machine-card-header { display:flex; align-items:center; justify-content:space-between; padding:9px 12px; }
+        .machine-card-name { display:flex; align-items:center; gap:7px; font-size:13px; font-weight:600; color:#e2e8f0; }
+        .machine-card-name .machine-dot { width:8px; height:8px; border-radius:50%; background:#22c55e; flex-shrink:0; }
+        .machine-card-name .machine-dot.has-issues { background:#f59e0b; }
+        .machine-badge-count { font-size:11px; font-weight:700; padding:2px 7px; border-radius:20px; background:rgba(255,255,255,0.1); color:#94a3b8; min-width:26px; text-align:center; }
+        .machine-card-chevron { font-size:9px; color:#64748b; transition:transform 0.25s ease; margin-left:6px; }
+        .machine-card-chevron.open { transform:rotate(180deg); }
+        .machine-card-body { overflow:hidden; max-height:0; transition:max-height 0.3s ease; }
+        .machine-card-body.open { max-height:400px; }
+        .machine-card-stats { padding:0 12px 10px; display:flex; flex-direction:column; gap:5px; }
+        .machine-stat-row { display:flex; align-items:center; justify-content:space-between; font-size:12px; }
+        .machine-stat-label { color:#64748b; display:flex; align-items:center; gap:5px; }
+        .machine-stat-value { font-weight:600; color:#cbd5e1; }
+        .machine-stat-value.green { color:#4ade80; }
+        .machine-stat-value.amber { color:#fbbf24; }
+        .machine-stat-value.red   { color:#f87171; }
+        .machine-last-check { font-size:11px; color:#475569; padding:0 12px 8px; border-top:1px solid rgba(255,255,255,0.05); margin-top:4px; padding-top:6px; }
+        .machine-filter-btn { display:block; width:calc(100% - 24px); margin:2px 12px 8px; padding:5px; font-size:11px; font-weight:600; text-align:center; border-radius:6px; background:rgba(99,102,241,0.2); color:#818cf8; border:1px solid rgba(99,102,241,0.3); cursor:pointer; transition:background 0.2s; }
+        .machine-filter-btn:hover { background:rgba(99,102,241,0.35); }
+        .machine-issues-badge { font-size:10px; font-weight:700; padding:2px 6px; border-radius:20px; background:rgba(245,158,11,0.2); color:#fbbf24; border:1px solid rgba(245,158,11,0.3); }
+        .sidebar-machines-loading { padding:12px 16px; font-size:12px; color:#475569; text-align:center; }
 
-        .sidebar-machines-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px 16px;
-            cursor: pointer;
-            border-radius: 8px;
-            transition: background 0.2s;
-            user-select: none;
-        }
-        .sidebar-machines-header:hover {
-            background: rgba(255,255,255,0.07);
-        }
-        .sidebar-machines-header-left {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-            font-weight: 600;
-            color: #94a3b8;
-            text-transform: uppercase;
-            letter-spacing: 0.7px;
-        }
-        .sidebar-machines-header-left .icon {
-            font-size: 15px;
-        }
-        .sidebar-machines-chevron {
-            font-size: 10px;
-            color: #64748b;
-            transition: transform 0.3s ease;
-            line-height: 1;
-        }
-        .sidebar-machines-chevron.open {
-            transform: rotate(180deg);
-        }
-
-        /* Lista de máquinas (colapsável) */
-        .sidebar-machines-list {
-            overflow: hidden;
-            max-height: 0;
-            transition: max-height 0.35s ease;
-        }
-        .sidebar-machines-list.open {
-            max-height: 2000px;
-        }
-
-        /* Card de cada máquina */
-        .machine-card {
-            margin: 4px 8px;
-            border-radius: 10px;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.07);
-            overflow: hidden;
-            cursor: pointer;
-            transition: background 0.2s, border-color 0.2s;
-        }
-        .machine-card:hover {
-            background: rgba(255,255,255,0.09);
-            border-color: rgba(255,255,255,0.14);
-        }
-        .machine-card.active-machine {
-            background: rgba(99,102,241,0.15);
-            border-color: rgba(99,102,241,0.4);
-        }
-
-        /* Cabeçalho do card (sempre visível) */
-        .machine-card-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 9px 12px;
-        }
-        .machine-card-name {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            font-size: 13px;
-            font-weight: 600;
-            color: #e2e8f0;
-        }
-        .machine-card-name .machine-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #22c55e;
-            flex-shrink: 0;
-        }
-        .machine-card-name .machine-dot.has-issues {
-            background: #f59e0b;
-        }
-        .machine-badge-count {
-            font-size: 11px;
-            font-weight: 700;
-            padding: 2px 7px;
-            border-radius: 20px;
-            background: rgba(255,255,255,0.1);
-            color: #94a3b8;
-            min-width: 26px;
-            text-align: center;
-        }
-        .machine-card-chevron {
-            font-size: 9px;
-            color: #64748b;
-            transition: transform 0.25s ease;
-            margin-left: 6px;
-        }
-        .machine-card-chevron.open {
-            transform: rotate(180deg);
-        }
-
-        /* Detalhes expandidos */
-        .machine-card-body {
-            overflow: hidden;
-            max-height: 0;
-            transition: max-height 0.3s ease;
-        }
-        .machine-card-body.open {
-            max-height: 400px;
-        }
-        .machine-card-stats {
-            padding: 0 12px 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        .machine-stat-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-size: 12px;
-        }
-        .machine-stat-label {
-            color: #64748b;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .machine-stat-value {
-            font-weight: 600;
-            color: #cbd5e1;
-        }
-        .machine-stat-value.green  { color: #4ade80; }
-        .machine-stat-value.amber  { color: #fbbf24; }
-        .machine-stat-value.red    { color: #f87171; }
-
-        .machine-last-check {
-            font-size: 11px;
-            color: #475569;
-            padding: 0 12px 8px;
-            border-top: 1px solid rgba(255,255,255,0.05);
-            margin-top: 4px;
-            padding-top: 6px;
-        }
-
-        .machine-filter-btn {
-            display: block;
-            width: calc(100% - 24px);
-            margin: 2px 12px 8px;
-            padding: 5px;
-            font-size: 11px;
-            font-weight: 600;
-            text-align: center;
+        /* ── BOTÃO IMPRIMIR NA TABELA ── */
+        .btn-print {
+            background: #0f172a;
+            color: #60a5fa;
+            border: 1px solid #1e40af;
+            padding: 4px 10px;
             border-radius: 6px;
-            background: rgba(99,102,241,0.2);
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-left: 4px;
+        }
+        .btn-print:hover { background: #1e3a5f; }
+
+        /* ── LINK DE IMAGEM NO MODAL ── */
+        .img-link-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 8px;
+            background: rgba(99,102,241,0.15);
             color: #818cf8;
             border: 1px solid rgba(99,102,241,0.3);
-            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
             transition: background 0.2s;
         }
-        .machine-filter-btn:hover {
-            background: rgba(99,102,241,0.35);
+        .img-link-btn:hover { background: rgba(99,102,241,0.3); }
+        .img-links-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
+
+        /* ═══════════════════════════════════
+           ESTILOS DE IMPRESSÃO
+        ═══════════════════════════════════ */
+        @media print {
+            body * { visibility: hidden; }
+            #printArea, #printArea * { visibility: visible; }
+            #printArea { position: fixed; inset: 0; background: #fff; z-index: 99999; padding: 0; margin: 0; }
         }
 
-        /* Badge de problemas no cabeçalho */
-        .machine-issues-badge {
-            font-size: 10px;
-            font-weight: 700;
-            padding: 2px 6px;
-            border-radius: 20px;
-            background: rgba(245,158,11,0.2);
-            color: #fbbf24;
-            border: 1px solid rgba(245,158,11,0.3);
+        /* Layout do documento impresso */
+        #printArea {
+            display: none;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11pt;
+            color: #1a1a1a;
+            background: #fff;
+        }
+        #printArea.show {
+            display: block;
         }
 
-        /* Estado de carregando no sidebar */
-        .sidebar-machines-loading {
-            padding: 12px 16px;
-            font-size: 12px;
+        .print-doc {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 24px 28px;
+            background: #fff;
+        }
+
+        /* Cabeçalho do documento */
+        .print-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 3px solid #1e40af;
+            padding-bottom: 10px;
+            margin-bottom: 14px;
+        }
+        .print-header-left h1 {
+            font-size: 15pt;
+            font-weight: 900;
+            color: #1e40af;
+            margin: 0 0 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .print-header-left p {
+            font-size: 9pt;
+            color: #64748b;
+            margin: 0;
+        }
+        .print-header-right {
+            text-align: right;
+            font-size: 9pt;
             color: #475569;
+        }
+        .print-header-right .print-logo {
+            font-size: 13pt;
+            font-weight: 800;
+            color: #1e40af;
+        }
+
+        /* Tabela de dados do cabeçalho */
+        .print-info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 14px;
+            font-size: 10pt;
+        }
+        .print-info-table td {
+            padding: 5px 8px;
+            border: 1px solid #cbd5e1;
+        }
+        .print-info-table .info-label {
+            background: #1e3a8a;
+            color: #fff;
+            font-weight: 700;
+            font-size: 9pt;
+            text-transform: uppercase;
+            width: 110px;
+        }
+        .print-info-table .info-value {
+            background: #f8fafc;
+            color: #1e293b;
+        }
+
+        /* Seção resultados */
+        .print-section-title {
+            background: #1e293b;
+            color: #fff;
+            font-size: 11pt;
+            font-weight: 800;
+            padding: 6px 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 14px 0 8px;
+        }
+        .print-subsection-title {
+            background: #e2e8f0;
+            color: #1e293b;
+            font-size: 9.5pt;
+            font-weight: 700;
+            padding: 4px 10px;
+            margin: 10px 0 4px;
+            border-left: 4px solid #1e40af;
+        }
+
+        /* Tabela de respostas */
+        .print-answers-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 8px;
+            font-size: 9.5pt;
+        }
+        .print-answers-table th {
+            background: #334155;
+            color: #fff;
+            padding: 5px 8px;
+            text-align: left;
+            font-size: 9pt;
+        }
+        .print-answers-table td {
+            padding: 4px 8px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: top;
+        }
+        .print-answers-table tr:nth-child(even) td { background: #f8fafc; }
+        .print-answers-table tr.row-problem td { background: #fef9c3; }
+        .print-badge-ok  { color: #15803d; font-weight: 700; }
+        .print-badge-bad { color: #dc2626; font-weight: 700; }
+
+        /* Seção de imagens */
+        .print-images-row {
+            display: flex;
+            gap: 16px;
+            margin: 12px 0;
+        }
+        .print-image-box {
+            flex: 1;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            overflow: hidden;
             text-align: center;
         }
+        .print-image-label {
+            background: #334155;
+            color: #fff;
+            font-size: 9pt;
+            font-weight: 700;
+            padding: 4px 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .print-image-content {
+            padding: 8px;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8fafc;
+        }
+        .print-image-content img {
+            max-width: 100%;
+            max-height: 200px;
+            object-fit: contain;
+        }
+        .print-image-url {
+            font-size: 8pt;
+            color: #64748b;
+            word-break: break-all;
+            padding: 4px 8px;
+            text-align: left;
+        }
+
+        /* Comentário */
+        .print-comentario {
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 10px 12px;
+            font-size: 10pt;
+            color: #334155;
+            background: #f8fafc;
+            margin: 8px 0 14px;
+            min-height: 40px;
+        }
+
+        /* Assinatura */
+        .print-signature-section {
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 2px solid #e2e8f0;
+        }
+        .print-signature-row {
+            display: flex;
+            gap: 24px;
+            align-items: flex-end;
+        }
+        .print-signature-box {
+            flex: 1;
+            text-align: center;
+        }
+        .print-signature-img {
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 8px;
+            background: #f8fafc;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 4px;
+        }
+        .print-signature-img img {
+            max-height: 80px;
+            max-width: 100%;
+            object-fit: contain;
+        }
+        .print-signature-line {
+            border-top: 1.5px solid #334155;
+            padding-top: 4px;
+            font-size: 10pt;
+            font-weight: 700;
+            color: #1e293b;
+            margin-top: 8px;
+        }
+        .print-signature-sub {
+            font-size: 9pt;
+            color: #64748b;
+        }
+
+        /* Info box da situação */
+        .print-situacao-box {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 10pt;
+        }
+        .print-situacao-ok { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+        .print-situacao-bad { background: #fef9c3; color: #92400e; border: 1px solid #fcd34d; }
+
+        /* Rodapé do documento */
+        .print-footer {
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 8.5pt;
+            color: #94a3b8;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Botão fechar impressão (não imprime) */
+        .print-close-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #1e293b;
+            color: #fff;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100000;
+            font-size: 13px;
+        }
+        .print-close-bar button {
+            padding: 6px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 12px;
+        }
+        .btn-do-print { background: #2563eb; color: #fff; margin-right: 8px; }
+        .btn-close-print { background: #475569; color: #fff; }
+        @media print { .print-close-bar { display: none; } #printArea { padding-top: 0 !important; } }
     </style>
 </head>
     <script src="notifications.js"></script>
     <script src="push.js"></script>
 <body>
+
+<!-- ÁREA DE IMPRESSÃO (oculta por padrão) -->
+<div id="printArea">
+    <div class="print-close-bar" id="printCloseBar">
+        <span>📄 Pré-visualização — Check-list de Empilhadeira</span>
+        <div>
+            <button class="btn-do-print" onclick="window.print()">🖨️ Imprimir</button>
+            <button class="btn-close-print" onclick="fecharImpressao()">✕ Fechar</button>
+        </div>
+    </div>
+    <div style="padding-top:50px">
+        <div class="print-doc" id="printDoc">
+            <!-- preenchido dinamicamente -->
+        </div>
+    </div>
+</div>
 
 <!-- HEADER -->
 <div class="header">
@@ -242,10 +404,7 @@
     <div class="menu-section">
         <div class="menu-section-title">Operação</div>
         <a href="ocorrencias.html" style="text-decoration:none;">
-            <div class="menu-item" id="menuOcorrenciasExt">
-                <span class="menu-icon">📋</span>
-                <span>Central de Ocorrências</span>
-            </div>
+            <div class="menu-item" id="menuOcorrenciasExt"><span class="menu-icon">📋</span><span>Central de Ocorrências</span></div>
         </a>
         <div class="menu-section-title">Manutenção</div>
         <div class="menu-item" id="menuPredial"><span class="menu-icon">🏢</span><span>Predial</span></div>
@@ -254,16 +413,12 @@
     </div>
     <a href="checklist-painel.html" class="menu-item"><span class="menu-icon">✅</span><span>Painel Check-lists</span></a>
     <a href="checklist.html" class="menu-item"><span class="menu-icon">📝</span><span>Novo Check-list</span></a>
-
     <div class="menu-section">
         <div class="menu-section-title">Gestão</div>
-        <a href="usuarios.html" class="menu-item" id="menuUsuarios">
-            <span class="menu-icon">👥</span>
-            <span>Usuários</span>
-        </a>
+        <a href="usuarios.html" class="menu-item" id="menuUsuarios"><span class="menu-icon">👥</span><span>Usuários</span></a>
     </div>
 
-    <!-- ── RESUMO POR MÁQUINA (expansível) ── -->
+    <!-- RESUMO POR MÁQUINA -->
     <div class="sidebar-machines-section">
         <div class="sidebar-machines-header" id="machinesSidebarToggle" onclick="toggleMachinesSidebar()">
             <div class="sidebar-machines-header-left">
@@ -276,12 +431,10 @@
             <div class="sidebar-machines-loading" id="machinesSidebarLoading">⏳ Carregando...</div>
         </div>
     </div>
-
 </div>
 
 <!-- MAIN -->
 <div class="main-container">
-
     <div class="hero-strip">
         <div>
             <h2>✅ Painel de Check-lists</h2>
@@ -307,7 +460,7 @@
             <h3>🔍 Filtros</h3>
             <div class="form-grid">
                 <div class="form-group"><label>Turno</label>
-                    <select id="filtroTurno"><option value="">Todos</option><option value="A"> A </option><option value="B"> B </option><option value="C"> C </option></select>
+                    <select id="filtroTurno"><option value="">Todos</option><option value="A">A</option><option value="B">B</option><option value="C">C</option></select>
                 </div>
                 <div class="form-group"><label>Situação</label>
                     <select id="filtroSituacao"><option value="">Todas</option><option value="ok">Sem Problemas</option><option value="problemas">Com Problemas</option></select>
@@ -355,6 +508,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 let db, currentUser;
 let allChecklists = [], filteredChecklists = [];
+let currentPrintItem = null; // item sendo impresso
 
 const PERGUNTAS = {
     q1:'Há vazamentos visíveis de água ou óleo?',
@@ -374,15 +528,35 @@ const PERGUNTAS = {
     q15:'As rodas estão boas? (sem cortes, desgastadas ou danificadas)',
     q16:'O freio de serviço está eficiente?',
     q17:'O freio de estacionamento funciona normalmente?',
-    q18:'A direção está leve e sem folgas?'
+    q18:'A direção está leve e sem folgas?',
+    q19:'Possui cinto de segurança?',
+    q20:'Pedais, joystick e comandos funcionando corretamente?',
+    q21:'Possui retrovisores?',
+    q22:'Retrovisores em boas condições?',
+    q23:'Apresenta código de erro no painel?',
+    q24:'Luz de esgotamento apagada e manômetro funcionando?',
+    q25:'Deslocamento da máquina suave e freio correto (pedal de aproximação)?',
+    q26:'Proteções de segurança em bom estado?',
+    q27:'Pedal de segurança e timão em funcionamento?',
+    q28:'Condições gerais de pintura aceitáveis?'
 };
 
-const PROBLEMA_SIM = ['q1','q3','q4','q5','q13'];
-const PROBLEMA_NAO = ['q2','q6','q7','q8','q9','q10','q11','q12','q14','q15','q16','q17','q18'];
+const SECTIONS = [
+    { title:'👁️ Inspeção Visual Geral',    keys:['q1','q2','q3','q4','q5'] },
+    { title:'⚡ Sistema Elétrico',          keys:['q6','q7','q8','q9','q10','q11'] },
+    { title:'💧 Sistema Hidráulico',        keys:['q12','q13'] },
+    { title:'🔧 Rodas',                     keys:['q14','q15'] },
+    { title:'🛑 Freio e Direção',           keys:['q16','q17','q18'] },
+    { title:'🦺 Segurança e Operação',      keys:['q19','q20','q21','q22'] },
+    { title:'🖥️ Painel e Controles',        keys:['q23','q24','q25','q26','q27','q28'] },
+];
+
+const ALERTA_SIM = ['q1','q3','q4','q5','q13','q23'];
+const ALERTA_NAO = ['q2','q6','q7','q8','q9','q10','q11','q12','q14','q15','q16','q17','q18','q19','q20','q21','q22','q24','q25','q26','q27','q28'];
 
 function isProblema(key, val) {
-    if (PROBLEMA_SIM.includes(key) && val === 'Sim') return true;
-    if (PROBLEMA_NAO.includes(key) && val === 'Não') return true;
+    if (ALERTA_SIM.includes(key) && val === 'Sim') return true;
+    if (ALERTA_NAO.includes(key) && val === 'Não') return true;
     return false;
 }
 
@@ -411,14 +585,14 @@ function setupSidebar() {
     });
     ov.addEventListener('click', closeSidebar);
     document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') { closeSidebar(); fecharModal(); }
+        if (e.key === 'Escape') { closeSidebar(); fecharModal(); fecharImpressao(); }
     });
 }
 function closeSidebar() {
     ['hamburgerBtn','sidebar','sidebarOverlay'].forEach(id => document.getElementById(id).classList.remove('active'));
 }
 
-/* ── TOGGLE RESUMO MÁQUINAS ── */
+/* ── RESUMO MÁQUINAS SIDEBAR ── */
 let machinesSidebarOpen = false;
 function toggleMachinesSidebar() {
     machinesSidebarOpen = !machinesSidebarOpen;
@@ -426,30 +600,20 @@ function toggleMachinesSidebar() {
     document.getElementById('machinesSidebarChevron').classList.toggle('open', machinesSidebarOpen);
 }
 
-/* ── MONTAR RESUMO POR MÁQUINA NO SIDEBAR ── */
 function buildMachinesSidebar(checklists) {
     const container = document.getElementById('machinesSidebarList');
-
-    // Agrupar por número de máquina
     const map = {};
     checklists.forEach(item => {
         const maq = item.numero_maquina || '(sem nº)';
-        if (!map[maq]) map[maq] = { total: 0, problemas: 0, ok: 0, ultimo: null };
+        if (!map[maq]) map[maq] = { total:0, problemas:0, ok:0, ultimo:null };
         map[maq].total++;
         if ((item.total_problemas || 0) > 0) map[maq].problemas++;
         else map[maq].ok++;
-
         const dt = new Date(item.created_at || item.data);
         if (!map[maq].ultimo || dt > new Date(map[maq].ultimo)) map[maq].ultimo = item.created_at || item.data;
     });
-
     const maquinas = Object.keys(map).sort();
-
-    if (!maquinas.length) {
-        container.innerHTML = '<div class="sidebar-machines-loading">Nenhuma máquina encontrada.</div>';
-        return;
-    }
-
+    if (!maquinas.length) { container.innerHTML = '<div class="sidebar-machines-loading">Nenhuma máquina.</div>'; return; }
     let html = '';
     maquinas.forEach((maq, idx) => {
         const d = map[maq];
@@ -457,9 +621,7 @@ function buildMachinesSidebar(checklists) {
         const hasIssues = d.problemas > 0;
         const dotClass = hasIssues ? 'machine-dot has-issues' : 'machine-dot';
         const lastDt = d.ultimo ? new Date(d.ultimo).toLocaleDateString('pt-BR') : '–';
-
-        html += `
-        <div class="machine-card" id="mcard-${idx}">
+        html += `<div class="machine-card" id="mcard-${idx}">
             <div class="machine-card-header" onclick="toggleMachineCard(${idx})">
                 <div class="machine-card-name">
                     <span class="${dotClass}"></span>
@@ -473,27 +635,15 @@ function buildMachinesSidebar(checklists) {
             </div>
             <div class="machine-card-body" id="mcard-body-${idx}">
                 <div class="machine-card-stats">
-                    <div class="machine-stat-row">
-                        <span class="machine-stat-label">✅ Sem problemas</span>
-                        <span class="machine-stat-value green">${d.ok}</span>
-                    </div>
-                    <div class="machine-stat-row">
-                        <span class="machine-stat-label">⚠️ Com problemas</span>
-                        <span class="machine-stat-value ${d.problemas > 0 ? 'amber' : ''}">${d.problemas}</span>
-                    </div>
-                    <div class="machine-stat-row">
-                        <span class="machine-stat-label">📊 Taxa OK</span>
-                        <span class="machine-stat-value ${taxaOk >= 80 ? 'green' : taxaOk >= 50 ? 'amber' : 'red'}">${taxaOk}%</span>
-                    </div>
+                    <div class="machine-stat-row"><span class="machine-stat-label">✅ Sem problemas</span><span class="machine-stat-value green">${d.ok}</span></div>
+                    <div class="machine-stat-row"><span class="machine-stat-label">⚠️ Com problemas</span><span class="machine-stat-value ${d.problemas > 0 ? 'amber' : ''}">${d.problemas}</span></div>
+                    <div class="machine-stat-row"><span class="machine-stat-label">📊 Taxa OK</span><span class="machine-stat-value ${taxaOk>=80?'green':taxaOk>=50?'amber':'red'}">${taxaOk}%</span></div>
                 </div>
                 <div class="machine-last-check">🕒 Última inspeção: ${lastDt}</div>
-                <button class="machine-filter-btn" onclick="filtrarPorMaquina('${maq}')">
-                    🔍 Ver apenas esta máquina
-                </button>
+                <button class="machine-filter-btn" onclick="filtrarPorMaquina('${maq}')">🔍 Ver apenas esta máquina</button>
             </div>
         </div>`;
     });
-
     container.innerHTML = html;
 }
 
@@ -507,20 +657,18 @@ function toggleMachineCard(idx) {
     card.classList.toggle('active-machine', !isOpen);
 }
 
-/* Filtra tabela por máquina clicando no sidebar */
 function filtrarPorMaquina(maq) {
     document.getElementById('filtroMaquina').value = maq;
     aplicarFiltros();
     closeSidebar();
-    // Scroll suave até a tabela
-    document.querySelector('.card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.querySelector('.card')?.scrollIntoView({ behavior:'smooth', block:'start' });
 }
 
 /* ── LOAD ── */
 async function loadChecklists() {
     document.getElementById('listaChecklists').innerHTML = '<div class="loading"><div class="spinner"></div><p>Carregando...</p></div>';
     try {
-        const { data, error } = await db.from('checklist_diario').select('*').order('created_at', { ascending: false }).limit(200);
+        const { data, error } = await db.from('checklist_diario').select('*').order('created_at', { ascending:false }).limit(200);
         if (error) throw error;
         allChecklists = data || [];
     } catch(e) {
@@ -529,13 +677,13 @@ async function loadChecklists() {
     filteredChecklists = [...allChecklists];
     calcStats();
     popularFiltros();
-    buildMachinesSidebar(allChecklists);   // ← monta o resumo no sidebar
+    buildMachinesSidebar(allChecklists);
     renderTabela(filteredChecklists);
 }
 
 function calcStats() {
     const total = allChecklists.length;
-    const comProblemas = allChecklists.filter(i => (i.total_problemas || 0) > 0).length;
+    const comProblemas = allChecklists.filter(i => (i.total_problemas||0) > 0).length;
     const semProblemas = total - comProblemas;
     const turnoA  = allChecklists.filter(i => i.turno === 'A').length;
     const turnoBC = allChecklists.filter(i => i.turno === 'B' || i.turno === 'C').length;
@@ -551,7 +699,6 @@ function popularFiltros() {
     const selOp = document.getElementById('filtroOperador');
     selOp.innerHTML = '<option value="">Todos</option>';
     ops.forEach(o => { const opt = document.createElement('option'); opt.value = o; opt.textContent = o; selOp.appendChild(opt); });
-
     const maquinas = [...new Set(allChecklists.map(i => i.numero_maquina).filter(Boolean))].sort();
     const selMaq = document.getElementById('filtroMaquina');
     selMaq.innerHTML = '<option value="">Todas</option>';
@@ -565,35 +712,48 @@ function renderTabela(lista) {
         el.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><p>Nenhum check-list encontrado.</p></div>';
         return;
     }
-
     let html = `<div class="total-strip">📊 ${lista.length} check-list(s) encontrado(s)</div>
     <div class="table-container"><table id="tabelaChecklists">
     <thead><tr>
-        <th>Data/Hora</th><th>Operador</th><th>Matrícula</th><th>Máquina</th><th>Turno</th><th>Horímetro</th><th>Situação</th><th>Problemas</th><th>Ações</th>
+        <th>Data/Hora</th><th>Operador</th><th>Matrícula</th><th>Máquina</th><th>Turno</th>
+        <th>Horímetro</th><th>Situação</th><th>Problemas</th><th>Foto</th><th>Assinatura</th><th>Ações</th>
     </tr></thead><tbody>`;
 
     lista.forEach(item => {
-        const dt = new Date(item.created_at || `${item.data}T${item.hora || '00:00'}`);
-        const dataStr = dt.toLocaleDateString('pt-BR') + ' ' + dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        const dt = new Date(item.created_at || `${item.data}T${item.hora||'00:00'}`);
+        const dataStr = dt.toLocaleDateString('pt-BR') + ' ' + dt.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
         const prob = item.total_problemas || 0;
-        const turnoClass = item.turno === 'A' ? 'badge-turno-a' : item.turno === 'B' ? 'badge-turno-b' : 'badge-turno-c';
+        const turnoClass = item.turno==='A' ? 'badge-turno-a' : item.turno==='B' ? 'badge-turno-b' : 'badge-turno-c';
         const situBadge = prob > 0
-            ? `<span class="badge badge-warning">⚠️ ${prob} problema(s)</span>`
+            ? `<span class="badge badge-warning">⚠️ ${prob} prob.</span>`
             : `<span class="badge badge-ok">✅ OK</span>`;
         const maquinaStr = item.numero_maquina
             ? `<span class="badge badge-purple">🏭 ${item.numero_maquina}</span>`
             : '<span style="color:#aaa;font-size:12px">–</span>';
 
+        // Links foto e assinatura
+        const fotoLink = item.foto_drive_url
+            ? `<a href="${item.foto_drive_url}" target="_blank" title="Ver foto" style="color:#60a5fa;font-size:13px">📷</a>`
+            : '<span style="color:#475569;font-size:11px">–</span>';
+        const assLink = item.assinatura_drive_url
+            ? `<a href="${item.assinatura_drive_url}" target="_blank" title="Ver assinatura" style="color:#a78bfa;font-size:13px">✍️</a>`
+            : '<span style="color:#475569;font-size:11px">–</span>';
+
         html += `<tr>
             <td style="white-space:nowrap;font-size:13px">${dataStr}</td>
-            <td><strong>${item.operador || '–'}</strong></td>
-            <td>${item.matricula || '–'}</td>
+            <td><strong>${item.operador||'–'}</strong></td>
+            <td>${item.matricula||'–'}</td>
             <td>${maquinaStr}</td>
-            <td><span class="badge ${turnoClass}">Turno ${item.turno || '–'}</span></td>
-            <td>${item.horimetro || '–'}</td>
+            <td><span class="badge ${turnoClass}">Turno ${item.turno||'–'}</span></td>
+            <td>${item.horimetro||'–'}</td>
             <td>${situBadge}</td>
-            <td style="text-align:center"><strong style="color:${prob > 0 ? '#dc2626' : '#059669'}">${prob}</strong></td>
-            <td><button class="btn btn-small" onclick='verDetalhes(${JSON.stringify(JSON.stringify(item))})'>👁️ Ver</button></td>
+            <td style="text-align:center"><strong style="color:${prob>0?'#dc2626':'#059669'}">${prob}</strong></td>
+            <td style="text-align:center">${fotoLink}</td>
+            <td style="text-align:center">${assLink}</td>
+            <td style="white-space:nowrap">
+                <button class="btn btn-small" onclick='verDetalhes(${JSON.stringify(JSON.stringify(item))})'>👁️ Ver</button>
+                <button class="btn-print" onclick='abrirImpressao(${JSON.stringify(JSON.stringify(item))})'>🖨️</button>
+            </td>
         </tr>`;
     });
 
@@ -626,16 +786,15 @@ function aplicarFiltros() {
     const maquina  = document.getElementById('filtroMaquina').value;
     const ini      = document.getElementById('filtroDataInicio').value;
     const fim      = document.getElementById('filtroDataFim').value;
-
     filteredChecklists = allChecklists.filter(item => {
         if (turno    && item.turno !== turno) return false;
-        if (situacao === 'ok'       && (item.total_problemas || 0) > 0) return false;
-        if (situacao === 'problemas' && (item.total_problemas || 0) === 0) return false;
+        if (situacao==='ok' && (item.total_problemas||0)>0) return false;
+        if (situacao==='problemas' && (item.total_problemas||0)===0) return false;
         if (operador && item.operador !== operador) return false;
         if (maquina  && item.numero_maquina !== maquina) return false;
         const dt = new Date(item.created_at || item.data);
         if (ini && dt < new Date(ini)) return false;
-        if (fim) { const f = new Date(fim); f.setHours(23, 59, 59, 999); if (dt > f) return false; }
+        if (fim) { const f = new Date(fim); f.setHours(23,59,59,999); if (dt>f) return false; }
         return true;
     });
     renderTabela(filteredChecklists);
@@ -653,35 +812,36 @@ function limparFiltros() {
 /* ── VER DETALHES ── */
 function verDetalhes(jsonStr) {
     const item = JSON.parse(jsonStr);
-    const dt   = new Date(item.created_at || `${item.data}T${item.hora || '00:00'}`).toLocaleString('pt-BR');
+    const dt   = new Date(item.created_at || `${item.data}T${item.hora||'00:00'}`).toLocaleString('pt-BR');
     const prob = item.total_problemas || 0;
-
     document.getElementById('modalTitle').textContent = `📋 Check-list — ${item.operador}`;
 
-    let html = `
-        <div class="detail-grid">
-            <div class="detail-item"><strong>Operador</strong><span>${item.operador || '–'}</span></div>
-            <div class="detail-item"><strong>Matrícula</strong><span>${item.matricula || '–'}</span></div>
-            <div class="detail-item"><strong>Nº da Máquina</strong><span>${item.numero_maquina || '–'}</span></div>
-            <div class="detail-item"><strong>Turno</strong><span class="badge ${item.turno === 'A' ? 'badge-turno-a' : item.turno === 'B' ? 'badge-turno-b' : 'badge-turno-c'}">Turno ${item.turno || '–'}</span></div>
-            <div class="detail-item"><strong>Horímetro</strong><span>${item.horimetro || '–'}</span></div>
-            <div class="detail-item"><strong>Data</strong><span>${item.data || '–'}</span></div>
-            <div class="detail-item"><strong>Hora</strong><span>${item.hora || '–'}</span></div>
-            <div class="detail-item"><strong>Enviado em</strong><span style="font-size:13px">${dt}</span></div>
-            <div class="detail-item"><strong>Situação</strong><span>${prob > 0 ? `<span class="badge badge-warning">⚠️ ${prob} problema(s)</span>` : '<span class="badge badge-ok">✅ Sem problemas</span>'}</span></div>
-        </div>`;
+    let html = `<div class="detail-grid">
+        <div class="detail-item"><strong>Operador</strong><span>${item.operador||'–'}</span></div>
+        <div class="detail-item"><strong>Matrícula</strong><span>${item.matricula||'–'}</span></div>
+        <div class="detail-item"><strong>Nº da Máquina</strong><span>${item.numero_maquina||'–'}</span></div>
+        <div class="detail-item"><strong>Turno</strong><span class="badge ${item.turno==='A'?'badge-turno-a':item.turno==='B'?'badge-turno-b':'badge-turno-c'}">Turno ${item.turno||'–'}</span></div>
+        <div class="detail-item"><strong>Horímetro</strong><span>${item.horimetro||'–'}</span></div>
+        <div class="detail-item"><strong>Data</strong><span>${item.data||'–'}</span></div>
+        <div class="detail-item"><strong>Hora</strong><span>${item.hora||'–'}</span></div>
+        <div class="detail-item"><strong>Enviado em</strong><span style="font-size:13px">${dt}</span></div>
+        <div class="detail-item"><strong>Situação</strong><span>${prob>0?`<span class="badge badge-warning">⚠️ ${prob} problema(s)</span>`:'<span class="badge badge-ok">✅ Sem problemas</span>'}</span></div>
+        ${item.comentario ? `<div class="detail-item" style="grid-column:1/-1"><strong>Comentário</strong><span>${item.comentario}</span></div>` : ''}
+    </div>`;
+
+    // Links Drive
+    if (item.foto_drive_url || item.assinatura_drive_url) {
+        html += '<div class="img-links-row">';
+        if (item.foto_drive_url)
+            html += `<a class="img-link-btn" href="${item.foto_drive_url}" target="_blank">📷 Ver Foto</a>`;
+        if (item.assinatura_drive_url)
+            html += `<a class="img-link-btn" href="${item.assinatura_drive_url}" target="_blank">✍️ Ver Assinatura</a>`;
+        html += '</div>';
+    }
 
     if (item.respostas && Object.keys(item.respostas).length) {
-        const sections = [
-            { title: '👁️ Inspeção Visual Geral', keys: ['q1','q2','q3','q4','q5'] },
-            { title: '⚡ Sistema Elétrico',        keys: ['q6','q7','q8','q9','q10','q11'] },
-            { title: '💧 Sistema Hidráulico',       keys: ['q12','q13'] },
-            { title: '🔧 Rodas',                    keys: ['q14','q15'] },
-            { title: '🛑 Freio e Direção',           keys: ['q16','q17','q18'] },
-        ];
-
         html += '<div class="respostas-section"><h3>Respostas da Inspeção</h3>';
-        sections.forEach(sec => {
+        SECTIONS.forEach(sec => {
             const anyAnswered = sec.keys.some(k => item.respostas[k]);
             if (!anyAnswered) return;
             html += `<p style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#999;margin:16px 0 8px">${sec.title}</p>`;
@@ -689,15 +849,20 @@ function verDetalhes(jsonStr) {
                 if (!item.respostas[k]) return;
                 const val = item.respostas[k];
                 const bad = isProblema(k, val);
-                const badgeClass = bad ? (val === 'Sim' ? 'badge-sim-bad' : 'badge-nao-bad') : (val === 'Sim' ? 'badge-sim-ok' : 'badge-nao-ok');
-                html += `<div class="resposta-row ${bad ? 'problema' : ''}">
-                    <span class="resposta-label">${PERGUNTAS[k] || k}</span>
+                const badgeClass = bad ? (val==='Sim'?'badge-sim-bad':'badge-nao-bad') : (val==='Sim'?'badge-sim-ok':'badge-nao-ok');
+                html += `<div class="resposta-row ${bad?'problema':''}">
+                    <span class="resposta-label">${PERGUNTAS[k]||k}</span>
                     <span class="${badgeClass}">${val}</span>
                 </div>`;
             });
         });
         html += '</div>';
     }
+
+    // Botão imprimir dentro do modal também
+    html += `<div style="margin-top:16px;text-align:right">
+        <button class="btn-print" style="padding:8px 18px;font-size:13px" onclick='abrirImpressao(${JSON.stringify(JSON.stringify(item))})'>🖨️ Imprimir este check-list</button>
+    </div>`;
 
     document.getElementById('modalConteudo').innerHTML = html;
     document.getElementById('modalDetalhes').classList.add('active');
@@ -707,6 +872,165 @@ function fecharModal() { document.getElementById('modalDetalhes').classList.remo
 document.getElementById('modalDetalhes').addEventListener('click', e => {
     if (e.target === document.getElementById('modalDetalhes')) fecharModal();
 });
+
+/* ═══════════════════════════════════════════
+   IMPRESSÃO
+═══════════════════════════════════════════ */
+function abrirImpressao(jsonStr) {
+    const item = JSON.parse(jsonStr);
+    currentPrintItem = item;
+    fecharModal();
+
+    const dt  = new Date(item.created_at || `${item.data}T${item.hora||'00:00'}`);
+    const dtStr = dt.toLocaleString('pt-BR');
+    const prob = item.total_problemas || 0;
+    const situacaoClass = prob > 0 ? 'print-situacao-bad' : 'print-situacao-ok';
+    const situacaoText  = prob > 0 ? `⚠️ ${prob} problema(s) identificado(s)` : '✅ Inspeção sem problemas';
+    const now = new Date().toLocaleString('pt-BR');
+
+    let html = `
+    <!-- CABEÇALHO -->
+    <div class="print-header">
+        <div class="print-header-left">
+            <h1>📋 Check-list Diário de Empilhadeira</h1>
+            <p>Inspeção e Segurança Operacional — Sistema de Manutenção</p>
+        </div>
+        <div class="print-header-right">
+            <div class="print-logo">GESTÃO A VISTA</div>
+            <div>Documento gerado em:<br>${now}</div>
+        </div>
+    </div>
+
+    <!-- DADOS GERAIS -->
+    <table class="print-info-table">
+        <tr>
+            <td class="info-label">Data</td>
+            <td class="info-value">${item.data || '–'}</td>
+            <td class="info-label">Hora</td>
+            <td class="info-value">${item.hora || '–'}</td>
+            <td class="info-label">Turno</td>
+            <td class="info-value"><strong>${item.turno || '–'}</strong></td>
+        </tr>
+        <tr>
+            <td class="info-label">Operador</td>
+            <td class="info-value" colspan="3"><strong>${item.operador || '–'}</strong></td>
+            <td class="info-label">Matrícula</td>
+            <td class="info-value">${item.matricula || '–'}</td>
+        </tr>
+        <tr>
+            <td class="info-label">Nº Máquina</td>
+            <td class="info-value"><strong>${item.numero_maquina || '–'}</strong></td>
+            <td class="info-label">Horímetro</td>
+            <td class="info-value">${item.horimetro || '–'} h</td>
+            <td class="info-label">Situação</td>
+            <td class="info-value"><span class="print-situacao-box ${situacaoClass}">${situacaoText}</span></td>
+        </tr>
+    </table>`;
+
+    // RESULTADOS
+    html += '<div class="print-section-title">RESULTADOS DA INSPEÇÃO</div>';
+
+    SECTIONS.forEach(sec => {
+        const keys = sec.keys.filter(k => item.respostas && item.respostas[k]);
+        if (!keys.length) return;
+
+        // Remove emoji para o título limpo
+        const titleClean = sec.title.replace(/[^\w\s\u00C0-\u024F]/g, '').trim();
+
+        html += `<div class="print-subsection-title">${sec.title}</div>
+        <table class="print-answers-table">
+            <thead><tr><th>#</th><th>Pergunta</th><th>Resposta</th></tr></thead>
+            <tbody>`;
+
+        keys.forEach((k, i) => {
+            const val = item.respostas[k];
+            const bad = isProblema(k, val);
+            const badgeClass = bad ? 'print-badge-bad' : 'print-badge-ok';
+            const rowClass = bad ? 'row-problem' : '';
+            const num = k.replace('q','');
+            html += `<tr class="${rowClass}">
+                <td style="width:32px;text-align:center;color:#64748b;font-size:9pt">${num}</td>
+                <td>${PERGUNTAS[k] || k}</td>
+                <td style="width:60px;text-align:center"><span class="${badgeClass}">${val}</span></td>
+            </tr>`;
+        });
+
+        html += '</tbody></table>';
+    });
+
+    // COMENTÁRIO
+    if (item.comentario) {
+        html += `<div class="print-section-title" style="margin-top:14px">OBSERVAÇÕES</div>
+        <div class="print-comentario">${item.comentario}</div>`;
+    }
+
+    // FOTOS — links clicáveis (no print aparece o URL)
+    if (item.foto_drive_url || item.assinatura_drive_url) {
+        html += '<div class="print-section-title" style="margin-top:14px">REGISTROS FOTOGRÁFICOS</div>';
+        html += '<div class="print-images-row">';
+
+        if (item.foto_drive_url) {
+            html += `<div class="print-image-box">
+                <div class="print-image-label">📷 Foto da Inspeção</div>
+                <div class="print-image-content">
+                    <div style="text-align:center;color:#334155;font-size:11pt">
+                        <div style="font-size:32pt;margin-bottom:8px">📷</div>
+                        <div style="font-size:9pt;color:#64748b">Acesse pelo link:</div>
+                    </div>
+                </div>
+                <div class="print-image-url">🔗 ${item.foto_drive_url}</div>
+            </div>`;
+        } else {
+            html += `<div class="print-image-box">
+                <div class="print-image-label">📷 Foto da Inspeção</div>
+                <div class="print-image-content" style="color:#94a3b8;font-size:10pt">Não enviada</div>
+            </div>`;
+        }
+
+        html += '</div>'; // fecha print-images-row
+    }
+
+    // ASSINATURA
+    html += `<div class="print-signature-section">
+        <div class="print-signature-row">
+            <div class="print-signature-box" style="flex:2">
+                ${item.assinatura_drive_url
+                    ? `<div class="print-signature-img" style="min-height:90px;flex-direction:column;gap:6px">
+                            <div style="font-size:24pt">✍️</div>
+                            <div style="font-size:8pt;color:#64748b;word-break:break-all;max-width:300px">${item.assinatura_drive_url}</div>
+                       </div>`
+                    : `<div class="print-signature-img" style="min-height:90px">
+                            <span style="color:#94a3b8;font-size:10pt">[ Campo para assinatura ]</span>
+                       </div>`
+                }
+                <div class="print-signature-line">${item.operador || '____________________________'}</div>
+                <div class="print-signature-sub">Assinatura do Operador — Matrícula: ${item.matricula || '–'}</div>
+            </div>
+            <div class="print-signature-box" style="flex:1">
+                <div class="print-signature-img" style="min-height:90px">
+                    <span style="color:#94a3b8;font-size:10pt">[ Visto do Supervisor ]</span>
+                </div>
+                <div class="print-signature-line">____________________________</div>
+                <div class="print-signature-sub">Supervisor Responsável</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RODAPÉ -->
+    <div class="print-footer">
+        <span>Sistema de Gestão a Vista — Check-list Diário de Empilhadeiras</span>
+        <span>Impresso em: ${now}</span>
+    </div>`;
+
+    document.getElementById('printDoc').innerHTML = html;
+    document.getElementById('printArea').classList.add('show');
+    window.scrollTo(0,0);
+}
+
+function fecharImpressao() {
+    document.getElementById('printArea').classList.remove('show');
+    currentPrintItem = null;
+}
 
 function logout() {
     if (confirm('Deseja realmente sair?')) { localStorage.removeItem('currentUser'); window.location.href = 'login.html'; }
