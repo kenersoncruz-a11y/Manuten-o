@@ -40,10 +40,9 @@
         return null;
     }
 
-    /* ── Verificar se é admin ──────────────────────────────── */
-    function isAdmin() {
-        const u = window.currentUser;
-        return u && (u.perfil === 'admin' || u.perm_usuarios_visualizar);
+    /* ── Verificar se está logado ──────────────────────────── */
+    function isLoggedIn() {
+        return !!(window.currentUser);
     }
 
     /* ── Injetar estilos ───────────────────────────────────── */
@@ -452,7 +451,7 @@
     function init() {
         // Aguarda o DOM e o currentUser estarem prontos
         const tentar = () => {
-            if (!isAdmin()) return; // Só para admins/supervisores
+            if (!isLoggedIn()) return;
             injetarEstilos();
             injetarHTML();
             carregarNotificacoes();
@@ -471,6 +470,7 @@
 
     /* ── Reinicializar quando o usuário logar ──────────────── */
     window.notifInit = function () {
+        if (!isLoggedIn()) return;
         if (!document.getElementById('notif-sino')) {
             injetarEstilos();
             injetarHTML();

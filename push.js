@@ -28,10 +28,9 @@
         return 'serviceWorker' in navigator && 'PushManager' in window;
     }
 
-    /* ── Verificar se é admin/supervisor ───────────────────── */
-    function isAdmin() {
-        const u = window.currentUser;
-        return u && (u.perfil === 'admin' || u.perm_usuarios_visualizar);
+    /* ── Verificar se está logado ──────────────────────────── */
+    function isLoggedIn() {
+        return !!(window.currentUser);
     }
 
     /* ── Registrar Service Worker ───────────────────────────── */
@@ -156,7 +155,7 @@
         // Aguarda o currentUser estar disponível (login)
         // A função pushInit() pode ser chamada manualmente após login
         window.pushInit = async function () {
-            if (!isAdmin()) return;
+            if (!isLoggedIn()) return;
 
             // Verifica se já tem assinatura ativa
             const subAtual = await reg.pushManager.getSubscription();
@@ -173,7 +172,7 @@
 
         // Tentar automaticamente se já logado
         setTimeout(() => {
-            if (isAdmin()) window.pushInit();
+            if (isLoggedIn()) window.pushInit();
         }, 1000);
     }
 
