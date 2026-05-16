@@ -22,17 +22,20 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjZnJ3c2dueG9jaHh2d2h4bnZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc2MzExMDgsImV4cCI6MjA4MzIwNzEwOH0.Yb4cT5chXp3S8NZaWbLpv436HzxGCO7CZTruPpOPDdU';
 
     /* ── Estado interno ────────────────────────────────────── */
-    let _sb         = null;   // cliente Supabase
-    let _canal      = null;   // canal Realtime
-    let _contador   = 0;
+    let _sb           = null;   // cliente Supabase
+    let _canal        = null;   // canal Realtime
+    let _contador     = 0;
     let _painelAberto = false;
+    let _intervalo    = null;                       // handle do setInterval de polling
+    let _ultimaVerif  = new Date().toISOString();   // timestamp da última verificação
+    let _idsMostrados = new Set();                  // IDs já exibidos no toast (evita duplicata)
 
     /* ── Obter cliente Supabase ────────────────────────────── */
     function getSB() {
         if (_sb) return _sb;
-        // Tenta reusar o cliente já inicializado no HTML
-        if (window.supabase && window.supabase.from) return (_sb = window.supabase);
-        // Cria um novo se não existir
+        // Prefere reusar o cliente da página (window.db)
+        if (window.db && window.db.from) return (_sb = window.db);
+        // Fallback: cria novo cliente a partir da lib CDN
         if (window.supabase && window.supabase.createClient) {
             return (_sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY));
         }
@@ -469,17 +472,55 @@
                 { event: 'INSERT', schema: 'public', table: 'notificacoes' },
                 (payload) => {
                     const nova = payload.new;
+                    if (_idsMostrados.has(nova.id)) return; // já exibiu via polling
+                    _idsMostrados.add(nova.id);
+                    if (nova.created_at > _ultimaVerif) _ultimaVerif = nova.created_at;
                     atualizarContador(_contador + 1);
                     mostrarToast(nova);
                     if (_painelAberto) carregarNotificacoes();
                 }
             )
             .subscribe((status) => {
+                console.log('[Notif] Realtime status:', status);
                 if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-                    console.warn('[Notif] Canal perdido (' + status + '), reconectando em 5s...');
+                    console.warn('[Notif] Canal perdido, reconectando em 5s...');
                     setTimeout(inscreverRealtime, 5000);
                 }
             });
+    }
+
+    /* ── Polling: busca notificações novas a cada 10s ─────── */
+    async function verificarNovas() {
+        const sb = getSB();
+        if (!sb) return;
+        try {
+            const { data } = await sb
+                .from('notificacoes')
+                .select('*')
+                .gt('created_at', _ultimaVerif)
+                .order('created_at', { ascending: true });
+
+            if (!data || !data.length) return;
+
+            // Avança o cursor para a notificação mais recente
+            _ultimaVerif = data[data.length - 1].created_at;
+
+            data.forEach(n => {
+                if (_idsMostrados.has(n.id)) return; // já exibiu via Realtime
+                _idsMostrados.add(n.id);
+                atualizarContador(_contador + 1);
+                mostrarToast(n);
+                if (_painelAberto) carregarNotificacoes();
+            });
+        } catch(e) {
+            console.warn('[Notif] Erro no polling:', e);
+        }
+    }
+
+    function iniciarPolling() {
+        if (_intervalo) return; // já rodando
+        verificarNovas(); // verificação imediata
+        _intervalo = setInterval(verificarNovas, 10000); // a cada 10s
     }
 
     /* ── Inicialização ─────────────────────────────────────── */
@@ -495,7 +536,8 @@
             injetarEstilos();
             injetarHTML();
             carregarNotificacoes();
-            inscreverRealtime();
+            inscreverRealtime(); // Realtime (quando habilitado no Supabase)
+            iniciarPolling();    // Polling garantido a cada 10s
         };
 
         if (document.readyState === 'loading') {
@@ -517,6 +559,7 @@
         }
         carregarNotificacoes();
         if (!_canal) inscreverRealtime();
+        iniciarPolling();
     };
 
     init();
