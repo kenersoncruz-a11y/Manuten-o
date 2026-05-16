@@ -487,6 +487,14 @@ function isProblema(key, value) {
     return false;
 }
 
+/* HELPER: inserir notificação no Supabase */
+async function notificar(tipo, titulo, mensagem, link) {
+    if (!db) return;
+    try {
+        await db.from('notificacoes').insert([{ tipo, titulo, mensagem, link: link || null, lida: false }]);
+    } catch(e) { console.warn('[notif]', e); }
+}
+
 // ── INIT ──
 document.addEventListener('DOMContentLoaded', () => {
     if (typeof window.supabase !== 'undefined') {
@@ -632,6 +640,19 @@ async function enviarChecklist(e) {
         }
 
         mostrarAlerta('✅ Check-list enviado com sucesso!', 'success');
+
+        // Notificação automática
+        if (payload.total_problemas > 0) {
+            await notificar('checklist_problema',
+                `⚠️ Check-list com ${payload.total_problemas} problema(s)`,
+                `Operador: ${payload.operador} | Máquina: ${payload.numero_maquina} | Turno: ${payload.turno}.`,
+                'checklist-painel.html');
+        } else {
+            await notificar('checklist_problema',
+                `✅ Check-list enviado`,
+                `Operador: ${payload.operador} | Máquina: ${payload.numero_maquina} | Sem problemas.`,
+                'checklist-painel.html');
+        }
 
         form.reset();
 

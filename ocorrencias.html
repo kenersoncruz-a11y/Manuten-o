@@ -223,6 +223,13 @@ function closeSidebar(){
     ['hamburgerBtn','sidebar','sidebarOverlay'].forEach(id=>document.getElementById(id).classList.remove('active'));
 }
 
+/* HELPER: inserir notificação no Supabase */
+async function notificar(tipo, titulo, mensagem, link) {
+    try {
+        await db.from('notificacoes').insert([{ tipo, titulo, mensagem, link: link || null, lida: false }]);
+    } catch(e) { console.warn('[notif]', e); }
+}
+
 /* LOAD */
 async function loadOcorrencias() {
     document.getElementById('listaOcorrencias').innerHTML='<div class="loading"><div class="spinner"></div><p>Carregando...</p></div>';
@@ -496,12 +503,25 @@ async function salvarEdicao(){
         const{data}=await db.from(tabela).select('*').eq('id',currentItemId).single();
         currentItemData=data;
         renderDetalhes(data,tipo);
-        // Fechar edição
         editModeActive=false;
         document.getElementById('editSection').style.display='none';
         document.getElementById('btnToggleEdit').textContent='✏️ Editar';
         document.getElementById('btnSalvarEdit').style.display='none';
         loadOcorrencias();
+        // Notificação automática
+        const cod = data.codigo || '';
+        const nome = tipo==='predial' ? (data.local||'') : (data.equipamento||'');
+        if (status === 'concluido') {
+            await notificar('ocorrencia_concluida',
+                `✅ Ocorrência concluída`,
+                `${cod} — ${nome} foi concluída por ${currentUser.nome}.`,
+                'ocorrencias.html');
+        } else {
+            await notificar('ocorrencia_atualizada',
+                `🔄 Ocorrência atualizada`,
+                `${cod} — ${nome} foi atualizada por ${currentUser.nome}. Status: ${status}.`,
+                'ocorrencias.html');
+        }
     } catch(err){showAlert('alertModal','❌ Erro: '+err.message,'error');}
 }
 
@@ -582,6 +602,12 @@ async function salvarNovaOcorrencia(){
         const{error}=await db.from(tabela).insert([payload]);
         if(error)throw error;
         showAlert('alertNova','✅ Registrado com sucesso!','success');
+        // Notificação automática
+        const nomeItem = isPredial ? (payload.local||'') : (payload.equipamento||'');
+        await notificar('ocorrencia_criada',
+            `🆕 Nova ocorrência registrada`,
+            `${payload.codigo} — ${nomeItem} criada por ${currentUser.nome}.`,
+            'ocorrencias.html');
         setTimeout(()=>{fecharModalNova();loadOcorrencias();},1400);
     } catch(err){showAlert('alertNova','❌ Erro: '+err.message,'error');}
 }
@@ -629,6 +655,12 @@ async function enviarComentario(){
         document.getElementById('commentText').value='';
         commentImgs=[]; document.getElementById('commentImgsPreview').innerHTML='';
         await carregarComentarios();
+        // Notificação automática
+        const cod = currentItemData?.codigo || '';
+        await notificar('comentario_adicionado',
+            `💬 Novo comentário`,
+            `${currentUser.nome} comentou em ${cod}: "${texto.substring(0,80)}"`,
+            'ocorrencias.html');
     } catch(err){alert('Erro: '+err.message);}
 }
 function handleCommentImg(ev){
