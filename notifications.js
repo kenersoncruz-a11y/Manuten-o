@@ -460,6 +460,9 @@
         const sb = getSB();
         if (!sb) return;
 
+        // Cancela canal anterior se existir
+        if (_canal) { try { sb.removeChannel(_canal); } catch(e) {} }
+
         _canal = sb
             .channel('notificacoes-realtime')
             .on('postgres_changes',
@@ -471,7 +474,12 @@
                     if (_painelAberto) carregarNotificacoes();
                 }
             )
-            .subscribe();
+            .subscribe((status) => {
+                if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                    console.warn('[Notif] Canal perdido (' + status + '), reconectando em 5s...');
+                    setTimeout(inscreverRealtime, 5000);
+                }
+            });
     }
 
     /* ── Inicialização ─────────────────────────────────────── */
