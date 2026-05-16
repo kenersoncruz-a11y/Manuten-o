@@ -598,8 +598,8 @@ function abrirImpressao(jsonStr) {
     let corpo = `<!-- CABEÇALHO -->
     <div class="print-header">
         <div class="print-header-left">
-            <h1>📋 Check-list Diário de Empilhadeira</h1>
-            <p>Inspeção e Segurança Operacional — Sistema de Manutenção</p>
+            <h1>📋 Check-list Empilhadeira</h1>
+            <p>Inspeção e Segurança Operacional</p>
         </div>
         <div class="print-header-right">
             <div class="print-logo">GESTÃO A VISTA</div>
@@ -664,7 +664,7 @@ function abrirImpressao(jsonStr) {
         corpo += `<div class="print-section-title" style="margin-top:14px">REGISTROS FOTOGRÁFICOS</div>
         <div class="print-images-row">
             <div class="print-image-box">
-                <div class="print-image-label">📷 Foto da Inspeção</div>
+                <div class="print-image-label">Foto da Inspeção</div>
                 <div class="print-image-content">
                     <img src="${fotoImgUrl}" alt="Foto" onerror="this.parentElement.innerHTML='Imagem não carregada.'"
                          style="max-width:100%;max-height:220px;object-fit:contain;border-radius:4px">
@@ -697,7 +697,7 @@ function abrirImpressao(jsonStr) {
         </div>
     </div>
     <div class="print-footer">
-        <span>Sistema de Gestão a Vista — Check-list Diário de Empilhadeiras</span>
+        <span>Sistema de Gestão a Vista — Check-list Empilhadeiras</span>
         <span>Impresso em: ${now}</span>
     </div>`;
 
