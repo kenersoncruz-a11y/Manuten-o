@@ -42,7 +42,7 @@
 
     /* ── Verificar se está logado ──────────────────────────── */
     function isLoggedIn() {
-        return !!(window.currentUser);
+        return !!(window.currentUser || localStorage.getItem('currentUser'));
     }
 
     /* ── Injetar estilos ───────────────────────────────────── */
@@ -484,9 +484,14 @@
 
     /* ── Inicialização ─────────────────────────────────────── */
     function init() {
-        // Aguarda o DOM e o currentUser estarem prontos
+        let tentativas = 0;
+        const MAX = 10;
+
         const tentar = () => {
-            if (!isLoggedIn()) return;
+            if (!isLoggedIn()) {
+                if (++tentativas < MAX) setTimeout(tentar, 500);
+                return;
+            }
             injetarEstilos();
             injetarHTML();
             carregarNotificacoes();
@@ -494,9 +499,9 @@
         };
 
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => setTimeout(tentar, 500));
+            document.addEventListener('DOMContentLoaded', () => setTimeout(tentar, 300));
         } else {
-            setTimeout(tentar, 500);
+            setTimeout(tentar, 300);
         }
     }
 
