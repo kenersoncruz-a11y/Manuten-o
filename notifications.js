@@ -458,6 +458,40 @@
         }, 7000);
     }
 
+    /* ── Solicitar permissão de notificação ───────────────── */
+    async function pedirPermissao() {
+        if (!('Notification' in window)) return;
+        if (Notification.permission === 'default') {
+            await Notification.requestPermission();
+        }
+    }
+
+    /* ── Mostrar notificação nativa do OS ─────────────────── */
+    async function mostrarNotificacaoNativa(notif) {
+        if (!('Notification' in window)) return;
+        if (Notification.permission !== 'granted') return;
+
+        const opcoes = {
+            body:    notif.mensagem,
+            icon:    '/icon-192.png',
+            badge:   '/icon-96.png',
+            tag:     'notif-' + notif.id,
+            data:    { url: notif.link || '/', id: notif.id },
+            vibrate: [200, 100, 200],
+        };
+
+        // Usa o Service Worker se disponível (funciona em aba em segundo plano)
+        if ('serviceWorker' in navigator) {
+            try {
+                const reg = await navigator.serviceWorker.ready;
+                await reg.showNotification(notif.titulo, opcoes);
+                return;
+            } catch (e) {}
+        }
+        // Fallback para API nativa
+        new Notification(notif.titulo, opcoes);
+    }
+
     /* ── Inscrever no Realtime ─────────────────────────────── */
     function inscreverRealtime() {
         const sb = getSB();
@@ -477,6 +511,7 @@
                     if (nova.created_at > _ultimaVerif) _ultimaVerif = nova.created_at;
                     atualizarContador(_contador + 1);
                     mostrarToast(nova);
+                    mostrarNotificacaoNativa(nova);
                     if (_painelAberto) carregarNotificacoes();
                 }
             )
@@ -536,8 +571,13 @@
             injetarEstilos();
             injetarHTML();
             carregarNotificacoes();
+<<<<<< claude/fix-supabase-realtime-error-DkjW1
+            pedirPermissao();
+            inscreverRealtime();
+======
             inscreverRealtime(); // Realtime (quando habilitado no Supabase)
             iniciarPolling();    // Polling garantido a cada 10s
+>>>>>> main
         };
 
         if (document.readyState === 'loading') {
@@ -558,6 +598,7 @@
             injetarHTML();
         }
         carregarNotificacoes();
+        pedirPermissao();
         if (!_canal) inscreverRealtime();
         iniciarPolling();
     };
