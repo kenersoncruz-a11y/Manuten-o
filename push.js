@@ -30,7 +30,13 @@
 
     /* ── Verificar se está logado ──────────────────────────── */
     function isLoggedIn() {
-        return !!(window.currentUser);
+        return !!(window.currentUser || localStorage.getItem('currentUser'));
+    }
+
+    /* ── Obter usuário atual ────────────────────────────────── */
+    function getUser() {
+        if (window.currentUser) return window.currentUser;
+        try { return JSON.parse(localStorage.getItem('currentUser')); } catch { return null; }
     }
 
     /* ── Registrar Service Worker ───────────────────────────── */
@@ -69,7 +75,7 @@
 
     /* ── Salvar assinatura no Supabase ──────────────────────── */
     async function salvarAssinatura(subscription) {
-        const u = window.currentUser;
+        const u = getUser();
         if (!u?.id) return;
 
         const payload = {
@@ -170,10 +176,13 @@
             }
         };
 
-        // Tentar automaticamente se já logado
-        setTimeout(() => {
-            if (isLoggedIn()) window.pushInit();
-        }, 1000);
+        // Tentar automaticamente se já logado (retry até 10x)
+        let tentativas = 0;
+        const tentarInit = () => {
+            if (isLoggedIn()) { window.pushInit(); return; }
+            if (++tentativas < 10) setTimeout(tentarInit, 600);
+        };
+        setTimeout(tentarInit, 600);
     }
 
     if (document.readyState === 'loading') {
