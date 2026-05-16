@@ -168,7 +168,7 @@
     <div class="hero">
         <div>
             <h2>👥 Gestão de Usuários</h2>
-            <p>Cadastre, edite permissões e configure notificações WhatsApp</p>
+            <p>Cadastre, edite permissões e gerencie o acesso dos usuários</p>
         </div>
         <div class="hero-actions">
             <button class="btn-hero primary" onclick="abrirModalNovo()">➕ Novo Usuário</button>
@@ -179,7 +179,7 @@
         <div class="stat"><div class="stat-num" id="sTotal">–</div><div class="stat-lbl">Total</div></div>
         <div class="stat s-admin"><div class="stat-num" id="sAdmin">–</div><div class="stat-lbl">Admins</div></div>
         <div class="stat s-ativo"><div class="stat-num" id="sAtivo">–</div><div class="stat-lbl">Ativos</div></div>
-        <div class="stat s-tel"><div class="stat-num" id="sTel">–</div><div class="stat-lbl">Com WhatsApp</div></div>
+        <div class="stat s-inativo"><div class="stat-num" id="sInativo">–</div><div class="stat-lbl">Inativos</div></div>
     </div>
 
     <div class="card">
@@ -246,24 +246,6 @@
                     <option value="true">Ativo</option>
                     <option value="false">Inativo</option>
                 </select>
-            </div>
-        </div>
-
-        <!-- WHATSAPP -->
-        <div class="wa-section">
-            <h3>💬 WhatsApp para notificações</h3>
-            <div class="wa-row">
-                <div class="form-group" style="flex:1;min-width:180px">
-                    <label class="form-label">Número (com DDD e código país)</label>
-                    <input class="form-input" id="f_telefone" placeholder="+55 11 99999-9999" oninput="atualizarPreviewTel()">
-                    <span class="form-hint">Formato: +55 11 99999-9999</span>
-                </div>
-                <button class="btn btn-whatsapp btn-sm" onclick="testarWhatsApp()" type="button">💬 Testar</button>
-            </div>
-            <div class="phone-preview" id="telPreview" style="display:none">
-                <span style="font-size:20px">💬</span>
-                <span id="telPreviewText"></span>
-                <span style="color:var(--green);font-weight:700;margin-left:auto;">✓ Notificações ativas</span>
             </div>
         </div>
 
@@ -399,26 +381,6 @@
     </div>
 </div>
 
-<!-- ===== MODAL TESTE WHATSAPP ===== -->
-<div class="modal" id="modalWA">
-    <div class="modal-box" style="max-width:460px">
-        <div class="modal-head">
-            <h2>💬 Testar Notificação WhatsApp</h2>
-            <button class="modal-close" onclick="fecharModal('modalWA')">×</button>
-        </div>
-        <div id="alertWA" class="alert"></div>
-        <div class="wa-test-box">
-            <p style="font-size:13px;font-weight:700;color:#166534;margin-bottom:8px;">Mensagem de teste:</p>
-            <textarea id="waTestMsg">Olá! Esta é uma mensagem de teste do Sistema de Manutenção. Suas notificações estão configuradas corretamente! ✅</textarea>
-        </div>
-        <p style="font-size:12px;color:var(--text-light);margin-top:10px">Será enviado para: <strong id="waTestNum"></strong></p>
-        <div class="modal-foot">
-            <button class="btn btn-secondary" onclick="fecharModal('modalWA')">Cancelar</button>
-            <button class="btn btn-whatsapp" onclick="enviarTesteWA()">💬 Enviar via WhatsApp</button>
-        </div>
-    </div>
-</div>
-
 <!-- ===== MODAL EXCLUSÃO ===== -->
 <div class="modal" id="modalDel">
     <div class="modal-box" style="max-width:400px">
@@ -439,9 +401,6 @@
 <script>
 const SUPABASE_URL = 'https://wcfrwsgnxochxvwhxnvy.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjZnJ3c2dueG9jaHh2d2h4bnZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc2MzExMDgsImV4cCI6MjA4MzIwNzEwOH0.Yb4cT5chXp3S8NZaWbLpv436HzxGCO7CZTruPpOPDdU';
-
-const WA_PROVIDER      = 'direct_link';
-const WA_CALLMEBOT_API = 'https://api.callmebot.com/whatsapp.php';
 
 const ALL_PERMS = [
     'perm_usuarios_visualizar',
@@ -542,7 +501,7 @@ async function loadUsuarios() {
         '<div class="loading"><div class="spinner"></div><p>Carregando...</p></div>';
 
     const SELECT_FIELDS = [
-        'id','nome','usuario','senha','perfil','ativo','telefone','created_at','updated_at',
+        'id','nome','usuario','senha','perfil','ativo','created_at','updated_at',
         'maquinas_permitidas',
         ...ALL_PERMS
     ].join(',');
@@ -565,10 +524,10 @@ async function loadUsuarios() {
 }
 
 function calcStats() {
-    document.getElementById('sTotal').textContent = allUsers.length;
-    document.getElementById('sAdmin').textContent = allUsers.filter(u => u.perfil === 'admin').length;
-    document.getElementById('sAtivo').textContent = allUsers.filter(u => u.ativo !== false).length;
-    document.getElementById('sTel').textContent   = allUsers.filter(u => u.telefone && u.telefone.trim()).length;
+    document.getElementById('sTotal').textContent   = allUsers.length;
+    document.getElementById('sAdmin').textContent   = allUsers.filter(u => u.perfil === 'admin').length;
+    document.getElementById('sAtivo').textContent   = allUsers.filter(u => u.ativo !== false).length;
+    document.getElementById('sInativo').textContent = allUsers.filter(u => u.ativo === false).length;
 }
 
 /* ── RENDER ── */
@@ -601,14 +560,11 @@ function renderTabela(lista) {
     <div class="table-wrap"><table>
     <thead><tr>
         <th>Usuário</th><th>Login</th><th>Perfil</th>
-        <th>Check-list</th><th>WhatsApp</th><th>Status</th><th>Criado em</th><th>Ações</th>
+        <th>Check-list</th><th>Status</th><th>Criado em</th><th>Ações</th>
     </tr></thead><tbody>`;
 
     lista.forEach(u => {
         const isAtivo = u.ativo !== false;
-        const tel = u.telefone
-            ? `<span class="badge b-tem-tel">💬 ${escStr(u.telefone)}</span>`
-            : `<span class="badge b-sem-tel">–</span>`;
         const status = isAtivo
             ? `<span class="badge b-ativo">Ativo</span>`
             : `<span class="badge b-inativo">Inativo</span>`;
@@ -627,9 +583,6 @@ function renderTabela(lista) {
             checkBadge = `<span class="badge" style="background:#fee2e2;color:#991b1b">✗ Sem acesso</span>`;
         }
 
-        const waBtn  = u.telefone
-            ? `<button class="btn btn-sm btn-whatsapp" title="Enviar WhatsApp"
-                onclick="abrirTesteWA('${u.id}','${escStr(u.nome)}','${escStr(u.telefone)}')">💬</button>` : '';
         const editBtn = podeEditar
             ? `<button class="btn btn-sm" onclick="abrirEditar('${u.id}')">✏️</button>` : '';
         const delBtn  = podeExcluir
@@ -643,12 +596,11 @@ function renderTabela(lista) {
             <td style="color:var(--text-mid);font-size:13px">${escStr(u.usuario || '')}</td>
             <td>${perfilBadge(u.perfil)}</td>
             <td>${checkBadge}</td>
-            <td>${tel}</td>
             <td>${status}</td>
             <td style="font-size:12px;color:var(--text-light)">${criado}</td>
             <td><div class="action-btns">
                 <button class="btn btn-sm btn-outline" onclick="verDetalhe('${u.id}')">👁️ Ver</button>
-                ${editBtn}${waBtn}${delBtn}
+                ${editBtn}${delBtn}
             </div></td>
         </tr>`;
     });
@@ -731,8 +683,6 @@ function abrirModalNovo() {
     document.getElementById('f_senha_hint').textContent = 'Mínimo 6 caracteres';
     document.getElementById('f_perfil').value   = 'operador';
     document.getElementById('f_ativo').value    = 'true';
-    document.getElementById('f_telefone').value = '';
-    document.getElementById('telPreview').style.display = 'none';
     limparPerms();
     setModoMaquinas('todas');
     renderMaquinasTags();
@@ -756,8 +706,6 @@ function abrirEditar(id) {
     document.getElementById('f_senha_hint').textContent = 'Deixe em branco para manter a senha atual';
     document.getElementById('f_perfil').value   = u.perfil  || 'operador';
     document.getElementById('f_ativo').value    = u.ativo === false ? 'false' : 'true';
-    document.getElementById('f_telefone').value = u.telefone || '';
-    atualizarPreviewTel();
     limparPerms();
     ALL_PERMS.forEach(p => {
         if (u[p]) {
@@ -793,17 +741,6 @@ function onPerfilChange() {
     }
 }
 
-function atualizarPreviewTel() {
-    const tel = document.getElementById('f_telefone').value.trim();
-    const prv = document.getElementById('telPreview');
-    if (tel.length > 5) {
-        document.getElementById('telPreviewText').textContent = tel;
-        prv.style.display = 'flex';
-    } else {
-        prv.style.display = 'none';
-    }
-}
-
 /* ── SALVAR ── */
 async function salvarUsuario() {
     const nome    = document.getElementById('f_nome').value.trim();
@@ -811,14 +748,13 @@ async function salvarUsuario() {
     const senha   = document.getElementById('f_senha').value.trim();
     const perfil  = document.getElementById('f_perfil').value;
     const ativo   = document.getElementById('f_ativo').value === 'true';
-    const tel     = document.getElementById('f_telefone').value.trim();
 
     if (!nome || !usuario) { showAlert('alertForm','⚠️ Nome e usuário são obrigatórios.','error'); return; }
     if (!editingId && !senha) { showAlert('alertForm','⚠️ Informe uma senha para o novo usuário.','error'); return; }
     if (senha && senha.length < 6) { showAlert('alertForm','⚠️ Senha deve ter mínimo 6 caracteres.','error'); return; }
 
     const payload = {
-        nome, usuario, perfil, ativo, telefone: tel,
+        nome, usuario, perfil, ativo,
         maquinas_permitidas: modoMaquinas === 'especificas' && maquinasPermitidas.length > 0
             ? maquinasPermitidas
             : null
@@ -891,9 +827,6 @@ function verDetalhe(id) {
         </div>
         <div class="info-grid">
             <div class="info-box"><strong>Login (usuário)</strong><span>${escStr(u.usuario || '–')}</span></div>
-            <div class="info-box"><strong>WhatsApp</strong><span style="color:${u.telefone ? 'var(--whatsapp-dark)' : 'var(--text-light)'}">
-                ${u.telefone ? '💬 ' + escStr(u.telefone) : 'Não configurado'}
-            </span></div>
             <div class="info-box"><strong>Criado em</strong><span style="font-size:13px">${criado}</span></div>
             <div class="info-box"><strong>Atualizado em</strong><span style="font-size:13px">${atualizado}</span></div>
         </div>
@@ -905,12 +838,6 @@ function verDetalhe(id) {
             <strong style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#9ca3af;display:block;margin-bottom:8px">🔐 Permissões ativas</strong>
             <div style="display:flex;flex-wrap:wrap;gap:4px">${permsHtml}</div>
         </div>
-        ${u.telefone ? `<div style="margin-top:16px">
-            <button class="btn btn-whatsapp btn-sm"
-                onclick="abrirTesteWA('${u.id}','${escStr(u.nome)}','${escStr(u.telefone)}')">
-                💬 Enviar mensagem de teste
-            </button>
-        </div>` : ''}
     `;
     document.getElementById('btnEditarDetalhe').onclick = () => { fecharModal('modalDetalhe'); abrirEditar(id); };
     document.getElementById('modalDetalhe').classList.add('open');
@@ -935,55 +862,6 @@ async function deletarUsuario() {
     fecharModal('modalDel');
     loadUsuarios();
 }
-
-/* ── WHATSAPP ── */
-function testarWhatsApp() {
-    const tel  = document.getElementById('f_telefone').value.trim();
-    const nome = document.getElementById('f_nome').value.trim() || 'Usuário';
-    if (!tel) { showAlert('alertForm','⚠️ Informe o número de telefone primeiro.','error'); return; }
-    abrirTesteWA(null, nome, tel);
-}
-function abrirTesteWA(id, nome, tel) {
-    document.getElementById('waTestNum').textContent = tel;
-    document.getElementById('waTestMsg').value =
-        `Olá, ${nome}! Esta é uma notificação de teste do Sistema de Manutenção. ✅\nSuas notificações estão configuradas corretamente.`;
-    showAlert('alertWA','','');
-    document.getElementById('modalWA').classList.add('open');
-}
-function enviarTesteWA() {
-    const tel = document.getElementById('waTestNum').textContent.trim();
-    const msg = document.getElementById('waTestMsg').value.trim();
-    if (!msg) { showAlert('alertWA','⚠️ Digite uma mensagem.','error'); return; }
-    enviarWhatsApp(tel, msg, 'alertWA');
-}
-function enviarWhatsApp(tel, msg, alertEl) {
-    const n = tel.replace(/[^\d+]/g, '');
-    if (WA_PROVIDER === 'callmebot') {
-        fetch(`${WA_CALLMEBOT_API}?phone=${encodeURIComponent(n)}&text=${encodeURIComponent(msg)}&apikey=SUA_APIKEY`)
-            .then(() => { if (alertEl) showAlert(alertEl,'✅ Enviado via CallMeBot!','success'); })
-            .catch(e => { if (alertEl) showAlert(alertEl,'❌ Erro: ' + e.message,'error'); });
-    } else {
-        window.open(`https://wa.me/${n.replace(/^\+/,'')}?text=${encodeURIComponent(msg)}`, '_blank');
-        if (alertEl) showAlert(alertEl,'✅ WhatsApp aberto! Clique em Enviar no app.','success');
-    }
-}
-
-window.notificarUsuario = async function(nomeOuId, mensagem) {
-    let u = allUsers.find(x =>
-        String(x.id) === String(nomeOuId) ||
-        (x.nome || '').toLowerCase() === String(nomeOuId).toLowerCase()
-    );
-    if (!u && db) {
-        try {
-            const { data } = await db.from('usuarios')
-                .select('id,nome,usuario,telefone')
-                .or(`id.eq.${nomeOuId},nome.ilike.%${nomeOuId}%`)
-                .maybeSingle();
-            u = data;
-        } catch {}
-    }
-    if (u?.telefone) enviarWhatsApp(u.telefone, mensagem, null);
-};
 
 /* ── UTILS ── */
 function showAlert(elId, msg, type) {

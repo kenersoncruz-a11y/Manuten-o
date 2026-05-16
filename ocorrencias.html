@@ -189,35 +189,6 @@
 const SUPABASE_URL = 'https://wcfrwsgnxochxvwhxnvy.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjZnJ3c2dueG9jaHh2d2h4bnZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc2MzExMDgsImV4cCI6MjA4MzIwNzEwOH0.Yb4cT5chXp3S8NZaWbLpv436HzxGCO7CZTruPpOPDdU';
 
-/* ── WhatsApp Helper ─────────────────────────────────────────── */
-const WA = (() => {
-    const _cache = {};
-    async function _buscarTel(nomeOuId) {
-        if (_cache[nomeOuId]) return _cache[nomeOuId];
-        try {
-            const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            const { data } = await sb.from('usuarios').select('nome,telefone')
-                .ilike('nome', nomeOuId).maybeSingle();
-            if (data?.telefone) _cache[nomeOuId] = data.telefone;
-            return data?.telefone || null;
-        } catch { return null; }
-    }
-    function _enviar(tel, msg) {
-        const n = tel.replace(/[^\d+]/g,'').replace(/^\+/,'');
-        window.open(`https://wa.me/${n}?text=${encodeURIComponent(msg)}`, '_blank');
-    }
-    async function notificar(nomeOuId, mensagem) {
-        if (!nomeOuId || !mensagem) return;
-        if (/^\+?\d{8,}$/.test(nomeOuId.replace(/[\s\-()+]/g,''))) { _enviar(nomeOuId, mensagem); return; }
-        const tel = await _buscarTel(nomeOuId);
-        if (tel) _enviar(tel, mensagem);
-    }
-    async function notificarMencoes(texto, contexto) {
-        const m = (texto.match(/@([\wÀ-ú\s]+?)(?=\s@|\s*$|[,.])/g)||[]).map(x=>x.replace('@','').trim());
-        for (const nome of m) await notificar(nome, `💬 Você foi mencionado!\n\n"${texto.substring(0,120)}"\n\n${contexto||''}`);
-    }
-    return { notificar, notificarMencoes };
-})();
 
 let db, currentUser;
 let allOcorrencias = [], filteredOcorrencias = [];
@@ -250,6 +221,13 @@ function setupSidebar() {
 }
 function closeSidebar(){
     ['hamburgerBtn','sidebar','sidebarOverlay'].forEach(id=>document.getElementById(id).classList.remove('active'));
+}
+
+/* HELPER: inserir notificação no Supabase */
+async function notificar(tipo, titulo, mensagem, link) {
+    try {
+        await db.from('notificacoes').insert([{ tipo, titulo, mensagem, link: link || null, lida: false }]);
+    } catch(e) { console.warn('[notif]', e); }
 }
 
 /* LOAD */
@@ -525,23 +503,24 @@ async function salvarEdicao(){
         const{data}=await db.from(tabela).select('*').eq('id',currentItemId).single();
         currentItemData=data;
         renderDetalhes(data,tipo);
-        // Fechar edição
         editModeActive=false;
         document.getElementById('editSection').style.display='none';
         document.getElementById('btnToggleEdit').textContent='✏️ Editar';
         document.getElementById('btnSalvarEdit').style.display='none';
         loadOcorrencias();
-        // Notificações WhatsApp
-        const codigo = data.codigo || '';
-        if (tipo !== 'predial') {
-            const novoResp = payload.responsavel;
-            const antigoResp = currentItemData?.responsavel;
-            if (novoResp && novoResp !== antigoResp) {
-                await WA.notificar(novoResp, `🔧 Você foi designado como responsável!\n\nOcorrência: ${codigo}\nEquipamento: ${data.equipamento||''}\nStatus: ${payload.status}\n\nAcesse o sistema para mais detalhes.`);
-            }
-        }
-        if (payload.status === 'concluido' && data.criado_por && data.criado_por !== currentUser.nome) {
-            await WA.notificar(data.criado_por, `✅ Ocorrência ${codigo} foi concluída por ${currentUser.nome}.`);
+        // Notificação automática
+        const cod = data.codigo || '';
+        const nome = tipo==='predial' ? (data.local||'') : (data.equipamento||'');
+        if (status === 'concluido') {
+            await notificar('ocorrencia_concluida',
+                `✅ Ocorrência concluída`,
+                `${cod} — ${nome} foi concluída por ${currentUser.nome}.`,
+                'ocorrencias.html');
+        } else {
+            await notificar('ocorrencia_atualizada',
+                `🔄 Ocorrência atualizada`,
+                `${cod} — ${nome} foi atualizada por ${currentUser.nome}. Status: ${status}.`,
+                'ocorrencias.html');
         }
     } catch(err){showAlert('alertModal','❌ Erro: '+err.message,'error');}
 }
@@ -623,10 +602,12 @@ async function salvarNovaOcorrencia(){
         const{error}=await db.from(tabela).insert([payload]);
         if(error)throw error;
         showAlert('alertNova','✅ Registrado com sucesso!','success');
-        // Notificar responsável se equipamento
-        if (!isPredial && payload.responsavel) {
-            await WA.notificar(payload.responsavel, `🔧 Nova ocorrência atribuída a você!\n\nCódigo: ${payload.codigo}\nEquipamento: ${payload.equipamento||''}\nTipo: ${payload.tipo||''}\n\nAcesse o sistema para mais detalhes.`);
-        }
+        // Notificação automática
+        const nomeItem = isPredial ? (payload.local||'') : (payload.equipamento||'');
+        await notificar('ocorrencia_criada',
+            `🆕 Nova ocorrência registrada`,
+            `${payload.codigo} — ${nomeItem} criada por ${currentUser.nome}.`,
+            'ocorrencias.html');
         setTimeout(()=>{fecharModalNova();loadOcorrencias();},1400);
     } catch(err){showAlert('alertNova','❌ Erro: '+err.message,'error');}
 }
@@ -674,12 +655,12 @@ async function enviarComentario(){
         document.getElementById('commentText').value='';
         commentImgs=[]; document.getElementById('commentImgsPreview').innerHTML='';
         await carregarComentarios();
-        // Notificar @menções e criador da ocorrência
-        const codigo = currentItemData?.codigo || '';
-        await WA.notificarMencoes(texto, `Ocorrência: ${codigo}\nAcesse o sistema para responder.`);
-        if (currentItemData?.criado_por && currentItemData.criado_por !== currentUser.nome) {
-            await WA.notificar(currentItemData.criado_por, `💬 ${currentUser.nome} comentou na ocorrência ${codigo}:\n"${texto.substring(0,100)}"`);
-        }
+        // Notificação automática
+        const cod = currentItemData?.codigo || '';
+        await notificar('comentario_adicionado',
+            `💬 Novo comentário`,
+            `${currentUser.nome} comentou em ${cod}: "${texto.substring(0,80)}"`,
+            'ocorrencias.html');
     } catch(err){alert('Erro: '+err.message);}
 }
 function handleCommentImg(ev){

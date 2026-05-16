@@ -481,12 +481,18 @@ const PERGUNTAS = {
 const ALERTA_SIM = ['q1','q3','q4','q5','q13'];
 const ALERTA_NAO = ['q2','q6','q7','q8','q9','q10','q11','q12','q14','q15','q16','q17','q18'];
 
-const WA_SUPERVISOR = '';
-
 function isProblema(key, value) {
     if (ALERTA_SIM.includes(key) && value === 'Sim') return true;
     if (ALERTA_NAO.includes(key) && value === 'Não') return true;
     return false;
+}
+
+/* HELPER: inserir notificação no Supabase */
+async function notificar(tipo, titulo, mensagem, link) {
+    if (!db) return;
+    try {
+        await db.from('notificacoes').insert([{ tipo, titulo, mensagem, link: link || null, lida: false }]);
+    } catch(e) { console.warn('[notif]', e); }
 }
 
 // ── INIT ──
@@ -635,36 +641,17 @@ async function enviarChecklist(e) {
 
         mostrarAlerta('✅ Check-list enviado com sucesso!', 'success');
 
-        // ── NOTIFICAÇÕES WHATSAPP ──
-        if (payload.total_problemas > 0 && WA_SUPERVISOR) {
-            const problemasDesc = Object.entries(respostas)
-                .filter(([k, v]) => isProblema(k, v))
-                .map(([k]) => `• ${PERGUNTAS[k]}`)
-                .join('\n');
-
-            await WA.notificar(
-                WA_SUPERVISOR,
-                `⚠️ Check-list com problema(s) registrado!\n\n` +
-                `Operador: ${payload.operador}\n` +
-                `Máquina: ${payload.numero_maquina}\n` +
-                `Turno: ${payload.turno} | Horímetro: ${payload.horimetro}\n` +
-                `Data: ${payload.data} às ${payload.hora}\n\n` +
-                `🔴 ${payload.total_problemas} problema(s) encontrado(s):\n${problemasDesc}`
-            );
-        }
-
-        if (currentUser?.nome) {
-            await WA.notificar(
-                currentUser.nome,
-                `✅ Check-list enviado com sucesso!\n\n` +
-                `Operador: ${payload.operador}\n` +
-                `Máquina: ${payload.numero_maquina}\n` +
-                `Turno: ${payload.turno} | Horímetro: ${payload.horimetro}\n` +
-                `Data: ${payload.data} às ${payload.hora}\n` +
-                (payload.total_problemas > 0
-                    ? `\n⚠️ ${payload.total_problemas} problema(s) registrado(s). O supervisor foi notificado.`
-                    : `\n✅ Nenhum problema encontrado. Bom turno!`)
-            );
+        // Notificação automática
+        if (payload.total_problemas > 0) {
+            await notificar('checklist_problema',
+                `⚠️ Check-list com ${payload.total_problemas} problema(s)`,
+                `Operador: ${payload.operador} | Máquina: ${payload.numero_maquina} | Turno: ${payload.turno}.`,
+                'checklist-painel.html');
+        } else {
+            await notificar('checklist_problema',
+                `✅ Check-list enviado`,
+                `Operador: ${payload.operador} | Máquina: ${payload.numero_maquina} | Sem problemas.`,
+                'checklist-painel.html');
         }
 
         form.reset();

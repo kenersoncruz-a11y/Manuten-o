@@ -40,10 +40,9 @@
         return null;
     }
 
-    /* ── Verificar se é admin ──────────────────────────────── */
-    function isAdmin() {
-        const u = window.currentUser;
-        return u && (u.perfil === 'admin' || u.perm_usuarios_visualizar);
+    /* ── Verificar se está logado ──────────────────────────── */
+    function isLoggedIn() {
+        return !!(window.currentUser);
     }
 
     /* ── Injetar estilos ───────────────────────────────────── */
@@ -247,8 +246,14 @@
             .notif-toast.saindo { animation: toast-out 0.3s ease forwards; }
             @keyframes toast-in  { from { opacity:0; transform: translateX(20px); } to { opacity:1; transform: translateX(0); } }
             @keyframes toast-out { from { opacity:1; transform: translateX(0); } to { opacity:0; transform: translateX(20px); } }
-            .notif-toast-titulo { font-size: 13px; font-weight: 600; color: #e2e8f0; margin-bottom: 2px; }
+            .notif-toast { cursor: pointer; position: relative; }
+            .notif-toast-titulo { font-size: 13px; font-weight: 600; color: #e2e8f0; margin-bottom: 2px; padding-right: 20px; }
             .notif-toast-msg    { font-size: 12px; color: #94a3b8; line-height: 1.4; }
+            .notif-toast-fechar {
+                position: absolute; top: 8px; right: 10px;
+                font-size: 16px; color: #64748b; cursor: pointer; line-height: 1;
+            }
+            .notif-toast-fechar:hover { color: #e2e8f0; }
         `;
         document.head.appendChild(style);
     }
@@ -414,19 +419,40 @@
         const container = document.getElementById('notif-toast-container');
         if (!container) return;
 
+        // Som de notificação (beep suave via AudioContext)
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, ctx.currentTime);
+            osc.frequency.setValueAtTime(660, ctx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.15, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.4);
+        } catch(e) {}
+
         const toast = document.createElement('div');
         toast.className = 'notif-toast';
         toast.innerHTML = `
             <div class="notif-toast-titulo">${icone(notif.tipo)} ${notif.titulo}</div>
             <div class="notif-toast-msg">${notif.mensagem}</div>
+            <div class="notif-toast-fechar" title="Fechar">×</div>
         `;
+        toast.querySelector('.notif-toast-fechar').addEventListener('click', (e) => {
+            e.stopPropagation();
+            toast.classList.add('saindo');
+            setTimeout(() => toast.remove(), 300);
+        });
         toast.addEventListener('click', () => abrirNotif(notif.id, notif.link));
         container.appendChild(toast);
 
         setTimeout(() => {
             toast.classList.add('saindo');
             setTimeout(() => toast.remove(), 300);
-        }, 5000);
+        }, 7000);
     }
 
     /* ── Inscrever no Realtime ─────────────────────────────── */
@@ -452,7 +478,7 @@
     function init() {
         // Aguarda o DOM e o currentUser estarem prontos
         const tentar = () => {
-            if (!isAdmin()) return; // Só para admins/supervisores
+            if (!isLoggedIn()) return;
             injetarEstilos();
             injetarHTML();
             carregarNotificacoes();
@@ -471,6 +497,7 @@
 
     /* ── Reinicializar quando o usuário logar ──────────────── */
     window.notifInit = function () {
+        if (!isLoggedIn()) return;
         if (!document.getElementById('notif-sino')) {
             injetarEstilos();
             injetarHTML();
