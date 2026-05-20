@@ -7,27 +7,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/checklist.css">
-    <style>
-        .sig-wrap {
-            position: relative; background: #fff; border: 2px dashed #cbd5e1;
-            border-radius: 10px; overflow: hidden; touch-action: none; cursor: crosshair;
-            margin-top: 10px;
-        }
-        .sig-wrap canvas { display: block; width: 100%; height: 130px; }
-        .sig-wrap.signed { border-color: #6366f1; border-style: solid; }
-        .sig-footer {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 6px 10px; background: #f1f5f9; border-top: 1px solid #e2e8f0; margin-top: 0;
-        }
-        .sig-hint { font-size: 11px; color: #94a3b8; }
-        .btn-sig-clear {
-            background: none; border: 1px solid #94a3b8; color: #64748b;
-            border-radius: 6px; padding: 3px 12px; font-size: 12px; cursor: pointer;
-        }
-        .btn-sig-clear:hover { border-color: #dc2626; color: #dc2626; }
-        .sig-nome { margin-top: 10px; }
-    </style>
-
     <meta name="theme-color" content="#1e293b">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -441,38 +420,6 @@
             </div>
         </div>
 
-        <!-- ASSINATURAS -->
-        <div class="section-divider">
-            <div class="section-divider-line"></div>
-            <div class="section-label">✍️ Assinaturas</div>
-            <div class="section-divider-line"></div>
-        </div>
-
-        <div class="form-card" id="card_assinatura_operador">
-            <span class="check-icon">✓</span>
-            <label class="main-label">Assinatura do Técnico / Operador</label>
-            <div class="sig-wrap" id="sigWrapOperador">
-                <canvas id="canvasOperador"></canvas>
-            </div>
-            <div class="sig-footer">
-                <span class="sig-hint">Desenhe com o dedo ou mouse</span>
-                <button type="button" class="btn-sig-clear" onclick="limparCanvas('canvasOperador','sigWrapOperador')">↺ Limpar</button>
-            </div>
-        </div>
-
-        <div class="form-card" id="card_assinatura_supervisor">
-            <span class="check-icon">✓</span>
-            <label class="main-label">Assinatura do Supervisor</label>
-            <input class="sig-nome" type="text" id="nome_supervisor" name="nome_supervisor" placeholder="Nome do supervisor (opcional)">
-            <div class="sig-wrap" id="sigWrapSupervisor">
-                <canvas id="canvasSupervisor"></canvas>
-            </div>
-            <div class="sig-footer">
-                <span class="sig-hint">Desenhe com o dedo ou mouse</span>
-                <button type="button" class="btn-sig-clear" onclick="limparCanvas('canvasSupervisor','sigWrapSupervisor')">↺ Limpar</button>
-            </div>
-        </div>
-
         <!-- SUBMIT -->
         <div class="submit-area">
             <button type="submit" class="btn-submit" id="btnSubmit">
@@ -572,90 +519,10 @@ document.addEventListener('DOMContentLoaded', () => {
     atualizarCard('data', document.getElementById('data'));
     atualizarCard('hora', document.getElementById('hora'));
 
-    initCanvas('canvasOperador',   'sigWrapOperador');
-    initCanvas('canvasSupervisor', 'sigWrapSupervisor');
     setupListeners();
     atualizarProgresso();
     carregarHistorico();
 });
-
-/* ═══════════════════════════════════════════
-   CANVAS ASSINATURA
-═══════════════════════════════════════════ */
-function initCanvas(canvasId, wrapId) {
-    const canvas = document.getElementById(canvasId);
-    canvas.width  = 600;
-    canvas.height = 150;
-    const ctx = canvas.getContext('2d');
-    ctx.strokeStyle = '#1e293b';
-    ctx.lineWidth   = 2.5;
-    ctx.lineCap     = 'round';
-    ctx.lineJoin    = 'round';
-
-    let drawing = false, lx = 0, ly = 0;
-
-    function pt(e) {
-        const r  = canvas.getBoundingClientRect();
-        const sx = canvas.width  / r.width;
-        const sy = canvas.height / r.height;
-        const src = e.touches ? e.touches[0] : e;
-        return { x: (src.clientX - r.left) * sx, y: (src.clientY - r.top) * sy };
-    }
-    function start(e) {
-        e.preventDefault();
-        drawing = true;
-        const p = pt(e); lx = p.x; ly = p.y;
-        ctx.beginPath(); ctx.arc(lx, ly, 1, 0, Math.PI * 2); ctx.fill();
-    }
-    function move(e) {
-        e.preventDefault();
-        if (!drawing) return;
-        const p = pt(e);
-        ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(p.x, p.y); ctx.stroke();
-        lx = p.x; ly = p.y;
-    }
-    function end() {
-        drawing = false;
-        if (!canvasVazio(canvasId)) document.getElementById(wrapId)?.classList.add('signed');
-    }
-
-    canvas.addEventListener('mousedown',  start);
-    canvas.addEventListener('mousemove',  move);
-    canvas.addEventListener('mouseup',    end);
-    canvas.addEventListener('mouseleave', end);
-    canvas.addEventListener('touchstart', start, { passive: false });
-    canvas.addEventListener('touchmove',  move,  { passive: false });
-    canvas.addEventListener('touchend',   end);
-}
-
-function limparCanvas(canvasId, wrapId) {
-    const c = document.getElementById(canvasId);
-    c.getContext('2d').clearRect(0, 0, c.width, c.height);
-    document.getElementById(wrapId)?.classList.remove('signed');
-}
-
-function canvasVazio(canvasId) {
-    const c    = document.getElementById(canvasId);
-    const data = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
-    for (let i = 3; i < data.length; i += 4) { if (data[i] > 0) return false; }
-    return true;
-}
-
-async function uploadAssinatura(canvasId, prefixo) {
-    if (canvasVazio(canvasId) || !db) return null;
-    const canvas = document.getElementById(canvasId);
-    return new Promise(resolve => {
-        canvas.toBlob(async blob => {
-            const path = `checklist/${Date.now()}_${prefixo}.png`;
-            const { data, error } = await db.storage
-                .from('assinaturas')
-                .upload(path, blob, { contentType: 'image/png' });
-            if (error) { console.error('[sig]', error); resolve(null); return; }
-            const { data: pub } = db.storage.from('assinaturas').getPublicUrl(data.path);
-            resolve(pub.publicUrl);
-        }, 'image/png');
-    });
-}
 
 // ── LISTENERS ──
 function setupListeners() {
@@ -755,23 +622,11 @@ async function enviarChecklist(e) {
         horimetro:      document.getElementById('horimetro').value,
         data:           document.getElementById('data').value,
         hora:           document.getElementById('hora').value,
-        nome_supervisor: document.getElementById('nome_supervisor').value.trim() || null,
         usuario_id:     currentUser?.id || null,
         respostas:      respostas
     };
 
     payload.total_problemas = Object.entries(respostas).filter(([k, v]) => isProblema(k, v)).length;
-
-    // Upload assinaturas para Supabase Storage
-    btn.innerHTML = '<span style="animation:spin 0.8s linear infinite;display:inline-block">⏳</span> Salvando assinaturas...';
-    const [urlOperador, urlSupervisor] = await Promise.all([
-        uploadAssinatura('canvasOperador',   'operador'),
-        uploadAssinatura('canvasSupervisor', 'supervisor')
-    ]);
-    payload.assinatura_operador_url   = urlOperador   || null;
-    payload.assinatura_supervisor_url = urlSupervisor || null;
-
-    btn.innerHTML = '<span style="animation:spin 0.8s linear infinite;display:inline-block">⏳</span> Enviando...';
 
     try {
         if (db) {
@@ -933,9 +788,6 @@ function limparFormulario() {
     document.getElementById('data').value = now.toISOString().split('T')[0];
     document.getElementById('hora').value = now.toTimeString().slice(0, 5);
     document.querySelectorAll('.form-card.answered').forEach(c => c.classList.remove('answered'));
-    limparCanvas('canvasOperador',   'sigWrapOperador');
-    limparCanvas('canvasSupervisor', 'sigWrapSupervisor');
-    document.getElementById('nome_supervisor').value = '';
     atualizarProgresso();
 }
 </script>
