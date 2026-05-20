@@ -633,36 +633,26 @@ function verDetalhes(jsonStr) {
     </div>`;
 
     // ── SEÇÃO DE ASSINATURAS ──
-    const assSupUrl = item.assinatura_supervisor_url || null;
-
     html += `<div class="sig-section">
         <h3>✍️ Assinaturas</h3>
         <div class="sig-grid">
             <div class="sig-block">
                 <label>Técnico / Operador</label>
-                ${assOperUrl
-                    ? `<div class="sig-img-preview"><img src="${assOperUrl}" alt="Assinatura técnico"></div>
-                       <button class="btn-limpar-assinatura" style="margin-top:6px" onclick="reassinar('tecnico')">✏️ Reasinar</button>`
-                    : `<div class="assinatura-wrap" id="sigWrapTecnico">
-                           <canvas id="assinaturaCanvas" width="800" height="180"></canvas>
-                       </div>
-                       <p class="assinatura-hint">Assine com o dedo ou mouse no campo acima</p>
-                       <button type="button" class="btn-limpar-assinatura" onclick="limparAssinatura('assinaturaCanvas','sigWrapTecnico')">↺ Limpar</button>`
-                }
+                <div class="assinatura-wrap" id="sigWrapTecnico">
+                    <canvas id="assinaturaCanvas" width="800" height="180"></canvas>
+                </div>
+                <p class="assinatura-hint">Assine com o dedo ou mouse no campo acima</p>
+                <button type="button" class="btn-limpar-assinatura" onclick="limparAssinatura('assinaturaCanvas','sigWrapTecnico')">↺ Limpar</button>
             </div>
             <div class="sig-block">
                 <label>Supervisor</label>
                 <input type="text" id="modalNomeSupervisor" placeholder="Nome do supervisor (opcional)"
                        value="${item.nome_supervisor || ''}">
-                ${assSupUrl
-                    ? `<div class="sig-img-preview"><img src="${assSupUrl}" alt="Assinatura supervisor"></div>
-                       <button class="btn-limpar-assinatura" style="margin-top:6px" onclick="reassinar('supervisor')">✏️ Reasinar</button>`
-                    : `<div class="assinatura-wrap" id="sigWrapSupervisor">
-                           <canvas id="assinaturaSupervisorCanvas" width="800" height="180"></canvas>
-                       </div>
-                       <p class="assinatura-hint">Assine com o dedo ou mouse no campo acima</p>
-                       <button type="button" class="btn-limpar-assinatura" onclick="limparAssinatura('assinaturaSupervisorCanvas','sigWrapSupervisor')">↺ Limpar</button>`
-                }
+                <div class="assinatura-wrap" id="sigWrapSupervisor">
+                    <canvas id="assinaturaSupervisorCanvas" width="800" height="180"></canvas>
+                </div>
+                <p class="assinatura-hint">Assine com o dedo ou mouse no campo acima</p>
+                <button type="button" class="btn-limpar-assinatura" onclick="limparAssinatura('assinaturaSupervisorCanvas','sigWrapSupervisor')">↺ Limpar</button>
             </div>
         </div>
         <button class="btn-salvar-assinaturas" id="btnSalvarAssinaturas"
@@ -676,11 +666,8 @@ function verDetalhes(jsonStr) {
     document.getElementById('modalConteudo').innerHTML = html;
     document.getElementById('modalDetalhes').classList.add('active');
 
-    // Inicializa canvas apenas se estiverem presentes no DOM
-    if (document.getElementById('assinaturaCanvas'))
-        setupAssinatura('assinaturaCanvas', 'sigWrapTecnico');
-    if (document.getElementById('assinaturaSupervisorCanvas'))
-        setupAssinatura('assinaturaSupervisorCanvas', 'sigWrapSupervisor');
+    setupAssinatura('assinaturaCanvas',           'sigWrapTecnico');
+    setupAssinatura('assinaturaSupervisorCanvas', 'sigWrapSupervisor');
 }
 
 /* ═══════════════════════════════════════════
@@ -737,34 +724,22 @@ function limparAssinatura(canvasId, wrapId) {
     document.getElementById(wrapId)?.classList.remove('signed');
 }
 
-async function uploadAssinatura(canvasId, prefixo) {
+function getAssinaturaBase64(canvasId) {
     var canvas = document.getElementById(canvasId);
     if (!canvas || canvas._vazia) return null;
-    return new Promise(function(resolve) {
-        canvas.toBlob(async function(blob) {
-            var path = 'checklist/' + Date.now() + '_' + prefixo + '.png';
-            var { data, error } = await db.storage
-                .from('assinaturas')
-                .upload(path, blob, { contentType: 'image/png' });
-            if (error) { console.error('[sig]', error); resolve(null); return; }
-            var { data: pub } = db.storage.from('assinaturas').getPublicUrl(data.path);
-            resolve(pub.publicUrl);
-        }, 'image/png');
-    });
+    return canvas.toDataURL('image/png');
 }
 
 async function salvarAssinaturas(itemId) {
     var btn = document.getElementById('btnSalvarAssinaturas');
     btn.disabled = true; btn.textContent = '⏳ Salvando...';
 
-    var [urlTecnico, urlSupervisor] = await Promise.all([
-        uploadAssinatura('assinaturaCanvas',           'tecnico'),
-        uploadAssinatura('assinaturaSupervisorCanvas', 'supervisor')
-    ]);
+    var b64Tecnico    = getAssinaturaBase64('assinaturaCanvas');
+    var b64Supervisor = getAssinaturaBase64('assinaturaSupervisorCanvas');
 
     var update = {};
-    if (urlTecnico)    update.assinatura_operador_url   = urlTecnico;
-    if (urlSupervisor) update.assinatura_supervisor_url = urlSupervisor;
+    if (b64Tecnico)    update.assinatura_operador_url   = b64Tecnico;
+    if (b64Supervisor) update.assinatura_supervisor_url = b64Supervisor;
     var nomeSup = document.getElementById('modalNomeSupervisor')?.value.trim();
     if (nomeSup) update.nome_supervisor = nomeSup;
 
@@ -786,42 +761,6 @@ async function salvarAssinaturas(itemId) {
 
     btn.textContent = '✅ Salvo!';
     setTimeout(function() { fecharModal(); renderTabela(filteredChecklists); }, 800);
-}
-
-// Reasinar: substitui imagem por canvas
-function reassinar(quem) {
-    var isT = quem === 'tecnico';
-    var wrapId    = isT ? 'sigWrapTecnico'    : 'sigWrapSupervisor';
-    var canvasId  = isT ? 'assinaturaCanvas'  : 'assinaturaSupervisorCanvas';
-    var container = isT
-        ? document.querySelector('.sig-block:first-child')
-        : document.querySelector('.sig-block:last-child');
-    if (!container) return;
-
-    var preview = container.querySelector('.sig-img-preview');
-    var btnR    = container.querySelector('.btn-limpar-assinatura');
-    if (preview) preview.remove();
-    if (btnR)    btnR.remove();
-
-    var wrap   = document.createElement('div');
-    wrap.className = 'assinatura-wrap'; wrap.id = wrapId;
-    var canvas = document.createElement('canvas');
-    canvas.id = canvasId; canvas.width = 800; canvas.height = 180;
-    wrap.appendChild(canvas);
-
-    var hint = document.createElement('p');
-    hint.className = 'assinatura-hint';
-    hint.textContent = 'Assine com o dedo ou mouse no campo acima';
-
-    var btnL = document.createElement('button');
-    btnL.type = 'button'; btnL.className = 'btn-limpar-assinatura';
-    btnL.textContent = '↺ Limpar';
-    btnL.onclick = function() { limparAssinatura(canvasId, wrapId); };
-
-    container.appendChild(wrap);
-    container.appendChild(hint);
-    container.appendChild(btnL);
-    setupAssinatura(canvasId, wrapId);
 }
 
 function fecharModal() { document.getElementById('modalDetalhes').classList.remove('active'); }
