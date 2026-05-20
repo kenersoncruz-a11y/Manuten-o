@@ -62,6 +62,43 @@
         }
         .btn-print:hover { background: #1e3a5f; }
 
+        /* ── ASSINATURA NO MODAL ── */
+        .assinatura-wrap {
+            border: 2px dashed #334155;
+            border-radius: 10px;
+            background: #fff;
+            overflow: hidden;
+            touch-action: none;
+            cursor: crosshair;
+            margin-top: 8px;
+        }
+        .assinatura-wrap canvas { display: block; width: 100%; height: 160px; }
+        .assinatura-wrap.signed { border-color: #6366f1; border-style: solid; }
+        .assinatura-hint { font-size: 11px; color: #64748b; margin: 5px 0 6px; }
+        .btn-limpar-assinatura {
+            background: none; border: 1px solid #475569; color: #64748b;
+            border-radius: 6px; padding: 3px 12px; font-size: 12px; cursor: pointer; margin-bottom: 4px;
+        }
+        .btn-limpar-assinatura:hover { border-color: #dc2626; color: #dc2626; }
+        .sig-section { margin-top: 20px; border-top: 2px solid #334155; padding-top: 16px; }
+        .sig-section h3 { font-size: 13px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+        .sig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        @media (max-width: 600px) { .sig-grid { grid-template-columns: 1fr; } }
+        .sig-block label { font-size: 12px; font-weight: 600; color: #cbd5e1; display: block; margin-bottom: 4px; }
+        .sig-block input[type="text"] {
+            width: 100%; padding: 6px 10px; background: #0f172a; border: 1px solid #334155;
+            border-radius: 6px; color: #e2e8f0; font-size: 13px; margin-bottom: 4px;
+        }
+        .sig-img-preview { width: 100%; border: 1px dashed #334155; border-radius: 8px; background: #0f172a;
+            display: flex; align-items: center; justify-content: center; min-height: 80px; margin-top: 8px; }
+        .sig-img-preview img { max-height: 80px; max-width: 100%; object-fit: contain; padding: 8px; }
+        .btn-salvar-assinaturas {
+            margin-top: 14px; width: 100%; padding: 10px; background: #4f46e5;
+            color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+        }
+        .btn-salvar-assinaturas:hover { background: #4338ca; }
+        .btn-salvar-assinaturas:disabled { opacity: 0.5; cursor: not-allowed; }
+
         /* ── LINK DE IMAGEM NO MODAL ── */
         .img-link-btn {
             display: inline-flex;
@@ -216,7 +253,8 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 let db, currentUser;
 let allChecklists = [], filteredChecklists = [];
-let currentPrintItem = null; // item sendo impresso
+let currentPrintItem = null;
+let _currentItemId   = null;
 
 const PERGUNTAS = {
     q1:'Há vazamentos visíveis de água ou óleo?',
@@ -594,8 +632,197 @@ function verDetalhes(jsonStr) {
         <button class="btn-print" style="padding:8px 18px;font-size:13px" onclick='abrirImpressao(${JSON.stringify(JSON.stringify(item))})'>🖨️ Imprimir este check-list</button>
     </div>`;
 
+    // ── SEÇÃO DE ASSINATURAS ──
+    const assOperUrl = item.assinatura_operador_url || item.assinatura_drive_url || null;
+    const assSupUrl  = item.assinatura_supervisor_url || null;
+
+    html += `<div class="sig-section">
+        <h3>✍️ Assinaturas</h3>
+        <div class="sig-grid">
+            <div class="sig-block">
+                <label>Técnico / Operador</label>
+                ${assOperUrl
+                    ? `<div class="sig-img-preview"><img src="${assOperUrl}" alt="Assinatura técnico"></div>
+                       <button class="btn-limpar-assinatura" style="margin-top:6px" onclick="reassinar('tecnico')">✏️ Reasinar</button>`
+                    : `<div class="assinatura-wrap" id="sigWrapTecnico">
+                           <canvas id="assinaturaCanvas" width="800" height="180"></canvas>
+                       </div>
+                       <p class="assinatura-hint">Assine com o dedo ou mouse no campo acima</p>
+                       <button type="button" class="btn-limpar-assinatura" onclick="limparAssinatura('assinaturaCanvas','sigWrapTecnico')">↺ Limpar</button>`
+                }
+            </div>
+            <div class="sig-block">
+                <label>Supervisor</label>
+                <input type="text" id="modalNomeSupervisor" placeholder="Nome do supervisor (opcional)"
+                       value="${item.nome_supervisor || ''}">
+                ${assSupUrl
+                    ? `<div class="sig-img-preview"><img src="${assSupUrl}" alt="Assinatura supervisor"></div>
+                       <button class="btn-limpar-assinatura" style="margin-top:6px" onclick="reassinar('supervisor')">✏️ Reasinar</button>`
+                    : `<div class="assinatura-wrap" id="sigWrapSupervisor">
+                           <canvas id="assinaturaSupervisorCanvas" width="800" height="180"></canvas>
+                       </div>
+                       <p class="assinatura-hint">Assine com o dedo ou mouse no campo acima</p>
+                       <button type="button" class="btn-limpar-assinatura" onclick="limparAssinatura('assinaturaSupervisorCanvas','sigWrapSupervisor')">↺ Limpar</button>`
+                }
+            </div>
+        </div>
+        <button class="btn-salvar-assinaturas" id="btnSalvarAssinaturas"
+                onclick="salvarAssinaturas(${item.id})">
+            💾 Salvar Assinaturas
+        </button>
+    </div>`;
+
+    _currentItemId = item.id;
+
     document.getElementById('modalConteudo').innerHTML = html;
     document.getElementById('modalDetalhes').classList.add('active');
+
+    // Inicializa canvas apenas se estiverem presentes no DOM
+    if (document.getElementById('assinaturaCanvas'))
+        setupAssinatura('assinaturaCanvas', 'sigWrapTecnico');
+    if (document.getElementById('assinaturaSupervisorCanvas'))
+        setupAssinatura('assinaturaSupervisorCanvas', 'sigWrapSupervisor');
+}
+
+/* ═══════════════════════════════════════════
+   ASSINATURAS
+═══════════════════════════════════════════ */
+function setupAssinatura(canvasId, wrapId) {
+    var canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var drawing = false, lastX = 0, lastY = 0;
+    canvas._vazia = true;
+
+    function getPos(e) {
+        var rect = canvas.getBoundingClientRect();
+        var scaleX = canvas.width / rect.width;
+        var scaleY = canvas.height / rect.height;
+        if (e.touches) return {
+            x: (e.touches[0].clientX - rect.left) * scaleX,
+            y: (e.touches[0].clientY - rect.top)  * scaleY
+        };
+        return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+    }
+    function startDraw(e) {
+        e.preventDefault(); drawing = true;
+        var p = getPos(e); lastX = p.x; lastY = p.y;
+    }
+    function draw(e) {
+        e.preventDefault();
+        if (!drawing) return;
+        var p = getPos(e);
+        ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(p.x, p.y);
+        ctx.strokeStyle = '#1e1b4b'; ctx.lineWidth = 2.5;
+        ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
+        lastX = p.x; lastY = p.y;
+        canvas._vazia = false;
+        document.getElementById(wrapId)?.classList.add('signed');
+    }
+    function stopDraw() { drawing = false; }
+
+    canvas.addEventListener('mousedown',  startDraw);
+    canvas.addEventListener('mousemove',  draw);
+    canvas.addEventListener('mouseup',    stopDraw);
+    canvas.addEventListener('mouseleave', stopDraw);
+    canvas.addEventListener('touchstart', startDraw, { passive: false });
+    canvas.addEventListener('touchmove',  draw,      { passive: false });
+    canvas.addEventListener('touchend',   stopDraw);
+}
+
+function limparAssinatura(canvasId, wrapId) {
+    var canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+    canvas._vazia = true;
+    document.getElementById(wrapId)?.classList.remove('signed');
+}
+
+async function uploadAssinatura(canvasId, prefixo) {
+    var canvas = document.getElementById(canvasId);
+    if (!canvas || canvas._vazia) return null;
+    return new Promise(function(resolve) {
+        canvas.toBlob(async function(blob) {
+            var path = 'checklist/' + Date.now() + '_' + prefixo + '.png';
+            var { data, error } = await db.storage
+                .from('assinaturas')
+                .upload(path, blob, { contentType: 'image/png' });
+            if (error) { console.error('[sig]', error); resolve(null); return; }
+            var { data: pub } = db.storage.from('assinaturas').getPublicUrl(data.path);
+            resolve(pub.publicUrl);
+        }, 'image/png');
+    });
+}
+
+async function salvarAssinaturas(itemId) {
+    var btn = document.getElementById('btnSalvarAssinaturas');
+    btn.disabled = true; btn.textContent = '⏳ Salvando...';
+
+    var [urlTecnico, urlSupervisor] = await Promise.all([
+        uploadAssinatura('assinaturaCanvas',           'tecnico'),
+        uploadAssinatura('assinaturaSupervisorCanvas', 'supervisor')
+    ]);
+
+    var update = {};
+    if (urlTecnico)    update.assinatura_operador_url   = urlTecnico;
+    if (urlSupervisor) update.assinatura_supervisor_url = urlSupervisor;
+    var nomeSup = document.getElementById('modalNomeSupervisor')?.value.trim();
+    if (nomeSup) update.nome_supervisor = nomeSup;
+
+    if (!Object.keys(update).length) {
+        btn.disabled = false; btn.textContent = '💾 Salvar Assinaturas';
+        return;
+    }
+
+    var { error } = await db.from('checklist_diario').update(update).eq('id', itemId);
+    if (error) {
+        console.error(error);
+        btn.textContent = '❌ Erro ao salvar'; btn.disabled = false;
+        return;
+    }
+
+    // Atualiza cache local para refletir na tabela e no print
+    var idx = allChecklists.findIndex(function(c) { return c.id === itemId; });
+    if (idx >= 0) Object.assign(allChecklists[idx], update);
+
+    btn.textContent = '✅ Salvo!';
+    setTimeout(function() { fecharModal(); renderTabela(filteredChecklists); }, 800);
+}
+
+// Reasinar: substitui imagem por canvas
+function reassinar(quem) {
+    var isT = quem === 'tecnico';
+    var wrapId    = isT ? 'sigWrapTecnico'    : 'sigWrapSupervisor';
+    var canvasId  = isT ? 'assinaturaCanvas'  : 'assinaturaSupervisorCanvas';
+    var container = isT
+        ? document.querySelector('.sig-block:first-child')
+        : document.querySelector('.sig-block:last-child');
+    if (!container) return;
+
+    var preview = container.querySelector('.sig-img-preview');
+    var btnR    = container.querySelector('.btn-limpar-assinatura');
+    if (preview) preview.remove();
+    if (btnR)    btnR.remove();
+
+    var wrap   = document.createElement('div');
+    wrap.className = 'assinatura-wrap'; wrap.id = wrapId;
+    var canvas = document.createElement('canvas');
+    canvas.id = canvasId; canvas.width = 800; canvas.height = 180;
+    wrap.appendChild(canvas);
+
+    var hint = document.createElement('p');
+    hint.className = 'assinatura-hint';
+    hint.textContent = 'Assine com o dedo ou mouse no campo acima';
+
+    var btnL = document.createElement('button');
+    btnL.type = 'button'; btnL.className = 'btn-limpar-assinatura';
+    btnL.textContent = '↺ Limpar';
+    btnL.onclick = function() { limparAssinatura(canvasId, wrapId); };
+
+    container.appendChild(wrap);
+    container.appendChild(hint);
+    container.appendChild(btnL);
+    setupAssinatura(canvasId, wrapId);
 }
 
 function fecharModal() { document.getElementById('modalDetalhes').classList.remove('active'); }
