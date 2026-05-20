@@ -633,8 +633,7 @@ function verDetalhes(jsonStr) {
     </div>`;
 
     // ── SEÇÃO DE ASSINATURAS ──
-    const assOperUrl = item.assinatura_operador_url || item.assinatura_drive_url || null;
-    const assSupUrl  = item.assinatura_supervisor_url || null;
+    const assSupUrl = item.assinatura_supervisor_url || null;
 
     html += `<div class="sig-section">
         <h3>✍️ Assinaturas</h3>

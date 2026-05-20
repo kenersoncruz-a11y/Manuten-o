@@ -571,13 +571,9 @@
             injetarEstilos();
             injetarHTML();
             carregarNotificacoes();
-<<<<<< claude/fix-supabase-realtime-error-DkjW1
             pedirPermissao();
             inscreverRealtime();
-======
-            inscreverRealtime(); // Realtime (quando habilitado no Supabase)
-            iniciarPolling();    // Polling garantido a cada 10s
->>>>>> main
+            iniciarPolling();
         };
 
         if (document.readyState === 'loading') {
